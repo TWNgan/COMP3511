@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC Quiz · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="quiz">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz" class="active"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Practice</span></div>
+<h1>MC 練習 Quiz</h1><p>168 題：歷屆 MC（S26 / F20 / Sp21 / HW1 / HW2）+ 新練習題（針對 Fall 2026 slides）。撳選項即時對答案；紀錄會保存喺瀏覽器（localStorage），可以揀「錯題 Wrong only」溫返錯嘅題目。</p><div id="quiz-app"></div>
+<nav class="pager"><a href="bank.html"><small>← 上一頁</small>歷屆試題 Past Papers</a><a class="next" href="tools.html"><small>下一頁 →</small>工具 Scheduler &amp; Calculators</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+
+</div>
+<script src="assets/quiz-data.js?v=1793172171"></script><script src="assets/quiz.js?v=1793172171"></script>
+</body>
+</html>

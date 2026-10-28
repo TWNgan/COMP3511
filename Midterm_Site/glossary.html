@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary A–Z · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="glossary">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary" class="active"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Reference</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="glossary-a-z">Glossary A–Z（術語速查：英文定義可直接抄）</h1>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Term</th>
+  <th>Definition（exam English）</th>
+  <th>中文</th>
+  <th>Ref</th>
+</tr>
+</thead>
+<tbody>
+<tr id="g-accounting-information"><td>Accounting information</td>
+  <td>PCB field: CPU used, clock time elapsed, time limits</td>
+  <td>記帳資訊</td>
+  <td>3.10</td>
+</tr>
+<tr id="g-address-space"><td>Address space</td>
+  <td>The memory a program executes in, distinct from other programs' (text, data, heap, stack)</td>
+  <td>位址空間</td>
+  <td>3.4–3.5</td>
+</tr>
+<tr id="g-admission-control"><td>Admission control</td>
+  <td>Real-time scheduler admits a task only if it can guarantee its deadline</td>
+  <td>准入控制</td>
+  <td>5.48</td>
+</tr>
+<tr id="g-aging"><td>Aging</td>
+  <td>Gradually increasing the priority of a process that waits a long time, to prevent starvation</td>
+  <td>老化</td>
+  <td>5.25</td>
+</tr>
+<tr id="g-amdahl-s-law"><td>Amdahl's Law</td>
+  <td>speedup ≤ 1 / (S + (1−S)/N); as N→∞, speedup → 1/S</td>
+  <td>阿姆達爾定律</td>
+  <td>4.12</td>
+</tr>
+<tr id="g-api"><td>API</td>
+  <td>A set of functions available to programmers (parameters + return values) that invoke system calls on their behalf</td>
+  <td>應用程式介面</td>
+  <td>2.15</td>
+</tr>
+<tr id="g-asymmetric-multiprocessing-amp"><td>Asymmetric multiprocessing (AMP)</td>
+  <td>Master processor handles scheduling, I/O and kernel data; others run user code only; master may bottleneck</td>
+  <td>非對稱多處理</td>
+  <td>1.37, 5.38</td>
+</tr>
+<tr id="g-asynchronous-cancellation"><td>Asynchronous cancellation</td>
+  <td>Terminates the target thread immediately</td>
+  <td>非同步取消</td>
+  <td>4.32</td>
+</tr>
+<tr id="g-asynchronous-signal"><td>Asynchronous signal</td>
+  <td>Signal generated by an event external to the running process (Ctrl-C, timer expiry)</td>
+  <td>非同步信號</td>
+  <td>4.29</td>
+</tr>
+<tr id="g-atomic"><td>Atomic</td>
+  <td>Non-interruptible; executes as one uninterruptible unit</td>
+  <td>原子性</td>
+  <td>6.14</td>
+</tr>
+<tr id="g-atomic-variable"><td>Atomic variable</td>
+  <td>Provides atomic updates on basic data types (e.g., increment via CAS)</td>
+  <td>原子變數</td>
+  <td>6.21</td>
+</tr>
+<tr id="g-average-access-time"><td>Average access time</td>
+  <td>Hit ratio × hit time + miss ratio × miss time</td>
+  <td>平均存取時間</td>
+  <td>1.32</td>
+</tr>
+<tr id="g-binary-semaphore"><td>Binary semaphore</td>
+  <td>Semaphore whose value is only 0 or 1; can act like a mutex</td>
+  <td>二元信號量</td>
+  <td>6.25</td>
+</tr>
+<tr id="g-blocking-synchronous-send-receive"><td>Blocking (synchronous) send/receive</td>
+  <td>Sender blocks until the message is received; receiver blocks until a message is available</td>
+  <td>阻塞式</td>
+  <td>3.62</td>
+</tr>
+<tr id="g-bootstrap-program"><td>Bootstrap program</td>
+  <td>First program run at power-on, stored in EEPROM</td>
+  <td>開機程式</td>
+  <td>1.30</td>
+</tr>
+<tr id="g-bounded-buffer"><td>Bounded buffer</td>
+  <td>Fixed-size buffer shared by producer and consumer</td>
+  <td>有界緩衝區</td>
+  <td>3.53</td>
+</tr>
+<tr id="g-bounded-waiting"><td>Bounded waiting</td>
+  <td>A bound exists on how many times others may enter their CS after a process requests entry</td>
+  <td>有限等待</td>
+  <td>6.11</td>
+</tr>
+<tr id="g-busy-waiting"><td>Busy waiting</td>
+  <td>Looping continuously while waiting for a condition; wastes CPU</td>
+  <td>忙碌等待</td>
+  <td>6.22</td>
+</tr>
+<tr id="g-cache"><td>Cache</td>
+  <td>Faster, smaller storage holding a copy of a subset of slower, larger storage</td>
+  <td>快取</td>
+  <td>1.32</td>
+</tr>
+<tr id="g-cascading-termination"><td>Cascading termination</td>
+  <td>When a process terminates, all its children are also terminated by the OS</td>
+  <td>級聯終止</td>
+  <td>3.48</td>
+</tr>
+<tr id="g-chip-multithreading-cmt-hyperthreading"><td>Chip multithreading (CMT) / hyperthreading</td>
+  <td>Multiple hardware threads per core, each appearing as a logical CPU; hides memory stalls</td>
+  <td>晶片多執行緒</td>
+  <td>5.40–5.42</td>
+</tr>
+<tr id="g-clone"><td>clone()</td>
+  <td>Linux call creating a task that shares selected resources with its parent (flags)</td>
+  <td>複製</td>
+  <td>3.46, 4.38</td>
+</tr>
+<tr id="g-cloud-computing"><td>Cloud computing</td>
+  <td>Delivers computing, storage and apps as a service over a network; extension of virtualization</td>
+  <td>雲端運算</td>
+  <td>1.47</td>
+</tr>
+<tr id="g-compare-and-swap-cas"><td>Compare-and-swap (CAS)</td>
+  <td>Atomically: if *value == expected set *value = new; return original value</td>
+  <td>比較並交換</td>
+  <td>6.17</td>
+</tr>
+<tr id="g-concurrency"><td>Concurrency</td>
+  <td>More than one task making progress (possibly by time multiplexing on one core)</td>
+  <td>並行（並發）</td>
+  <td>4.9</td>
+</tr>
+<tr id="g-context-switch"><td>Context switch</td>
+  <td>Saving the state of the old process/thread and loading the saved state of the new one; pure overhead</td>
+  <td>上下文切換</td>
+  <td>3.20</td>
+</tr>
+<tr id="g-convoy-effect"><td>Convoy effect</td>
+  <td>Short processes stuck waiting behind a long process (FCFS)</td>
+  <td>護航效應</td>
+  <td>5.10</td>
+</tr>
+<tr id="g-cooperating-process"><td>Cooperating process</td>
+  <td>A process that can affect or be affected by other processes</td>
+  <td>協作進程</td>
+  <td>3.51</td>
+</tr>
+<tr id="g-copy-on-write-cow"><td>Copy-on-write (COW)</td>
+  <td>Parent and child share pages until one writes; then the page is copied</td>
+  <td>寫入時複製</td>
+  <td>3.46</td>
+</tr>
+<tr id="g-cpu-burst"><td>CPU burst</td>
+  <td>A period of CPU execution between I/O waits</td>
+  <td>CPU 爆發</td>
+  <td>5.4</td>
+</tr>
+<tr id="g-cpu-bound-process"><td>CPU-bound process</td>
+  <td>Spends most time computing; few long CPU bursts</td>
+  <td>CPU 密集</td>
+  <td>3.14</td>
+</tr>
+<tr id="g-cpu-scheduler-short-term"><td>CPU scheduler (short-term)</td>
+  <td>Selects a process from the ready queue and allocates a CPU core</td>
+  <td>短期排程器</td>
+  <td>3.17, 5.6</td>
+</tr>
+<tr id="g-cpu-utilization"><td>CPU utilization</td>
+  <td>Fraction of time the CPU is busy</td>
+  <td>CPU 使用率</td>
+  <td>5.8</td>
+</tr>
+<tr id="g-critical-section"><td>Critical section</td>
+  <td>Code segment in which shared data is accessed/modified</td>
+  <td>臨界區</td>
+  <td>6.9</td>
+</tr>
+<tr id="g-data-parallelism"><td>Data parallelism</td>
+  <td>Same operation on different subsets of data across cores</td>
+  <td>數據並行</td>
+  <td>4.11</td>
+</tr>
+<tr id="g-deadlock"><td>Deadlock</td>
+  <td>Two or more processes wait indefinitely for an event only one of the waiting processes can cause</td>
+  <td>死結</td>
+  <td>6.28</td>
+</tr>
+<tr id="g-deferred-cancellation"><td>Deferred cancellation</td>
+  <td>Target thread periodically checks whether it should terminate (orderly)</td>
+  <td>延遲取消</td>
+  <td>4.32</td>
+</tr>
+<tr id="g-degree-of-multiprogramming"><td>Degree of multiprogramming</td>
+  <td>Number of processes currently in memory</td>
+  <td>多道程式度</td>
+  <td>3.14</td>
+</tr>
+<tr id="g-deterministic-modeling"><td>Deterministic modeling</td>
+  <td>Evaluates algorithms on a predetermined workload; exact but specific</td>
+  <td>確定性建模</td>
+  <td>5.54</td>
+</tr>
+<tr id="g-device-driver"><td>Device driver</td>
+  <td>Kernel module that controls a device</td>
+  <td>裝置驅動程式</td>
+  <td>1 (summary)</td>
+</tr>
+<tr id="g-direct-communication"><td>Direct communication</td>
+  <td>Processes name each other explicitly; one link per pair</td>
+  <td>直接通訊</td>
+  <td>3.59</td>
+</tr>
+<tr id="g-dispatch-latency"><td>Dispatch latency</td>
+  <td>Time for the dispatcher to stop one process and start another</td>
+  <td>分派延遲</td>
+  <td>5.7</td>
+</tr>
+<tr id="g-dispatcher"><td>Dispatcher</td>
+  <td>Gives CPU control to the selected process: context switch, switch to user mode, jump to restart location</td>
+  <td>分派器</td>
+  <td>5.7</td>
+</tr>
+<tr id="g-dll-dynamically-linked-library"><td>DLL (dynamically linked library)</td>
+  <td>Library loaded when needed and shared by all programs using it</td>
+  <td>動態連結庫</td>
+  <td>2.31</td>
+</tr>
+<tr id="g-dma"><td>DMA</td>
+  <td>Controller transfers blocks directly between device and memory without CPU; interrupts once when done</td>
+  <td>直接記憶體存取</td>
+  <td>3.25</td>
+</tr>
+<tr id="g-dual-mode-operation"><td>Dual-mode operation</td>
+  <td>User mode vs kernel mode distinguished by a hardware mode bit (1 = user, 0 = kernel)</td>
+  <td>雙模式</td>
+  <td>3.27–3.28</td>
+</tr>
+<tr id="g-dup-dup2"><td>dup / dup2</td>
+  <td>Duplicate a file descriptor (dup → lowest free fd; dup2 → specified fd)</td>
+  <td>複製描述符</td>
+  <td>Lab/PA1</td>
+</tr>
+<tr id="g-edf"><td>EDF</td>
+  <td>Earliest-deadline-first: dynamic priority, earlier deadline = higher priority; theoretically optimal</td>
+  <td>最早截止期限優先</td>
+  <td>5.51</td>
+</tr>
+<tr id="g-exec"><td>Exec()</td>
+  <td>Replaces the current process image with a new program; returns only on failure</td>
+  <td>執行新程式</td>
+  <td>3.41</td>
+</tr>
+<tr id="g-exponential-averaging"><td>Exponential averaging</td>
+  <td>τ(n+1) = α t(n) + (1−α) τ(n): predicts the next CPU burst</td>
+  <td>指數平均</td>
+  <td>5.19</td>
+</tr>
+<tr id="g-fcfs"><td>FCFS</td>
+  <td>First-come first-served; non-preemptive; convoy effect</td>
+  <td>先到先得</td>
+  <td>5.9</td>
+</tr>
+<tr id="g-fork"><td>fork()</td>
+  <td>Creates a child duplicating the parent's address space; returns 0 to child, child PID to parent, −1 on failure</td>
+  <td>分叉</td>
+  <td>3.35–3.37</td>
+</tr>
+<tr id="g-hard-affinity"><td>Hard affinity</td>
+  <td>Process specifies the subset of CPUs it may run on</td>
+  <td>硬親和性</td>
+  <td>5.45</td>
+</tr>
+<tr id="g-hard-real-time"><td>Hard real-time</td>
+  <td>Task must be serviced by its deadline; late = no service</td>
+  <td>硬實時</td>
+  <td>5.47</td>
+</tr>
+<tr id="g-heap"><td>Heap</td>
+  <td>Memory dynamically allocated at run time</td>
+  <td>堆積</td>
+  <td>3.5</td>
+</tr>
+<tr id="g-hybrid-system"><td>Hybrid system</td>
+  <td>OS combining several structures (Linux, Windows, macOS)</td>
+  <td>混合式</td>
+  <td>2.52</td>
+</tr>
+<tr id="g-indirect-communication"><td>Indirect communication</td>
+  <td>Messages sent to/received from mailboxes (ports)</td>
+  <td>間接通訊</td>
+  <td>3.60</td>
+</tr>
+<tr id="g-interrupt"><td>Interrupt</td>
+  <td>Signal from hardware/software requiring CPU attention; handled by an ISR</td>
+  <td>中斷</td>
+  <td>3.21–3.24</td>
+</tr>
+<tr id="g-interrupt-vector"><td>Interrupt vector</td>
+  <td>Table of interrupt-handler addresses indexed by interrupt number</td>
+  <td>中斷向量</td>
+  <td>3 (summary)</td>
+</tr>
+<tr id="g-i-o-bound-process"><td>I/O-bound process</td>
+  <td>Spends more time on I/O; many short CPU bursts</td>
+  <td>I/O 密集</td>
+  <td>3.14</td>
+</tr>
+<tr id="g-ipc"><td>IPC</td>
+  <td>Mechanism for cooperating processes to exchange data: shared memory or message passing</td>
+  <td>進程間通訊</td>
+  <td>3.51</td>
+</tr>
+<tr id="g-kernel"><td>Kernel</td>
+  <td>The one program running at all times on the computer</td>
+  <td>核心</td>
+  <td>1.24</td>
+</tr>
+<tr id="g-kernel-thread"><td>Kernel thread</td>
+  <td>Thread supported and scheduled by the OS</td>
+  <td>核心執行緒</td>
+  <td>4.19</td>
+</tr>
+<tr id="g-layered-approach"><td>Layered approach</td>
+  <td>OS divided into layers (0 = hardware … N = UI); each uses only lower layers</td>
+  <td>分層結構</td>
+  <td>2.44</td>
+</tr>
+<tr id="g-linker"><td>Linker</td>
+  <td>Combines relocatable object files and libraries into one executable</td>
+  <td>連結器</td>
+  <td>2.31</td>
+</tr>
+<tr id="g-little-s-formula"><td>Little's formula</td>
+  <td>n = λ × W (queue length = arrival rate × waiting time)</td>
+  <td>利特爾公式</td>
+  <td>5.57</td>
+</tr>
+<tr id="g-load-balancing"><td>Load balancing</td>
+  <td>Keep workload evenly distributed across CPUs (push / pull migration)</td>
+  <td>負載平衡</td>
+  <td>5.46</td>
+</tr>
+<tr id="g-loadable-kernel-module-lkm"><td>Loadable kernel module (LKM)</td>
+  <td>Core kernel plus modules linked in at boot or run time; any module can call any other</td>
+  <td>可載入核心模組</td>
+  <td>2.49–2.50</td>
+</tr>
+<tr id="g-loader"><td>Loader</td>
+  <td>Loads the executable file into memory for execution</td>
+  <td>載入器</td>
+  <td>2.31</td>
+</tr>
+<tr id="g-locality-temporal-spatial"><td>Locality (temporal / spatial)</td>
+  <td>Recently accessed items are reused soon / nearby items are accessed soon</td>
+  <td>局部性</td>
+  <td>1.33</td>
+</tr>
+<tr id="g-long-term-scheduler-job-scheduler"><td>Long-term scheduler (job scheduler)</td>
+  <td>Selects which jobs are brought into memory; controls degree of multiprogramming</td>
+  <td>長期排程器</td>
+  <td>3.17</td>
+</tr>
+<tr id="g-lwp-lightweight-process"><td>LWP (lightweight process)</td>
+  <td>Virtual processor between user threads and a kernel thread</td>
+  <td>輕量級進程</td>
+  <td>5.36</td>
+</tr>
+<tr id="g-many-to-one-one-to-one-many-to-many"><td>Many-to-one / one-to-one / many-to-many</td>
+  <td>Mappings from user threads to kernel threads</td>
+  <td>多對一 / 一對一 / 多對多</td>
+  <td>4.21–4.24</td>
+</tr>
+<tr id="g-medium-term-scheduler"><td>Medium-term scheduler</td>
+  <td>Swaps processes out to disk and back to reduce degree of multiprogramming</td>
+  <td>中期排程器</td>
+  <td>3.18</td>
+</tr>
+<tr id="g-memory-stall"><td>Memory stall</td>
+  <td>Processor waits for data from memory (e.g., cache miss)</td>
+  <td>記憶體停頓</td>
+  <td>5.40</td>
+</tr>
+<tr id="g-message-passing"><td>Message passing</td>
+  <td>IPC via explicit send()/receive() without shared memory</td>
+  <td>訊息傳遞</td>
+  <td>3.57</td>
+</tr>
+<tr id="g-microkernel"><td>Microkernel</td>
+  <td>Minimal kernel; other services run in user space and communicate via message passing</td>
+  <td>微核心</td>
+  <td>2.46–2.48</td>
+</tr>
+<tr id="g-mlfq"><td>MLFQ</td>
+  <td>Multilevel feedback queue: processes move between queues; approximates SRTF without burst knowledge</td>
+  <td>多級回饋佇列</td>
+  <td>5.30–5.35</td>
+</tr>
+<tr id="g-mode-bit"><td>Mode bit</td>
+  <td>Hardware bit: 1 = user mode, 0 = kernel mode</td>
+  <td>模式位元</td>
+  <td>3.28</td>
+</tr>
+<tr id="g-monolithic"><td>Monolithic</td>
+  <td>All kernel functionality in one static binary in a single address space; fast but hard to maintain</td>
+  <td>單體式</td>
+  <td>2.41</td>
+</tr>
+<tr id="g-multicore"><td>Multicore</td>
+  <td>Multiple computing cores on a single chip; faster on-chip communication, less power</td>
+  <td>多核心</td>
+  <td>1.39</td>
+</tr>
+<tr id="g-multilevel-queue"><td>Multilevel queue</td>
+  <td>Processes permanently assigned to queues by type; each queue its own algorithm</td>
+  <td>多級佇列</td>
+  <td>5.28–5.29</td>
+</tr>
+<tr id="g-multiprogramming"><td>Multiprogramming</td>
+  <td>Keeping several jobs in memory so the CPU always has one to execute</td>
+  <td>多道程式</td>
+  <td>1.42</td>
+</tr>
+<tr id="g-mutex-lock"><td>Mutex lock</td>
+  <td>Lock acquired before and released after a critical section (acquire/release atomic)</td>
+  <td>互斥鎖</td>
+  <td>6.22</td>
+</tr>
+<tr id="g-mutual-exclusion"><td>Mutual exclusion</td>
+  <td>If one process is in its CS, no other process can be in its CS</td>
+  <td>互斥</td>
+  <td>6.11</td>
+</tr>
+<tr id="g-named-pipe-fifo"><td>Named pipe (FIFO)</td>
+  <td>Bidirectional (UNIX half-duplex) pipe with a file name; no parent–child needed; persists until deleted</td>
+  <td>具名管道</td>
+  <td>3.69</td>
+</tr>
+<tr id="g-non-preemptive-scheduling"><td>Non-preemptive scheduling</td>
+  <td>Process keeps the CPU until it terminates or blocks</td>
+  <td>非搶佔式</td>
+  <td>5.6</td>
+</tr>
+<tr id="g-numa"><td>NUMA</td>
+  <td>Each CPU has fast local memory; remote memory access slower</td>
+  <td>非一致記憶體存取</td>
+  <td>1.40</td>
+</tr>
+<tr id="g-ordinary-pipe"><td>Ordinary pipe</td>
+  <td>Unidirectional pipe between parent and child; fd[0] read, fd[1] write; gone after use</td>
+  <td>普通管道</td>
+  <td>3.66</td>
+</tr>
+<tr id="g-orphan"><td>Orphan</td>
+  <td>Child whose parent terminated without wait(); adopted by init/systemd</td>
+  <td>孤兒進程</td>
+  <td>3.50</td>
+</tr>
+<tr id="g-parallelism"><td>Parallelism</td>
+  <td>Performing more than one task simultaneously (needs multiple cores)</td>
+  <td>平行</td>
+  <td>4.9</td>
+</tr>
+<tr id="g-pcb"><td>PCB</td>
+  <td>Process control block: state, PC, registers, scheduling, memory, accounting, I/O info</td>
+  <td>進程控制塊</td>
+  <td>3.10</td>
+</tr>
+<tr id="g-pcs-process-contention-scope"><td>PCS (process-contention scope)</td>
+  <td>Thread library schedules user threads onto LWPs, among threads of the same process</td>
+  <td>進程競爭範圍</td>
+  <td>5.37</td>
+</tr>
+<tr id="g-pipe"><td>Pipe</td>
+  <td>IPC channel treated as a special file; read()/write()</td>
+  <td>管道</td>
+  <td>3.65</td>
+</tr>
+<tr id="g-policy-vs-mechanism"><td>Policy vs mechanism</td>
+  <td>Policy = what will be done; mechanism = how to do it</td>
+  <td>策略與機制</td>
+  <td>2.34</td>
+</tr>
+<tr id="g-preemptive-scheduling"><td>Preemptive scheduling</td>
+  <td>CPU can be taken away involuntarily (interrupt, higher-priority arrival)</td>
+  <td>搶佔式</td>
+  <td>5.6</td>
+</tr>
+<tr id="g-priority-scheduling"><td>Priority scheduling</td>
+  <td>CPU to highest-priority process (smallest number); starvation → aging</td>
+  <td>優先權排程</td>
+  <td>5.25</td>
+</tr>
+<tr id="g-privileged-instruction"><td>Privileged instruction</td>
+  <td>Instruction executable only in kernel mode (I/O, timer, interrupt management)</td>
+  <td>特權指令</td>
+  <td>3.28</td>
+</tr>
+<tr id="g-process"><td>Process</td>
+  <td>A program in execution; active entity with PC and resources</td>
+  <td>進程</td>
+  <td>3.4–3.5</td>
+</tr>
+<tr id="g-processor-affinity"><td>Processor affinity</td>
+  <td>Tendency to keep a process on the CPU whose cache holds its data</td>
+  <td>處理器親和性</td>
+  <td>5.45</td>
+</tr>
+<tr id="g-program"><td>Program</td>
+  <td>Passive entity — executable file on disk</td>
+  <td>程式</td>
+  <td>3.5</td>
+</tr>
+<tr id="g-progress"><td>Progress</td>
+  <td>If no one is in the CS, selection of the next entrant cannot be postponed indefinitely</td>
+  <td>前進</td>
+  <td>6.11</td>
+</tr>
+<tr id="g-pull-push-migration"><td>Pull / push migration</td>
+  <td>Idle CPU pulls tasks / a task pushes work from overloaded CPUs</td>
+  <td>拉 / 推遷移</td>
+  <td>5.46</td>
+</tr>
+<tr id="g-race-condition"><td>Race condition</td>
+  <td>Outcome depends on the order of concurrent access to shared data</td>
+  <td>競爭條件</td>
+  <td>6.9</td>
+</tr>
+<tr id="g-ready-queue"><td>Ready queue</td>
+  <td>Processes in memory ready and waiting to run</td>
+  <td>就緒佇列</td>
+  <td>3.15</td>
+</tr>
+<tr id="g-rate-monotonic-rm"><td>Rate-monotonic (RM)</td>
+  <td>Static priority = shorter period higher priority; optimal among static-priority algorithms</td>
+  <td>速率單調</td>
+  <td>5.49</td>
+</tr>
+<tr id="g-response-time"><td>Response time</td>
+  <td>(Course) end of the first run − arrival; time until the first response is produced</td>
+  <td>回應時間</td>
+  <td>5.12</td>
+</tr>
+<tr id="g-round-robin-rr"><td>Round robin (RR)</td>
+  <td>FCFS with a time quantum; preempted process to tail; wait ≤ (n−1)q</td>
+  <td>輪轉</td>
+  <td>5.11</td>
+</tr>
+<tr id="g-rpc"><td>RPC</td>
+  <td>Remote procedure call: message-based procedure call between networked systems</td>
+  <td>遠端程序呼叫</td>
+  <td>3.70</td>
+</tr>
+<tr id="g-scs-system-contention-scope"><td>SCS (system-contention scope)</td>
+  <td>Kernel schedules kernel threads onto CPUs, among all threads in the system</td>
+  <td>系統競爭範圍</td>
+  <td>5.37</td>
+</tr>
+<tr id="g-semaphore"><td>Semaphore</td>
+  <td>Integer accessed only via atomic wait() (P) and signal() (V)</td>
+  <td>信號量</td>
+  <td>6.24</td>
+</tr>
+<tr id="g-shared-memory"><td>Shared memory</td>
+  <td>IPC by reading/writing a shared region</td>
+  <td>共享記憶體</td>
+  <td>3.51</td>
+</tr>
+<tr id="g-signal"><td>Signal</td>
+  <td>UNIX notification to a process that an event occurred</td>
+  <td>信號</td>
+  <td>4.29</td>
+</tr>
+<tr id="g-sjf"><td>SJF</td>
+  <td>Shortest-job-first: optimal minimum average waiting time; hard to know next burst</td>
+  <td>最短工作優先</td>
+  <td>5.17</td>
+</tr>
+<tr id="g-smp"><td>SMP</td>
+  <td>Symmetric multiprocessing: each processor self-schedules; own registers &amp; cache, shared memory</td>
+  <td>對稱多處理</td>
+  <td>1.38, 5.39</td>
+</tr>
+<tr id="g-socket"><td>Socket</td>
+  <td>Endpoint for communication identified by IP address + port</td>
+  <td>套接字</td>
+  <td>3.70</td>
+</tr>
+<tr id="g-soft-affinity"><td>Soft affinity</td>
+  <td>OS tries but does not guarantee to keep a process on the same CPU</td>
+  <td>軟親和性</td>
+  <td>5.45</td>
+</tr>
+<tr id="g-soft-real-time"><td>Soft real-time</td>
+  <td>Critical tasks get preference over non-critical ones; no guarantee</td>
+  <td>軟實時</td>
+  <td>5.47</td>
+</tr>
+<tr id="g-spinlock"><td>Spinlock</td>
+  <td>Lock that busy-waits; no context switch, wastes CPU; good for short CS on multiprocessors</td>
+  <td>自旋鎖</td>
+  <td>6.22</td>
+</tr>
+<tr id="g-srtf"><td>SRTF</td>
+  <td>Shortest-remaining-time-first: preemptive SJF</td>
+  <td>最短剩餘時間優先</td>
+  <td>5.23</td>
+</tr>
+<tr id="g-stack"><td>Stack</td>
+  <td>Temporary data: function parameters, return addresses, local variables</td>
+  <td>堆疊</td>
+  <td>3.5</td>
+</tr>
+<tr id="g-starvation"><td>Starvation</td>
+  <td>A process waits indefinitely (low priority / semaphore queue)</td>
+  <td>飢餓</td>
+  <td>5.25, 6.28</td>
+</tr>
+<tr id="g-system-call"><td>System call</td>
+  <td>Programming interface to OS services</td>
+  <td>系統呼叫</td>
+  <td>2.14</td>
+</tr>
+<tr id="g-system-program"><td>System program</td>
+  <td>Utilities shipped with the OS providing a convenient environment (not part of kernel)</td>
+  <td>系統程式</td>
+  <td>2.27</td>
+</tr>
+<tr id="g-task-parallelism"><td>Task parallelism</td>
+  <td>Different threads performing unique operations on cores</td>
+  <td>任務並行</td>
+  <td>4.11</td>
+</tr>
+<tr id="g-tcb"><td>TCB</td>
+  <td>Thread control block: registers, PC, stack pointer, scheduling info, pointer to PCB</td>
+  <td>執行緒控制塊</td>
+  <td>4.15</td>
+</tr>
+<tr id="g-test-and-set"><td>Test-and-set</td>
+  <td>Atomically returns the old value of a boolean and sets it to TRUE</td>
+  <td>測試並設置</td>
+  <td>6.15</td>
+</tr>
+<tr id="g-thread"><td>Thread</td>
+  <td>Basic unit of CPU utilization: thread ID, PC, register set, stack</td>
+  <td>執行緒</td>
+  <td>4.6</td>
+</tr>
+<tr id="g-thread-local-storage"><td>Thread-local storage</td>
+  <td>Data unique to each thread</td>
+  <td>執行緒區域儲存</td>
+  <td>(Sp21 MC)</td>
+</tr>
+<tr id="g-throughput"><td>Throughput</td>
+  <td>Number of processes completed per unit time</td>
+  <td>吞吐量</td>
+  <td>5 (summary)</td>
+</tr>
+<tr id="g-timesharing-multitasking"><td>Timesharing (multitasking)</td>
+  <td>CPU switches among jobs so frequently that users can interact with each</td>
+  <td>分時</td>
+  <td>1.42</td>
+</tr>
+<tr id="g-trap-exception"><td>Trap / exception</td>
+  <td>Software-generated interrupt caused by an error or a system call request</td>
+  <td>陷阱 / 例外</td>
+  <td>3.24, 3.31</td>
+</tr>
+<tr id="g-turnaround-time"><td>Turnaround time</td>
+  <td>Completion time − arrival time</td>
+  <td>周轉時間</td>
+  <td>5.8</td>
+</tr>
+<tr id="g-user-thread"><td>User thread</td>
+  <td>Thread managed by a user-level library, invisible to the kernel</td>
+  <td>使用者執行緒</td>
+  <td>4.19</td>
+</tr>
+<tr id="g-virtualization"><td>Virtualization</td>
+  <td>Abstracts one computer's hardware into multiple execution environments (VMs)</td>
+  <td>虛擬化</td>
+  <td>1.43</td>
+</tr>
+<tr id="g-vmm-hypervisor"><td>VMM / hypervisor</td>
+  <td>Creates and manages VMs, presenting an interface identical to the host</td>
+  <td>虛擬機監控器</td>
+  <td>1.44</td>
+</tr>
+<tr id="g-von-neumann-architecture"><td>von Neumann architecture</td>
+  <td>Stored-program: instructions and data in the same memory; fetch–decode–execute</td>
+  <td>馮紐曼架構</td>
+  <td>1.26</td>
+</tr>
+<tr id="g-waiting-time"><td>Waiting time</td>
+  <td>Time spent in the ready queue = turnaround − burst</td>
+  <td>等待時間</td>
+  <td>5.8</td>
+</tr>
+<tr id="g-zombie"><td>Zombie</td>
+  <td>Terminated process whose parent has not yet called wait(); PID &amp; PCB remain</td>
+  <td>殭屍進程</td>
+  <td>3.49</td>
+</tr>
+</tbody>
+</table></div>
+
+<nav class="pager"><a href="api.html"><small>← 上一頁</small>API 速查 (C / Pthreads)</a><a class="next" href="bank.html"><small>下一頁 →</small>歷屆試題 Past Papers</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+
+</div>
+
+</body>
+</html>

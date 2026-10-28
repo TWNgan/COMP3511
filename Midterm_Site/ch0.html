@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>考試攻略 Exam Strategy · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch0">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0" class="active"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Start</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-0-exam-strategy">Chapter 0 — 考試攻略（Exam Strategy）</h1>
+<blockquote class="callout info">
+<p>🗓️ <strong>COMP3511 Midterm：29-Oct-2026（Thu）8:00 PM – 10:00 PM（2 小時）</strong>
+📍 <strong>L1 → LTD｜L2 → LSKG012｜L3 → LTB</strong>（唔好同 lab section LAx 搞亂！唔記得 → Canvas &gt; People）
+📚 <strong>Coverage：Chapters 1–6（up to Synchronization Tools）</strong>
+📖 <strong>Open-book, open-notes（printed materials）</strong>；<strong>calculator OK（唔准手機/平板）</strong>；<strong>自備 rough work sheets</strong>（booklet 雙面）；答案寫喺 booklet 指定位置。
+💻 可能有 <strong>PA / lab API coding 題</strong>（fork, exec, wait, pipe, dup, open/read/write/close, pthread, semaphore）→ 印埋 lab notes / 本 cheat book 嘅 API 章。</p>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. 試卷結構預測（根據 4 份 past papers）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Section</th>
+  <th>S26（今個 instructor 出）</th>
+  <th>F20</th>
+  <th>F19</th>
+  <th>Sp21</th>
+  <th>預測 F26</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>MC</strong></td>
+  <td><strong>25 × 1 = 25</strong></td>
+  <td>15 × 1</td>
+  <td>—</td>
+  <td>30 × 1.5 = 45</td>
+  <td><strong>~25 分</strong></td>
+</tr>
+<tr>
+  <td><strong>Short questions</strong></td>
+  <td><strong>16</strong>（race condition、caching、custom policy、swap spinlock）</td>
+  <td>20（microkernel、linker/loader、heavyweight、SMP queues、MLFQ）</td>
+  <td>10 + 部分</td>
+  <td>—</td>
+  <td><strong>~15 分</strong></td>
+</tr>
+<tr>
+  <td><strong>Process &amp; thread（fork）</strong></td>
+  <td><strong>24</strong>（fork tree、fork+exec cases、pipe/dup 填空）</td>
+  <td>23（output orderings、count “a”）</td>
+  <td>25</td>
+  <td>18</td>
+  <td><strong>~24 分</strong></td>
+</tr>
+<tr>
+  <td><strong>CPU scheduling</strong></td>
+  <td><strong>27</strong>（MLFQ、RM/EDF、dynamic priority）</td>
+  <td>27（FCFS/SJF/SRTF、2-level FQ aging、priority+RR）</td>
+  <td>40</td>
+  <td>26</td>
+  <td><strong>~27 分</strong></td>
+</tr>
+<tr>
+  <td><strong>Synchronization</strong></td>
+  <td><strong>8</strong>（semaphore ordering 填空）</td>
+  <td>15（race values）</td>
+  <td>25</td>
+  <td>11</td>
+  <td><strong>~8–15 分</strong></td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout tip">
+<p>🎯 <strong>S26（Spring 2026）係最近一份、由 lecturer 直接提供，格式同今次 announcement 一致（open-book、calculator、rough sheets）→ 最有參考價值</strong> → 預期題型：<strong>25 MC + 4 short + 3 fork 題 + MLFQ + RM/EDF + custom priority + semaphore 填空</strong>。F19/F20 係 closed-book 年代，題目偏背誦；Sp21 MC 多。</p>
+</blockquote>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. 時間分配（120 分鐘）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>部分</th>
+  <th>建議時間</th>
+  <th>策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>掃一次全卷</td>
+  <td>3 min</td>
+  <td>圈出 calculation 題，估分</td>
+</tr>
+<tr>
+  <td>MC（25 題）</td>
+  <td><strong>25 min</strong></td>
+  <td>每題 ≤ 1 min；唔肯定 → 用 <strong>MC 陷阱表</strong>（每章 §「常見陷阱」）；做唔到先跳</td>
+</tr>
+<tr>
+  <td>Short questions</td>
+  <td>15 min</td>
+  <td>抄 <strong>Model answer</strong>（英文），寫 2–3 句 + 例子</td>
+</tr>
+<tr>
+  <td>fork 題</td>
+  <td>20 min</td>
+  <td>用 <strong>Ch3 §9 解題大法</strong>；畫 process tree</td>
+</tr>
+<tr>
+  <td>Scheduling</td>
+  <td><strong>35 min</strong></td>
+  <td>用 <strong>Ch5 §13 流程</strong>；寫晒每個 boundary time；每個 avg 寫 working</td>
+</tr>
+<tr>
+  <td>Synchronization</td>
+  <td>12 min</td>
+  <td>用 <strong>Ch6 §6</strong></td>
+</tr>
+<tr>
+  <td>Check</td>
+  <td>10 min</td>
+  <td>檢查 Gantt 總時間、WT ≥ 0、MC 答案格</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. 題型 → 去邊度搵方法（Index）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>見到…</th>
+  <th>去</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>&quot;interrupt / DMA / trap / dual mode / privileged&quot;</td>
+  <td><strong>Ch3 §0</strong></td>
+</tr>
+<tr>
+  <td>&quot;cache / hit ratio / locality / average access time&quot;</td>
+  <td><strong>Ch1 §4</strong></td>
+</tr>
+<tr>
+  <td>&quot;von Neumann / storage hierarchy / SMP / NUMA / multicore&quot;</td>
+  <td><strong>Ch1 §2, §3, §5</strong></td>
+</tr>
+<tr>
+  <td>&quot;API / system call / printf / parameter passing / linker / loader&quot;</td>
+  <td><strong>Ch2 §3, §5</strong></td>
+</tr>
+<tr>
+  <td>&quot;monolithic / layered / microkernel / LKM / hybrid&quot;</td>
+  <td><strong>Ch2 §7（比較表）</strong></td>
+</tr>
+<tr>
+  <td>&quot;process state / PCB / scheduler（long/short/medium）/ context switch&quot;</td>
+  <td><strong>Ch3 §2–6</strong></td>
+</tr>
+<tr>
+  <td>&quot;fork() … how many processes / lines / tree / outputs&quot;</td>
+  <td><strong>Ch3 §9（公式表 + 例題）</strong></td>
+</tr>
+<tr>
+  <td>&quot;exec 成功/失敗 scenarios&quot;</td>
+  <td><strong>Ch3 §9.7</strong></td>
+</tr>
+<tr>
+  <td>&quot;pipe / dup / open / read / write 填空&quot;</td>
+  <td><strong>Ch3 §11 + API 章</strong></td>
+</tr>
+<tr>
+  <td>&quot;zombie / orphan / IPC / message passing / socket&quot;</td>
+  <td><strong>Ch3 §8, §10–12</strong></td>
+</tr>
+<tr>
+  <td>&quot;thread shares / benefits / user vs kernel / models / signals / cancellation&quot;</td>
+  <td><strong>Ch4</strong></td>
+</tr>
+<tr>
+  <td>&quot;Amdahl&quot;</td>
+  <td><strong>Ch4 §4（計算表）</strong></td>
+</tr>
+<tr>
+  <td>&quot;Gantt chart / waiting time / turnaround / response&quot;</td>
+  <td><strong>Ch5 §2, §13, §14</strong></td>
+</tr>
+<tr>
+  <td>&quot;MLFQ&quot;</td>
+  <td><strong>Ch5 §8（規則 + checklist）</strong></td>
+</tr>
+<tr>
+  <td>&quot;RM / EDF / deadline / utilization&quot;</td>
+  <td><strong>Ch5 §11</strong></td>
+</tr>
+<tr>
+  <td>&quot;custom policy（LUF / dynamic priority / fᵢ）&quot;</td>
+  <td><strong>Ch5 §14.2–14.4</strong></td>
+</tr>
+<tr>
+  <td>&quot;exponential averaging / Little's formula&quot;</td>
+  <td><strong>Ch5 §5.4, §12</strong></td>
+</tr>
+<tr>
+  <td>&quot;PCS / SCS / affinity / load balancing / CMT&quot;</td>
+  <td><strong>Ch5 §9–10</strong></td>
+</tr>
+<tr>
+  <td>&quot;race condition / possible values of c&quot;</td>
+  <td><strong>Ch6 §6.1</strong></td>
+</tr>
+<tr>
+  <td>&quot;semaphore ordering / which output possible&quot;</td>
+  <td><strong>Ch6 §6.2–6.3</strong></td>
+</tr>
+<tr>
+  <td>&quot;test_and_set / CAS / swap / spinlock implementation&quot;</td>
+  <td><strong>Ch6 §3</strong></td>
+</tr>
+<tr>
+  <td>&quot;critical section requirements / binary semaphore vs mutex&quot;</td>
+  <td><strong>Ch6 §2.3, §5.2</strong></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. 答題技巧（拎分位）</h2>
+<ol>
+<li><strong>MC</strong>：題目問 <strong>NOT / false</strong> 要特別留神；有 &quot;always / only / never / exactly / all&quot; 嘅選項通常係錯。</li>
+<li><strong>Short questions</strong>：<strong>英文</strong>作答；先一句定義（keywords 要出現），再一句解釋/例子。S26 race condition 4 分 = 定義 2.5 + 例子 1.5。</li>
+<li><strong>fork 題</strong>：寫 <strong>process tree + 數式 + 最終答案</strong>；有 partial credit（S26：tree 4 分、數目 1 分、break 1 分）。</li>
+<li><strong>Gantt chart</strong>：<strong>由左至右評分，錯一格後面冇分</strong>（F20 grading rule）→ 慢慢做、逐格 check；寫 <strong>每段起止時間</strong>；MLFQ 標 queue。</li>
+<li><strong>Average</strong>：寫 <strong>(x1+x2+…)/n = 答案</strong>（保留 2 位小數）；1 分 only if Gantt 啱。</li>
+<li><strong>Ties / ambiguity</strong>：寫低 <strong>assumption</strong>（e.g. &quot;Assume: on tie, the running process continues; new arrivals enter the RR queue before the preempted process&quot;）。</li>
+<li><strong>Response time</strong>：用 <strong>course definition（end of first run − arrival）</strong>；如有疑問可以寫一句說明。</li>
+<li><strong>Synchronization values</strong>：列出 <strong>每個 case 嘅 interleaving + 值</strong>；每個 distinct 值都有分。</li>
+<li><strong>Semaphore 填空</strong>：S26 要求冇用嘅 blank 寫 <strong><code>/* Nothing */</code></strong>，唔好留空！</li>
+</ol>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. 24 小時溫習計劃（Oct 28 晚 → Oct 29 8pm）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>時間</th>
+  <th>做咩</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>今晚 2h</td>
+  <td>讀 <strong>Ch5 §8, §11, §13–14</strong>；用網站 <strong>Scheduler 工具</strong>做 S26 MLFQ、RM/EDF 一次</td>
+</tr>
+<tr>
+  <td>今晚 1.5h</td>
+  <td>讀 <strong>Ch3 §9</strong>；自己計 S26 Q3.1、F19 Q2.7、Sp21 Q1.2，對答案</td>
+</tr>
+<tr>
+  <td>今晚 1h</td>
+  <td><strong>Ch6 §6</strong>：F19 Q4.3、F20 Q5、F19 Q4.4、S26 Q5</td>
+</tr>
+<tr>
+  <td>明早 2h</td>
+  <td>MC 練習（網站 Quiz 全部做一次；錯嘅睇解釋）</td>
+</tr>
+<tr>
+  <td>明午 2h</td>
+  <td>Ch1、Ch2、Ch4 陷阱表 + short question model answers</td>
+</tr>
+<tr>
+  <td>明日 5pm</td>
+  <td><strong>打印 cheat book</strong>（雙面、加 tab / highlighter）；收拾 calculator、rough paper、Student ID</td>
+</tr>
+<tr>
+  <td>7:30pm</td>
+  <td>去對 venue（L1 LTD / L2 LSKG012 / L3 LTB）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. 考場必帶清單</h2>
+<ul>
+<li>[ ] Student ID card</li>
+<li>[ ] <strong>Cheat book（打印）</strong> + lecture notes / lab notes（printed）</li>
+<li>[ ] <strong>Calculator</strong>（非手機）</li>
+<li>[ ] <strong>Rough work sheets</strong>（自備！）</li>
+<li>[ ] 筆（藍/黑 + 備用）、highlighter、尺（畫 Gantt chart）</li>
+<li>[ ] 手錶（唔可以用手機睇時間）</li>
+</ul>
+
+<nav class="pager"><a href="index.html"><small>← 上一頁</small>首頁 Home</a><a class="next" href="ch1.html"><small>下一頁 →</small>Ch1 Introduction</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. 試卷結構預測（根據 4 份 past papers）</a>
+<a class="l2" href="#s2">2. 時間分配（120 分鐘）</a>
+<a class="l2" href="#s3">3. 題型 → 去邊度搵方法（Index）</a>
+<a class="l2" href="#s4">4. 答題技巧（拎分位）</a>
+<a class="l2" href="#s5">5. 24 小時溫習計劃（Oct 28 晚 → Oct 29 8pm）</a>
+<a class="l2" href="#s6">6. 考場必帶清單</a></aside>
+</div>
+
+</body>
+</html>

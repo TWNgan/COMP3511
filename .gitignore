@@ -1,0 +1,18 @@
+# Whitelist: publish only the study pack. Everything else in this course folder
+# (lecture PDFs, past papers, homework submissions, PA code, scratch work) stays local.
+/*
+!/.gitignore
+!/.nojekyll
+!/README.md
+!/index.html
+!/COMP3511_Midterm_CheatBook.pdf
+!/COMP3511_Midterm_CheatBook.html
+!/Midterm_Notes/
+!/Midterm_Site/
+!/_work/
+/_work/*
+!/_work/midterm/
+/_work/midterm/*
+!/_work/midterm/scripts/
+__pycache__/
+*.pyc

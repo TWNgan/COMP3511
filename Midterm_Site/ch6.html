@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch6 Synchronization · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch6">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6" class="active"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-6-synchronization-tools">Chapter 6 — Synchronization Tools（同步工具）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：Midterm 包到 <strong>Ch6（Synchronization Tools）</strong>。每年都有 <strong>1 大題（8–25 分）+ 3–4 題 MC</strong>。題型：</p>
+<ol>
+<li><strong>Race condition — 列出 shared variable 所有可能值</strong>（F19 Q4.3、F20 Q5：每個值 2.5 分！）</li>
+<li><strong>Semaphore 次序控制填空</strong>（S26 Q5：wait/signal 填 blank）、<strong>semaphore 輸出序列判斷</strong>（F19 Q4.4）</li>
+<li><strong>用 atomic instruction 寫 spinlock</strong>（S26 Q2.4 swap；Sp21 Q3.1 compare_and_reset）</li>
+<li><strong>Bounded-waiting test_and_set 算法分析 / 改錯</strong>（S26 MC25、Sp21 Q3.2）</li>
+<li>定義：<strong>race condition、critical section 三個條件、spinlock 優缺點、binary semaphore vs mutex</strong></li>
+<li><strong>Pthread mutex + semaphore 程式輸出</strong>（S26 MC23）</li>
+</ol>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Background（背景）<span class="sref">[6.4–6.8]</span></h2>
+<ul>
+<li><strong>Processes execute concurrently and may be interrupted at any time, partially completing execution.</strong></li>
+<li><strong>Concurrent access to shared data may result in data inconsistency.</strong></li>
+<li><strong>Maintaining data consistency requires mechanisms to ensure the orderly execution of cooperating processes.</strong></li>
+</ul>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 Producer–Consumer with <code>counter</code> <span class="sref">[6.5–6.6]</span></h3>
+<ul>
+<li>用 <code>counter</code> 記 buffer 有幾多 item（可以用晒 BUFFER_SIZE 格）：</li>
+</ul>
+<pre class="code" data-lang="c"><code>/* Producer */                          /* Consumer */
+while (true) {                          while (true) {
+  while (counter == BUFFER_SIZE) ;        while (counter == 0) ;
+  buffer[in] = next_produced;             next_consumed = buffer[out];
+  in = (in + 1) % BUFFER_SIZE;            out = (out + 1) % BUFFER_SIZE;
+  counter++;                              counter--;
+}                                       }
+</code></pre>
+<ul>
+<li>問題：<code>counter++</code> / <code>counter--</code> <strong>唔係 atomic</strong>。</li>
+</ul>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 Race Condition 例子 ⭐⭐ <span class="sref">[6.7]</span></h3>
+<pre class="code" data-lang=""><code>counter++  →  register1 = counter;  register1 = register1 + 1;  counter = register1
+counter--  →  register2 = counter;  register2 = register2 - 1;  counter = register2
+</code></pre>
+<p><strong>counter = 5 initially</strong>，interleaving：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th>Executed</th>
+  <th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S0</td>
+  <td>producer: register1 = counter</td>
+  <td>register1 = 5</td>
+</tr>
+<tr>
+  <td>S1</td>
+  <td>producer: register1 = register1 + 1</td>
+  <td>register1 = 6</td>
+</tr>
+<tr>
+  <td>S2</td>
+  <td>consumer: register2 = counter</td>
+  <td>register2 = 5</td>
+</tr>
+<tr>
+  <td>S3</td>
+  <td>consumer: register2 = register2 − 1</td>
+  <td>register2 = 4</td>
+</tr>
+<tr>
+  <td>S4</td>
+  <td>producer: counter = register1</td>
+  <td>counter = 6</td>
+</tr>
+<tr>
+  <td>S5</td>
+  <td>consumer: counter = register2</td>
+  <td><strong>counter = 4</strong>（正確應該係 5！）</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>調轉 S4、S5 → counter = 6。<strong>結果取決於執行次序 → race condition。</strong></li>
+<li><strong>Kernel race example</strong> <span class="sref">[6.8]</span>：P0、P1 同時 <code>fork()</code> → race on kernel variable <strong><code>next_available_pid</code></strong> → <strong>same pid could be assigned to two different processes</strong> unless mutual exclusion。</li>
+</ul>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. Race Condition &amp; Critical-Section Problem ⭐⭐⭐ <span class="sref">[6.9–6.12]</span></h2>
+<h3 id="s2-1"><a class="anchor" href="#s2-1">#</a>2.1 Race condition 定義（S26 Q2.1 原題，4 分）</h3>
+<ul>
+<li>Sp21 MC：「several processes access and manipulate the same data concurrently and the outcome depends on the order」→ <strong>race condition</strong>。</li>
+<li>根本原因（summary）：<strong>high-level statements (count++) translate into multiple machine instructions, which can be interleaved arbitrarily.</strong></li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>A <strong>race condition</strong> is an undesirable situation where several processes (or threads) access and manipulate shared data concurrently, and the final outcome depends on the particular order (timing) in which the accesses take place. Because the execution order is unpredictable (e.g., context switches at untimely points), the result can be incorrect / non-deterministic. <strong>Example</strong>: two threads execute <code>counter++</code> on the same shared counter without synchronization; each loads the old value into a register, increments it and stores it back, so one update can be lost and the final value is wrong (e.g., 5 + 1 − 1 gives 4 or 6 instead of 5).</em></p>
+</blockquote>
+<h3 id="s2-2"><a class="anchor" href="#s2-2">#</a>2.2 Critical Section</h3>
+<ul>
+<li><strong>Critical section：a segment of code in which a process may be changing shared variables, updating a table, writing a file, etc.</strong></li>
+<li><strong>When one process is in its critical section, no other may be in its critical section.</strong>（<strong>mutual exclusion and critical section imply the same thing</strong>）</li>
+<li><strong>Critical-section problem：design a protocol that processes can use to cooperate.</strong></li>
+<li><strong>General structure</strong> <span class="sref">[6.10]</span>：</li>
+</ul>
+<pre class="code" data-lang="c"><code>do {
+    entry section        /* request permission */
+        critical section
+    exit section
+        remainder section
+} while (true);
+</code></pre>
+<h3 id="s2-3"><a class="anchor" href="#s2-3">#</a>2.3 三個 requirements ⭐⭐⭐（F19 Q4.1 原題）<span class="sref">[6.11]</span></h3>
+<ol>
+<li><strong>Mutual exclusion</strong> — <strong>if process Pᵢ is executing in its critical section, no other processes can be executing in their critical sections.</strong></li>
+<li><strong>Progress</strong> — <strong>if no process is executing in its critical section and some processes wish to enter, the selection of the process that will enter next cannot be postponed indefinitely</strong>（只有唔喺 remainder section 嘅 process 先參與決定）。</li>
+<li><strong>Bounded waiting</strong> — <strong>a bound must exist on the number of times other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted.</strong>（i.e. 等待時間有上限，no starvation）</li>
+</ol>
+<ul>
+<li>Assumptions：<strong>each process executes at a nonzero speed；no assumption about the relative speed of the processes.</strong></li>
+<li>Summary：<strong>bounded waiting also implies progress.</strong></li>
+<li>Sp21 MC：CS solution <strong>唔需要</strong>滿足 → <strong>synchronization</strong>（三個係 mutual exclusion, progress, bounded waiting）；mutual exclusion 定義 → A。</li>
+</ul>
+<h3 id="s2-4"><a class="anchor" href="#s2-4">#</a>2.4 Critical sections in the kernel <span class="sref">[6.12]</span></h3>
+<ul>
+<li>Kernel data structures（<strong>list of open files</strong>, memory allocation, process table, interrupt handling）都有 race condition。</li>
+<li><strong>Preemptive kernel</strong> — allows preemption of a process running in kernel mode；<strong>not free from race conditions</strong>，SMP 上更難；但 more responsive（適合 real-time）。</li>
+<li><strong>Non-preemptive kernel</strong> — runs until it exits kernel mode, blocks, or voluntarily yields → <strong>essentially free of race conditions in kernel mode</strong>（single-processor）。</li>
+</ul>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Synchronization Hardware ⭐⭐ <span class="sref">[6.13–6.21]</span></h2>
+<h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 Disabling interrupts <span class="sref">[6.13]</span></h3>
+<ul>
+<li><strong>Uniprocessor：could simply disable interrupts</strong> → current code runs without preemption。</li>
+<li><strong>Generally inefficient on multiprocessor/SMP systems</strong>（要 disable 所有 CPU 嘅 interrupts，費時；影響 system clock）。</li>
+<li>層次：<strong>Hardware</strong>（load/store, disable interrupts, <strong>test&amp;set, compare&amp;swap</strong>）→ <strong>High-level APIs</strong>（locks, semaphores）→ programs。</li>
+</ul>
+<h3 id="s3-2"><a class="anchor" href="#s3-2">#</a>3.2 Atomic instructions <span class="sref">[6.14]</span></h3>
+<ul>
+<li><strong>Atomic = non-interruptible</strong>；保證 instruction 唔會被中途打斷 → no race condition。</li>
+<li>即使兩個 CPU 同時執行，<strong>they are forced to execute sequentially (serialization)</strong>。</li>
+<li><strong>Building blocks for more sophisticated synchronization tools.</strong></li>
+<li>兩個常用：<strong><code>test_and_set()</code></strong>（test a memory word and set a value）、<strong><code>compare_and_swap()</code></strong>（swap contents of two words）。</li>
+<li>S26 MC24：commonly used hardware primitive → <strong>test_and_set()</strong>。</li>
+</ul>
+<h3 id="s3-3"><a class="anchor" href="#s3-3">#</a>3.3 test_and_set ⭐⭐ <span class="sref">[6.15–6.16]</span></h3>
+<pre class="code" data-lang="c"><code>boolean test_and_set(boolean *target) {   /* executed atomically */
+    boolean rv = *target;
+    *target = TRUE;
+    return rv;                              /* returns the OLD value */
+}
+/* lock initialized to FALSE */
+do {
+    while (test_and_set(&amp;lock)) ;   /* spin while old value was TRUE (lock held) */
+        /* critical section */
+    lock = false;                   /* release */
+        /* remainder section */
+} while (true);
+</code></pre>
+<ul>
+<li>第一個 call 嘅 process 攞到 old = FALSE → 入 CS，同時 lock 變 TRUE；其他人攞到 TRUE → spin。</li>
+<li><span class="ok">✅</span> <strong>mutual exclusion</strong>；<span class="no">❌</span> <strong>bounded waiting</strong>（冇保證輪到邊個）。</li>
+<li>Sp21 MC4（lock init 0）：entry section → <strong><code>while (test_and_set(&amp;lock));</code></strong>（C）。✗ <code>while (!test_and_set(&amp;lock))</code>。</li>
+</ul>
+<h3 id="s3-4"><a class="anchor" href="#s3-4">#</a>3.4 compare_and_swap (CAS) ⭐⭐ <span class="sref">[6.17–6.18]</span></h3>
+<pre class="code" data-lang="c"><code>int compare_and_swap(int *value, int expected, int new_value) {  /* atomic */
+    int temp = *value;
+    if (*value == expected)
+        *value = new_value;
+    return temp;                           /* returns the OLD value */
+}
+/* lock initialized to 0 */
+do {
+    while (compare_and_swap(&amp;lock, 0, 1) != 0) ;   /* spin until old value was 0 */
+        /* critical section */
+    lock = 0;
+        /* remainder section */
+} while (true);
+</code></pre>
+<ul>
+<li>⚠️ 留意 return 值：<strong>CAS 返回 old value</strong> → 用 <code>!= 0</code> 判斷。Sp21 MC4 ✗ <code>while (compare_and_swap(&amp;lock, 0, 1) == 0)</code>（相反）、✗ <code>compare_and_swap(&amp;lock, 1, 0) != 0</code>。</li>
+</ul>
+<h3 id="s3-5"><a class="anchor" href="#s3-5">#</a>3.5 Bounded-waiting Mutual Exclusion with test_and_set ⭐⭐⭐ <span class="sref">[6.19–6.20]</span></h3>
+<pre class="code" data-lang="c"><code>/* shared: boolean waiting[n] (all false), boolean lock = false */
+do {
+    waiting[i] = true;
+    key = true;
+    while (waiting[i] &amp;&amp; key)
+        key = test_and_set(&amp;lock);
+    waiting[i] = false;
+        /* critical section */
+    j = (i + 1) % n;
+    while ((j != i) &amp;&amp; !waiting[j])        /* scan in cyclic order */
+        j = (j + 1) % n;
+    if (j == i)
+        lock = false;          /* no one is waiting, so release the lock */
+    else
+        waiting[j] = false;    /* unblock process j (hand the lock over directly) */
+        /* remainder section */
+} while (true);
+</code></pre>
+<p><strong>Sketch proof</strong> <span class="sref">[6.20]</span>：</p>
+<ul>
+<li><strong>Mutual exclusion</strong>：Pᵢ enters CS only if <code>waiting[i] == false</code> or <code>key == false</code>. <code>key</code> becomes false only via <code>test_and_set()</code> — <strong>only the first process to execute test_and_set finds key == false</strong>；others wait. <code>waiting[i]</code> becomes false only when another process leaves its CS, and <strong>only one waiting[i] is set to false</strong> → mutual exclusion。</li>
+<li><strong>Progress</strong>：a process exiting its CS <strong>either sets lock = false or sets waiting[j] = false</strong> — both let a waiting process proceed。</li>
+<li><strong>Bounded waiting</strong>：the exiting process <strong>scans waiting[] in cyclic order (i+1, i+2, …, n−1, 0, …, i−1)</strong> and designates the first waiting one → <strong>any waiting process enters within n − 1 turns</strong>。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>S26 MC25</strong>（which is NOT correct）→ <strong>A.「test_and_set(&amp;lock) releases the lock after the critical section」</strong>（錯：釋放係 <code>lock = false</code> 或者 <code>waiting[j] = false</code>；test_and_set 只會 set lock 為 true）。<span class="ok">✅</span> waiting[i] 表示 Pᵢ 想入 CS；<span class="ok">✅</span> <code>waiting[j] = false</code> 表示 Pᵢ 將 lock 交畀 Pⱼ（lock 冇真正釋放）；<span class="ok">✅</span> 執行 <code>lock = false</code> 後 Pᵢ 可以再入 CS。</p>
+</blockquote>
+<blockquote class="callout answer">
+<p>📝 <strong>Sp21 Q3.2（改錯題）</strong>：版本用 <code>j = i + 1; while (j &lt; n &amp;&amp; !waiting[j]) j++; if (j &lt; n) waiting[j] = false;</code>
+<strong>Problems</strong>：(1) <strong>只 scan index 大過 i 嘅 process → index 細過 i 嘅 process 可能 unbounded waiting</strong>（violates bounded waiting）；(2) <strong>冇 process 等嘅時候 lock 永遠唔會 release</strong> → 其他人之後永遠入唔到（violates progress / deadlock）。
+<strong>Correction</strong>：改返 cyclic scan <code>j = (i + 1) % n; while ((j != i) &amp;&amp; !waiting[j]) j = (j + 1) % n;</code> 同 <code>if (j == i) lock = false; else waiting[j] = false;</code>。</p>
+</blockquote>
+<h3 id="s3-6"><a class="anchor" href="#s3-6">#</a>3.6 Atomic Variables <span class="sref">[6.21]</span></h3>
+<ul>
+<li><strong>Atomic variable：atomic (uninterruptible) updates on basic data types (integers, booleans)</strong>，用 CAS 實現：</li>
+</ul>
+<pre class="code" data-lang="c"><code>void increment(atomic_int *v) {
+    int temp;
+    do {
+        temp = *v;
+    } while (temp != compare_and_swap(v, temp, temp + 1));   /* retry if someone changed v */
+}
+</code></pre>
+<h3 id="s3-7"><a class="anchor" href="#s3-7">#</a>3.7 用其他 atomic instruction 寫 spinlock（考試題型）⭐⭐</h3>
+<p><strong>S26 Q2.4 — <code>swap(x, v)</code>：atomically sets x = v and returns the old value of x</strong>（<code>locked</code> = 1 held / 0 free）：</p>
+<pre class="code" data-lang="c"><code>while (swap(locked, 1) == 1) ;   /* acquire: spin while the old value was 1 */
+/* critical section */
+locked = 0;                       /* release (or swap(locked, 0)) */
+</code></pre>
+<p><strong>Sp21 Q3.1 — <code>compare_and_reset(int *a, int old, int new)</code>：if (*a == old) { *a = new; return 1; } else return 0;</strong></p>
+<pre class="code" data-lang="c"><code>struct spinlock { int value = 0; };
+void acquire(struct spinlock *lock) {
+    while (compare_and_reset(&amp;lock-&gt;value, 0, 1) == 0) ;   /* spin until we changed 0 → 1 */
+}
+void release(struct spinlock *lock) {
+    lock-&gt;value = 0;
+}
+</code></pre>
+<p><strong>萬用套路</strong>：搵出「<strong>成功攞到 lock</strong>」時 instruction 嘅 return 值 → <code>while (instruction(...) 表示失敗) ;</code> → release 就 set 返 free value。</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Instruction</th>
+  <th>Acquire</th>
+  <th>Release</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>test_and_set(&amp;lock)</code>（return old）</td>
+  <td><code>while (test_and_set(&amp;lock)) ;</code></td>
+  <td><code>lock = false;</code></td>
+</tr>
+<tr>
+  <td><code>compare_and_swap(&amp;lock, 0, 1)</code>（return old）</td>
+  <td><code>while (compare_and_swap(&amp;lock, 0, 1) != 0) ;</code></td>
+  <td><code>lock = 0;</code></td>
+</tr>
+<tr>
+  <td><code>swap(locked, 1)</code>（return old）</td>
+  <td><code>while (swap(locked, 1) == 1) ;</code></td>
+  <td><code>locked = 0;</code></td>
+</tr>
+<tr>
+  <td><code>compare_and_reset(&amp;v, 0, 1)</code>（return 1 = success）</td>
+  <td><code>while (compare_and_reset(&amp;v, 0, 1) == 0) ;</code></td>
+  <td><code>v = 0;</code></td>
+</tr>
+<tr>
+  <td>課本 <code>swap(&amp;lock, &amp;key)</code>（exchange）</td>
+  <td><code>key = true; while (key == true) swap(&amp;lock, &amp;key);</code></td>
+  <td><code>lock = false;</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. Mutex Locks ⭐⭐ <span class="sref">[6.22–6.23]</span></h2>
+<ul>
+<li><strong>Simplest software tool most OSes use.</strong></li>
+<li><strong>Protect a critical region by first <code>acquire()</code> a lock, then <code>release()</code> it</strong> — <strong>both must be atomic</strong>（usually via hardware atomic instructions）。</li>
+<li>Boolean variable <strong><code>available</code></strong> 表示 lock 有冇得用：</li>
+</ul>
+<pre class="code" data-lang="c"><code>acquire() {
+    while (!available) ;   /* busy wait */
+    available = false;
+}
+release() {
+    available = true;
+}
+do { acquire lock;  critical section;  release lock;  remainder section; } while (true);
+</code></pre>
+<ul>
+<li><strong>This solution requires busy waiting → the lock is called a spinlock.</strong></li>
+<li>Wait if locked — 等耐咗應該 <strong>sleep / block</strong> 而唔係 spin。</li>
+</ul>
+<h3 id="s4-1"><a class="anchor" href="#s4-1">#</a>4.1 Spinlock 優缺點 ⭐⭐⭐（S26 Q2.4b 原題）</h3>
+<ul>
+<li>單 CPU 用 spinlock 冇乜意思（spin 緊嘅 thread 佔住 CPU，持有 lock 嘅 thread 跑唔到）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>Disadvantage: a spinlock <strong>wastes CPU cycles due to busy waiting</strong> (the waiting thread keeps looping). Advantage: <strong>no context switch is required</strong> when a process must wait on a lock, and a context switch may take considerable time. So spinlocks are useful when locks are expected to be <strong>held for short times</strong>, especially on <strong>multiprocessor systems</strong>, where one thread can spin on one processor while another thread executes its critical section on another processor.</em></p>
+</blockquote>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Semaphores ⭐⭐⭐ <span class="sref">[6.24–6.28]</span></h2>
+<h3 id="s5-1"><a class="anchor" href="#s5-1">#</a>5.1 定義 <span class="sref">[6.24]</span></h3>
+<ul>
+<li><strong>Semaphore S — a (non-negative) integer variable, a generalized lock</strong>；<strong>Dijkstra (late 1960s)</strong>；<strong>main synchronization primitive in original UNIX</strong>。</li>
+<li><strong>Accessed only through two atomic operations (apart from initialization)：<code>wait()</code> and <code>signal()</code></strong>（originally <strong>P()</strong> = <em>proberen</em>, to test；<strong>V()</strong> = <em>verhogen</em>, to increment）。</li>
+<li><strong>Atomic → no more than one process can execute wait()/signal() on the same semaphore at the same time (serialization).</strong></li>
+</ul>
+<pre class="code" data-lang="c"><code>wait(S) {                  signal(S) {
+    while (S &lt;= 0) ;           S++;
+    S--;                   }
+}
+</code></pre>
+<h3 id="s5-2"><a class="anchor" href="#s5-2">#</a>5.2 Counting vs Binary <span class="sref">[6.25]</span> ⭐</h3>
+<ul>
+<li><strong>Counting semaphore</strong> — <strong>value ranges over an unrestricted domain</strong>；<strong>control access to a resource with a finite number of instances</strong>（<strong>initialize to the number of available resources</strong>）；wait = 攞一個，signal = 還一個。</li>
+<li><strong>Binary semaphore</strong> — <strong>value only 0 or 1</strong>；<strong>can behave like a mutex lock</strong>，但亦可以用嚟做其他同步。</li>
+<li><strong>Ordering example</strong>（S1 喺 S2 之前執行）：<code>synch = 0</code></li>
+</ul>
+<pre class="code" data-lang="c"><code>P1:  S1;  signal(synch);          P2:  wait(synch);  S2;
+</code></pre>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q4.2：Binary semaphore = mutex lock?</strong> → <em><strong>No.</strong></em> <em>A binary semaphore initialized to 1 can be used as a mutex lock, but a binary semaphore can also be used for other synchronization purposes, e.g., initialized to 0 to enforce execution order / signaling between processes. (Also a mutex lock is owned — the thread that locks it must unlock it — whereas any process can signal a semaphore.)</em></p>
+</blockquote>
+<h3 id="s5-3"><a class="anchor" href="#s5-3">#</a>5.3 Implementation with no busy waiting ⭐⭐ <span class="sref">[6.26–6.27]</span></h3>
+<ul>
+<li><strong>Each semaphore has a waiting queue</strong>（each entry：value + pointer to next record）。</li>
+<li><strong>block()</strong> — place the invoking process on the waiting queue（suspend）；<strong>wakeup(P)</strong> — remove a process from the waiting queue and put it in the <strong>ready queue</strong>。</li>
+</ul>
+<pre class="code" data-lang="c"><code>typedef struct { int value; struct process *list; } semaphore;
+wait(semaphore *S) {
+    S-&gt;value--;
+    if (S-&gt;value &lt; 0) { add this process to S-&gt;list; block(); }
+}
+signal(semaphore *S) {
+    S-&gt;value++;
+    if (S-&gt;value &lt;= 0) { remove a process P from S-&gt;list; wakeup(P); }
+}
+</code></pre>
+<ul>
+<li>⭐ <strong>Increment/decrement is done BEFORE checking the value</strong>（同 busy-waiting 版相反）。</li>
+<li>⭐ <strong>Semaphore value may become negative；if negative, its magnitude = number of processes waiting on it.</strong>（busy-waiting classical 版永遠唔會 negative）</li>
+</ul>
+<h3 id="s5-4"><a class="anchor" href="#s5-4">#</a>5.4 Deadlock and Starvation ⭐ <span class="sref">[6.28]</span></h3>
+<ul>
+<li><strong>Deadlock — two or more processes waiting indefinitely for an event that can be caused only by one of the waiting processes.</strong></li>
+</ul>
+<pre class="code" data-lang=""><code>S = Q = 1
+P0: wait(S); wait(Q); ... signal(S); signal(Q);
+P1: wait(Q); wait(S); ... signal(Q); signal(S);
+</code></pre>
+<p>P0 wait(S)、P1 wait(Q) 之後：P0 等 Q（要 P1 signal），P1 等 S（要 P0 signal）→ <strong>deadlock</strong>（extremely difficult to debug）。</p>
+<ul>
+<li><strong>Starvation (indefinite blocking) — a process may never be removed from the semaphore queue</strong>，例如用 <strong>LIFO order</strong> 或者按 priority 移除 queue 入面嘅 processes。</li>
+</ul>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. 做題方法 ✍️⭐⭐⭐</h2>
+<h3 id="s6-1"><a class="anchor" href="#s6-1">#</a>6.1 Race condition 所有可能值（F19 Q4.3、F20 Q5）</h3>
+<p><strong>步驟</strong>：</p>
+<ol>
+<li>將每個 thread 拆成 <strong>atomic reads/writes</strong>（<code>c = b + a</code> → read b, read a, write c；<strong>if 條件嘅 read 係另一個 read</strong>！）。</li>
+<li>另一個 thread 嘅 writes 可以插喺任何 read 之間（<strong>次序保持</strong>）。</li>
+<li>按 <strong>「條件 read 嗰陣見到嘅值」分 branch</strong>，再按「每個 read 見到新值定舊值」分 sub-case。</li>
+<li>列出所有 <strong>distinct</strong> 值（唔好漏！每個值獨立計分）。</li>
+</ol>
+<p><strong>F19 Q4.3</strong>：a = 7, b = 2, c = 5；T1：<code>if (a &lt; 0) c = b - a; else c = b + a;</code>；T2：<code>b = 8; a = -6;</code></p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Case</th>
+  <th>T1 見到</th>
+  <th>c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>T2 全部喺 T1 之前 → a&lt;0 branch</td>
+  <td>b = 8, a = −6</td>
+  <td>8 − (−6) = <strong>14</strong></td>
+</tr>
+<tr>
+  <td>else branch；T2 喺 c 計之前完成</td>
+  <td>b = 8, a = −6</td>
+  <td>8 + (−6) = <strong>2</strong></td>
+</tr>
+<tr>
+  <td>else；T2 喺 T1 之後</td>
+  <td>b = 2, a = 7</td>
+  <td><strong>9</strong></td>
+</tr>
+<tr>
+  <td>else；write b 喺 read b 前，write a 喺 read a 後</td>
+  <td>b = 8, a = 7</td>
+  <td><strong>15</strong></td>
+</tr>
+<tr>
+  <td>else；read b 喺 write b 前，write a 喺 read a 前</td>
+  <td>b = 2, a = −6</td>
+  <td><strong>−4</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>→ <strong>{14, 2, 9, 15, −4}</strong></p>
+<p><strong>F20 Q5</strong>：a = 7, b = 2；T1：<code>if (b &lt; 0) c = b - a; else c = b + a;</code>；T2：<code>b = -8; a = 6;</code></p>
+<ul>
+<li>b&lt;0 branch（write b 喺條件 read 之前）：a 新 → −8 − 6 = <strong>−14</strong>；a 舊 → −8 − 7 = <strong>−15</strong></li>
+<li>else branch，第二次 read b 見到新值（−8）：a 新 → −8 + 6 = <strong>−2</strong>；a 舊 → −8 + 7 = <strong>−1</strong></li>
+<li>else branch，第二次 read b 見到舊值（2）：a 新 → 2 + 6 = <strong>8</strong>；a 舊 → 2 + 7 = <strong>9</strong>
+→ <strong>{−14, −15, −2, −1, 8, 9}</strong></li>
+</ul>
+<h3 id="s6-2"><a class="anchor" href="#s6-2">#</a>6.2 Semaphore 次序（dependency）題（S26 Q5）</h3>
+<p><strong>規則</strong>：「X 必須喺 Y 之前完成」→ 用一個 <strong>init 0</strong> 嘅 semaphore s：<strong>X 完成後 <code>signal(s)</code>；Y 開始前 <code>wait(s)</code></strong>。每個 dependency edge 一個 semaphore。</p>
+<p><strong>S26 Q5</strong>：A depends on B and C；B depends on C（即 C → B → A，且 C → A）；s0, s1, s2 全部 init 0。</p>
+<pre class="code" data-lang="c"><code>workerA: /*BLANK1*/ wait(&amp;s2);   wait(&amp;s1);  printf(&quot;A&quot;);          // 等 B (s2) 同 C (s1)
+workerB: /*BLANK2*/ wait(&amp;s0);   printf(&quot;B&quot;);  signal(&amp;s2);        // 等 C (s0)，完成通知 A
+workerC: /*BLANK3*/ /* Nothing */ printf(&quot;C&quot;); /*BLANK4*/ signal(&amp;s0); signal(&amp;s1);
+</code></pre>
+<ul>
+<li><strong>BLANK1 = wait(&amp;s2)，BLANK2 = wait(&amp;s0)，BLANK3 = /* Nothing */，BLANK4 = signal(&amp;s0)</strong> → 輸出一定係 <strong>C B A</strong>。</li>
+</ul>
+<h3 id="s6-3"><a class="anchor" href="#s6-3">#</a>6.3 Semaphore 輸出序列題（F19 Q4.4）</h3>
+<pre class="code" data-lang="c"><code>semaphore L = 3, R = 0;
+P1: while (true) { wait(L); putc(&#x27;C&#x27;); signal(R); }
+P2: while (true) { wait(R); putc(&#x27;A&#x27;); putc(&#x27;B&#x27;); signal(R); }
+P3: while (true) { wait(R); putc(&#x27;D&#x27;); }
+</code></pre>
+<p><strong>方法：數 token</strong>。L = 3 → <strong>P1 最多印 3 個 C</strong>（冇人 signal L）。每個 C 產生 1 個 R token；<strong>P2 借 token 印 AB 後還返</strong>；<strong>P3 食咗 token 唔還</strong>。</p>
+<ul>
+<li>(a) D 數目 = R token 總數 = <strong>3</strong></li>
+<li>(b) A：<strong>最少 0</strong>（P3 搶晒 token），<strong>最多 infinite</strong>（P2 無限借還）</li>
+<li>(c) <code>CABABDCDABCABD</code> → <strong>No</strong>：印到 <code>C A B A B D C D</code> 時 C 印咗 2 次、D 食咗 2 個 token → R = 0，下一個 <code>A</code>（P2 需要 wait(R)）冇 token，要等第 3 個 C 先得。</li>
+<li>(d) <code>CABACDBCABDD</code> → <strong>Yes</strong>：C(R=1) A(P2 借→0) B(還→1) A(借→0) C(→1) D(食→0) B(還→1) C(→2) A(借→1) B(還→2) D(→1) D(→0) ✓</li>
+<li><strong>技巧</strong>：逐個字元追蹤 semaphore 值同每個 process「做到邊」；任何時刻 token 唔可以 &lt; 0。</li>
+</ul>
+<h3 id="s6-4"><a class="anchor" href="#s6-4">#</a>6.4 Pthread 程式輸出題（S26 MC23）</h3>
+<pre class="code" data-lang="c"><code>int counter = 0; pthread_mutex_t mtx; sem_t sem;   /* sem_init(&amp;sem, 0, 0) */
+worker1: lock; counter += 2; printf(&quot;A %d;&quot;, counter); unlock; sem_post(&amp;sem);
+worker2: sem_wait(&amp;sem); lock; counter += 3; printf(&quot;B %d;&quot;, counter); unlock;
+</code></pre>
+<ul>
+<li>sem 初始 0 → worker2 一定等 worker1 post → <strong>輸出 <code>A 2; B 5;</code></strong>（答案 A）。mutex 保證 counter 更新互斥。</li>
+</ul>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. 課本補充（slides 冇，但可能用到）</h2>
+<h3 id="s7-1"><a class="anchor" href="#s7-1">#</a>7.1 Peterson's Solution（two processes, software-only）</h3>
+<pre class="code" data-lang="c"><code>int turn; boolean flag[2];          /* Pi uses j = 1 - i */
+do {
+    flag[i] = true;  turn = j;
+    while (flag[j] &amp;&amp; turn == j) ;
+        /* critical section */
+    flag[i] = false;
+        /* remainder section */
+} while (true);
+</code></pre>
+<ul>
+<li>滿足 mutual exclusion、progress、bounded waiting（兩個 process）；但 <strong>modern architectures may reorder instructions → not guaranteed to work</strong> without memory barriers。</li>
+</ul>
+<h3 id="s7-2"><a class="anchor" href="#s7-2">#</a>7.2 Classic problems with semaphores（Ch7 預覽）</h3>
+<ul>
+<li><strong>Bounded buffer</strong>：<code>mutex = 1, full = 0, empty = n</code></li>
+</ul>
+<pre class="code" data-lang="c"><code>Producer: wait(empty); wait(mutex); add item; signal(mutex); signal(full);
+Consumer: wait(full);  wait(mutex); remove item; signal(mutex); signal(empty);
+</code></pre>
+<ul>
+<li>⚠️ 調轉 <code>wait(mutex)</code> 同 <code>wait(empty)</code> 次序 → 可能 <strong>deadlock</strong>。</li>
+<li><strong>First readers–writers</strong>：<code>rw_mutex = 1, mutex = 1, read_count = 0</code>；第一個 reader <code>wait(rw_mutex)</code>，最後一個 reader <code>signal(rw_mutex)</code>；writers 可能 <strong>starve</strong>。</li>
+<li><strong>Condition variables (POSIX)</strong>：<code>pthread_cond_wait(&amp;cond, &amp;mutex)</code>（必須持有 mutex；wait 時<strong>釋放 mutex 並 sleep</strong>，醒後<strong>重新 acquire</strong>）；<code>pthread_cond_signal(&amp;cond)</code>。</li>
+</ul>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. 常見陷阱 &amp; MC 速查</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Race condition: outcome depends on order of access</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>counter++ is a single atomic machine instruction</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>CS requirements: mutual exclusion, progress, bounded waiting</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>&quot;Synchronization&quot; is one of the 3 CS requirements</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Bounded waiting implies progress</td>
+  <td><span class="ok">✅</span>（summary）</td>
+</tr>
+<tr>
+  <td>Disabling interrupts works well on multiprocessors</td>
+  <td><span class="no">❌</span>（only uniprocessor）</td>
+</tr>
+<tr>
+  <td>Atomic = non-interruptible</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>test_and_set returns the new value</td>
+  <td><span class="no">❌</span>（old value）</td>
+</tr>
+<tr>
+  <td>CAS returns old value</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Simple TAS lock satisfies bounded waiting</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Bounded-waiting TAS: waiting process enters within n−1 turns</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>test_and_set releases the lock</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Spinlock wastes CPU but avoids context switch</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Spinlocks useful on multiprocessors for short critical sections</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Semaphore accessed only by wait/signal (except init)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>P() = wait, V() = signal</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Binary semaphore = mutex lock (equivalent)</td>
+  <td><span class="no">❌</span>（can be used as one, but more general）</td>
+</tr>
+<tr>
+  <td>Counting semaphore initialized to # of resources</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Blocking semaphore value can be negative = # waiting</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Non-preemptive kernel essentially free of race conditions (uniprocessor)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>LIFO semaphore queue may cause starvation</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Wrong order of wait() on two semaphores may deadlock</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. Past-paper 題目（Ch6）</h2>
+<ul>
+<li><strong>S26</strong>：MC23（A 2; B 5;）、MC24（test_and_set）、MC25（A 錯）、Q2.1 race condition（4 分）、Q2.4 swap spinlock + 優缺點（4 分）、Q5 semaphore 填空（8 分）</li>
+<li><strong>F19</strong>：Q4.1 三個條件（4 分）、Q4.2 binary semaphore vs mutex（3 分）、Q4.3 c 可能值（8 分）、Q4.4 semaphore 序列（10 分）</li>
+<li><strong>F20</strong>：Q5 c 可能值（15 分！）</li>
+<li><strong>Sp21</strong>：MC mutual exclusion、MC CS 唔需要 synchronization、MC race condition、MC4 TAS entry、Q3.1 compare_and_reset spinlock（4 分）、Q3.2 bounded waiting 改錯（7 分）</li>
+</ul>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. 自我測驗</h2>
+<ol>
+<li>寫出 CS 三個 requirements 嘅定義（英文）。</li>
+<li>用 <code>test_and_set</code> 寫 lock；點解唔滿足 bounded waiting？</li>
+<li>一個 semaphore value = −3 代表咩？（3 個 processes 喺 waiting queue）</li>
+<li>x = 0；T1：<code>x = x + 1</code>；T2：<code>x = x * 2</code>（每句 read/write 分開）→ 可能值？（<strong>2</strong>: T1→T2；<strong>1</strong>: T2→T1；<strong>1</strong>: T1 read 0, T2 read 0 &amp; write 0, T1 write 1；<strong>0</strong>: T2 read 0, T1 write 1, T2 write 0 → {0, 1, 2}）</li>
+<li>三個 threads 要 A → B → C 次序，用最少 semaphores 寫出來。（s1 = s2 = 0；A; signal(s1) | wait(s1); B; signal(s2) | wait(s2); C）</li>
+</ol>
+
+<nav class="pager"><a href="ch5.html"><small>← 上一頁</small>Ch5 CPU Scheduling</a><a class="next" href="api.html"><small>下一頁 →</small>API 速查 (C / Pthreads)</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. Background（背景）[6.4–6.8]</a>
+<a class="l3" href="#s1-1">1.1 Producer–Consumer with counter [6.5–6.6]</a>
+<a class="l3" href="#s1-2">1.2 Race Condition 例子 ⭐⭐ [6.7]</a>
+<a class="l2" href="#s2">2. Race Condition &amp; Critical-Section Problem ⭐⭐⭐ [6.9–6.12]</a>
+<a class="l3" href="#s2-1">2.1 Race condition 定義（S26 Q2.1 原題，4 分）</a>
+<a class="l3" href="#s2-2">2.2 Critical Section</a>
+<a class="l3" href="#s2-3">2.3 三個 requirements ⭐⭐⭐（F19 Q4.1 原題）[6.11]</a>
+<a class="l3" href="#s2-4">2.4 Critical sections in the kernel [6.12]</a>
+<a class="l2" href="#s3">3. Synchronization Hardware ⭐⭐ [6.13–6.21]</a>
+<a class="l3" href="#s3-1">3.1 Disabling interrupts [6.13]</a>
+<a class="l3" href="#s3-2">3.2 Atomic instructions [6.14]</a>
+<a class="l3" href="#s3-3">3.3 test_and_set ⭐⭐ [6.15–6.16]</a>
+<a class="l3" href="#s3-4">3.4 compare_and_swap (CAS) ⭐⭐ [6.17–6.18]</a>
+<a class="l3" href="#s3-5">3.5 Bounded-waiting Mutual Exclusion with test_and_set ⭐⭐⭐ [6.19–6.20]</a>
+<a class="l3" href="#s3-6">3.6 Atomic Variables [6.21]</a>
+<a class="l3" href="#s3-7">3.7 用其他 atomic instruction 寫 spinlock（考試題型）⭐⭐</a>
+<a class="l2" href="#s4">4. Mutex Locks ⭐⭐ [6.22–6.23]</a>
+<a class="l3" href="#s4-1">4.1 Spinlock 優缺點 ⭐⭐⭐（S26 Q2.4b 原題）</a>
+<a class="l2" href="#s5">5. Semaphores ⭐⭐⭐ [6.24–6.28]</a>
+<a class="l3" href="#s5-1">5.1 定義 [6.24]</a>
+<a class="l3" href="#s5-2">5.2 Counting vs Binary [6.25] ⭐</a>
+<a class="l3" href="#s5-3">5.3 Implementation with no busy waiting ⭐⭐ [6.26–6.27]</a>
+<a class="l3" href="#s5-4">5.4 Deadlock and Starvation ⭐ [6.28]</a>
+<a class="l2" href="#s6">6. 做題方法 ✍️⭐⭐⭐</a>
+<a class="l3" href="#s6-1">6.1 Race condition 所有可能值（F19 Q4.3、F20 Q5）</a>
+<a class="l3" href="#s6-2">6.2 Semaphore 次序（dependency）題（S26 Q5）</a>
+<a class="l3" href="#s6-3">6.3 Semaphore 輸出序列題（F19 Q4.4）</a>
+<a class="l3" href="#s6-4">6.4 Pthread 程式輸出題（S26 MC23）</a>
+<a class="l2" href="#s7">7. 課本補充（slides 冇，但可能用到）</a>
+<a class="l3" href="#s7-1">7.1 Peterson&#x27;s Solution（two processes, software-only）</a>
+<a class="l3" href="#s7-2">7.2 Classic problems with semaphores（Ch7 預覽）</a>
+<a class="l2" href="#s8">8. 常見陷阱 &amp; MC 速查</a>
+<a class="l2" href="#s9">9. Past-paper 題目（Ch6）</a>
+<a class="l2" href="#s10">10. 自我測驗</a></aside>
+</div>
+
+</body>
+</html>

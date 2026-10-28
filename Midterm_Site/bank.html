@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Past Papers · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="bank">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank" class="active"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Practice</span></div>
+<h1>歷屆試題 Past-paper Long Questions</h1>
+<p>全部 short / long questions 連標準答案（fork 數目、Gantt chart、synchronization 值都用程式驗證過 ✅）。先自己做，再撳「顯示答案」。MC 喺 <a href="quiz.html">Quiz</a> 頁。</p>
+<div class="filters" id="bank-f-paper"><b>Paper：</b>
+<span class="chip on" data-paper="S26">S26</span>
+<span class="chip on" data-paper="F19">F19</span>
+<span class="chip on" data-paper="F20">F20</span>
+<span class="chip on" data-paper="Sp21">Sp21</span>
+<span class="chip on" data-paper="HW1">HW1</span>
+<span class="chip on" data-paper="HW2">HW2</span>
+</div><div class="filters" id="bank-f-ch"><b>Chapter：</b>
+<span class="chip on" data-ch="ch1">Ch1</span>
+<span class="chip on" data-ch="ch2">Ch2</span>
+<span class="chip on" data-ch="ch3">Ch3</span>
+<span class="chip on" data-ch="ch4">Ch4</span>
+<span class="chip on" data-ch="ch5">Ch5</span>
+<span class="chip on" data-ch="ch6">Ch6</span>
+</div><div class="filters"><button class="btn" id="bank-open">全部展開答案</button><button class="btn" id="bank-close">全部收起</button></div>
+<div class="qitem" id="S26-Q2.1" data-paper="S26" data-ch="ch6"><div class="qhead"><span class="qid">S26-Q2.1</span><span class="qtopic">Race condition (4 pts)</span><span class="qch">CH6</span></div><p>What is a race condition? Give an example.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>A race condition occurs when two or more processes/threads access and manipulate shared data concurrently, and the final result depends on the order in which the accesses take place; since the order is unpredictable, the result may be incorrect or inconsistent. (2.5) Example: two threads increment the same <code>counter</code> without synchronization — <code>counter++</code> is load/add/store, so both may load the same old value and one update is lost. (1.5)</p>
+</div></details></div>
+<div class="qitem" id="S26-Q2.2" data-paper="S26" data-ch="ch1"><div class="qhead"><span class="qid">S26-Q2.2</span><span class="qtopic">Caching (4 pts)</span><span class="qch">CH1</span></div><p>What is the fundamental idea of caching? Is a high cache hit ratio alone enough to guarantee good performance? Explain by considering hit time and miss penalty.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Caching temporarily copies a subset of information from a slower but larger storage into a faster but smaller storage so that frequently used data can be accessed more quickly. (2) No — hit ratio is a major criterion but not sufficient (1); performance is the <strong>average access time = hit ratio × hit time + miss ratio × miss time</strong>, which also depends on the hit time and the miss penalty (1). A slow cache or a huge miss penalty can still give poor performance.</p>
+</div></details></div>
+<div class="qitem" id="S26-Q2.3" data-paper="S26" data-ch="ch5"><div class="qhead"><span class="qid">S26-Q2.3</span><span class="qtopic">Custom policy fᵢ = 1/(a·cᵢ + b) (4 pts)</span><span class="qch">CH5</span></div><p>The OS keeps cᵢ = average past CPU burst of Pᵢ and picks the process with the highest fᵢ = 1/(a·cᵢ + b) (a, b &gt; 0), running it for one quantum or until it gives up the CPU. (a) Does this prioritize I/O-bound over CPU-bound processes? (b) Can it cause starvation?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) <strong>Yes</strong> — I/O-bound processes have small CPU bursts cᵢ, hence a larger fᵢ and higher priority.
+(b) <strong>Yes</strong> — a CPU-bound process (large cᵢ, low fᵢ) can starve if higher-priority I/O-bound processes keep arriving.</p>
+</div></details></div>
+<div class="qitem" id="S26-Q2.4" data-paper="S26" data-ch="ch6"><div class="qhead"><span class="qid">S26-Q2.4</span><span class="qtopic">swap spinlock (4 pts)</span><span class="qch">CH6</span></div><p><code>swap(x, v)</code> atomically sets x to v and returns the old value of x. <code>locked</code> = 1 when held, 0 otherwise. (a) Write the line that acquires the spinlock with a busy-spin loop. (b) Advantage and disadvantage of a spinlock.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) <code>while (swap(locked, 1) == 1);</code>   (release: <code>locked = 0;</code>)
+(b) Disadvantage: wastes CPU cycles due to busy waiting. Advantage: no context switch is needed when a process must wait on a lock (a context switch can take considerable time) — good for short critical sections on multiprocessors.</p>
+</div></details></div>
+<div class="qitem" id="S26-Q3.1" data-paper="S26" data-ch="ch3"><div class="qhead"><span class="qid">S26-Q3.1</span><span class="qtopic">fork tree with break (8 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>for (int i = 0; i &lt; n; i++) {
+    if (fork()) fork();
+    else break;
+}
+</code></pre>
+<p>(a) n = 2: draw the process tree; total processes and number of breaks. (b) Relationship between total processes and n.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) <strong>7 processes, 3 breaks.</strong> Tree: P0 → P1 (break), P2, P3 (break), P4; P2 → P5 (break), P6.
+(b) Each active process per iteration creates 2 children: the first breaks, the second keeps looping → active count doubles: Aₖ = 2ᵏ. After n iterations: active = 2ⁿ, stopped = 1 + 2 + … + 2ⁿ⁻¹ = 2ⁿ − 1. <strong>Total = 2ⁿ⁺¹ − 1</strong> (breaks = 2ⁿ − 1).</p>
+</div></details></div>
+<div class="qitem" id="S26-Q3.2" data-paper="S26" data-ch="ch3"><div class="qhead"><span class="qid">S26-Q3.2</span><span class="qtopic">fork + exec scenarios (8 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>int ret = fork();
+if (ret == 0) { printf(&quot;Hello1\n&quot;); exec(&quot;some_executable&quot;); printf(&quot;Hello2\n&quot;); }
+else if (ret &gt; 0) { wait(NULL); printf(&quot;Hello3\n&quot;); }
+else { printf(&quot;Hello4\n&quot;); }
+</code></pre>
+<p>List all possible scenarios and outputs.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li>Case I — fork succeeds, exec succeeds: <strong>Hello1, Hello3</strong> (exec replaces the image; Hello2 never runs).</li>
+<li>Case II — fork succeeds, exec fails (returns −1): <strong>Hello1, Hello2, Hello3</strong>.</li>
+<li>Case III — fork fails: <strong>Hello4</strong>.
+(Hello3 always last because the parent waits.)</li>
+</ul>
+</div></details></div>
+<div class="qitem" id="S26-Q3.3" data-paper="S26" data-ch="ch3"><div class="qhead"><span class="qid">S26-Q3.3</span><span class="qtopic">pipe + dup fill-in (8 pts)</span><span class="qch">CH3</span></div><p>Child counts even numbers in 1.txt, parent in 2.txt (file: length then elements, read with scanf); child sends its count via pipe; parent prints the total.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li>Blank 1: <code>close(0)</code>  · Blank 2: <code>dup(fin)</code> (stdin now refers to the file)</li>
+<li>Blank 3: <code>if (number % 2 == 0) cnt++</code></li>
+<li>Blank 4.1: <code>fd[1]</code> · 4.2: <code>&amp;cnt</code>   (child: <code>write(fd[1], &amp;cnt, sizeof(int))</code>)</li>
+<li>Blank 5.1: <code>fd[0]</code> · 5.2: <code>&amp;child_cnt</code> (parent: <code>read(fd[0], &amp;child_cnt, sizeof(int))</code>)</li>
+</ul>
+</div></details></div>
+<div class="qitem" id="S26-Q4.1" data-paper="S26" data-ch="ch5"><div class="qhead"><span class="qid">S26-Q4.1</span><span class="qtopic">MLFQ Q0 RR4 / Q1 RR8 / Q2 FCFS (8 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 9), P2 (2, 25), P3 (6, 7), P4 (14, 18), P5 (45, 15), P6 (58, 6). New jobs → Q0; full quantum → demote; Q0 arrival preempts Q1/Q2 immediately; preempted job → head of its queue; no demotion when preempted.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Gantt: <code>0 P1 4 P2 8 P3 12 P1 14 P4 18 P1 21 P2 29 P3 32 P4 40 P2 45 P5 57 P2 58 P6 64 P2 71 P4 77 P5 80</code> (P5 45–49 Q0 then 49–57 Q1; P6 58–62 Q0 then 62–64 Q1).
+Waiting = completion − arrival − burst: P1 21−0−9 = 12; P2 71−2−25 = 44; P3 32−6−7 = 19; P4 77−14−18 = 45; P5 80−45−15 = 20; P6 64−58−6 = 0 → <strong>avg = 140/6 = 23.33</strong>.
+Response (end of first run − arrival): 4, 6, 6, 4, 4 (49−45), 4 (62−58) → <strong>avg = 28/6 = 4.67</strong> (6.33 also accepted if P5/P6 merged).</p>
+</div></details></div>
+<div class="qitem" id="S26-Q4.2" data-paper="S26" data-ch="ch5"><div class="qhead"><span class="qid">S26-Q4.2</span><span class="qtopic">RM / EDF with D &lt; T (10 pts)</span><span class="qch">CH5</span></div><p>(t, d, p): P1 (1, 3, 4), P2 (2, 4, 5), P3 (2, 6, 7), P4 (1, 5, 8); all arrive at 0; draw 0–16; ties → smaller ID; count missed deadlines.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li><strong>RM</strong> (P1 &gt; P2 &gt; P3 &gt; P4 by period): <code>0 P1 1 P2 3 P3 4 P1 5 P2 7 P3 8 P1 9 P3 10 P2 12 P1 13 P3 14 P3 15 P2 16</code> → missed: P3 (d 6, finished 8), P4 (d 5, never), P3 (d 13, finished 14), P4 (d 13, never) → <strong>4 missed</strong>. (U = 1.06 &gt; 1.)</li>
+<li><strong>EDF</strong>: <code>0 P1 1 P2 3 P4 4 P3 6 P1 7 P2 9 P1 10 P3 12 P4 13 P2 15 P1 16</code> → missed: P2 (d 14, finished 15), P1 (d 15, finished 16) → <strong>2 missed</strong>.</li>
+</ul>
+</div></details></div>
+<div class="qitem" id="S26-Q4.3" data-paper="S26" data-ch="ch5"><div class="qhead"><span class="qid">S26-Q4.3</span><span class="qtopic">Dynamic priority (9 pts)</span><span class="qch">CH5</span></div><p>Larger value = higher priority; waiting changes priority at rate α, running at rate β; tie → larger ID. P1 (0, 7), P2 (3, 5), P3 (6, 6), P4 (9, 4).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li>(a) α = 0, β = 3, initial 0: <strong><code>0 P1 7 P3 13 P4 17 P2 22</code></strong></li>
+<li>(b) α = 1, β = 0, only P1, P2, check every 3: <strong><code>0 P1 3 P2 6 P1 9 P2 11 P1 12</code></strong></li>
+<li>(c) α = 1, β = −2, initial 30, check every 3: <strong><code>0 P1 3 P2 6 P3 9 P4 12 P1 15 P2 17 P3 20 P4 21 P1 22</code></strong></li>
+</ul>
+</div></details></div>
+<div class="qitem" id="S26-Q5" data-paper="S26" data-ch="ch6"><div class="qhead"><span class="qid">S26-Q5</span><span class="qtopic">Semaphore ordering (8 pts)</span><span class="qch">CH6</span></div><p>A depends on B and C; B depends on C. s0, s1, s2 initialised to 0. workerA: BLANK1; wait(&amp;s1); print A. workerB: BLANK2; print B; signal(&amp;s2). workerC: BLANK3; print C; BLANK4; signal(&amp;s1).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>BLANK1 <code>wait(&amp;s2)</code> · BLANK2 <code>wait(&amp;s0)</code> · BLANK3 <code>/* Nothing */</code> · BLANK4 <code>signal(&amp;s0)</code> → order always C, B, A.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q1.1" data-paper="F19" data-ch="ch2"><div class="qhead"><span class="qid">F19-Q1.1</span><span class="qtopic">Linker and loader (2 pts)</span><span class="qch">CH2</span></div><p>What do the linker and loader do, respectively?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>The linker combines relocatable object files (and libraries) into a single binary executable file; the loader loads the binary executable file into memory so it can run.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q1.2" data-paper="F19" data-ch="ch1"><div class="qhead"><span class="qid">F19-Q1.2</span><span class="qtopic">Locality (3 pts)</span><span class="qch">CH1</span></div><p>What are temporal locality and spatial locality?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Temporal locality: a memory location accessed recently is likely to be accessed again in the near future. Spatial locality: locations near a recently accessed location are likely to be accessed soon.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q1.3" data-paper="F19" data-ch="ch2"><div class="qhead"><span class="qid">F19-Q1.3</span><span class="qtopic">Why separate API and system calls (2 pts)</span><span class="qch">CH2</span></div><p>Two reasons for separating APIs from the underlying system calls?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(1) Program portability — the API stays the same across platforms. (2) Hide the complex details of system calls from programmers.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q1.4" data-paper="F19" data-ch="ch2"><div class="qhead"><span class="qid">F19-Q1.4</span><span class="qtopic">LKM vs layered (3 pts)</span><span class="qch">CH2</span></div><p>Similarity and difference between the loadable-kernel-module approach and the layered approach?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Similarity: functionality is divided into modules, each with a well-defined interface. Difference: LKM is more flexible — any module can call any other module (no higher/lower layer restriction), and modules can be loaded/removed at run time.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.1" data-paper="F19" data-ch="ch3"><div class="qhead"><span class="qid">F19-Q2.1</span><span class="qtopic">State transitions (3 pts)</span><span class="qch">CH3</span></div><p>Fill in the actions for: running→ready, ready→running, running→waiting, waiting→ready.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>running→ready: <strong>interrupt</strong>; ready→running: <strong>scheduler dispatch (CPU scheduling)</strong>; running→waiting: <strong>I/O or event wait</strong>; waiting→ready: <strong>I/O or event completion</strong>.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.2" data-paper="F19" data-ch="ch3"><div class="qhead"><span class="qid">F19-Q2.2</span><span class="qtopic">Socket (2 pts)</span><span class="qch">CH3</span></div><p>Four pieces of information that uniquely define a socket connection?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Source IP address, source port number, destination IP address, destination port number.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.3" data-paper="F19" data-ch="ch4"><div class="qhead"><span class="qid">F19-Q2.3</span><span class="qtopic">Thread unique vs shared (3 pts)</span><span class="qch">CH4</span></div><p>Three elements unique to each thread and three shared.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Unique: program counter, registers (state), stack (thread ID). Shared: code, data (globals/heap), open files.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.4" data-paper="F19" data-ch="ch3"><div class="qhead"><span class="qid">F19-Q2.4</span><span class="qtopic">Shell system calls (3 pts)</span><span class="qch">CH3</span></div><p>Two system calls a shell must execute to start a new process on UNIX?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>fork()</code> — clones the calling process (creates a child); <code>exec()</code> — overlays/replaces the child's address space with a new program (loads the program to run).</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.5" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q2.5</span><span class="qtopic">Multicore vs SMP, CMT (4 pts)</span><span class="qch">CH5</span></div><p>Two advantages of multicore vs conventional SMP; reason for chip multithreading (hyper-threading).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Multicore is faster (on-chip communication) and consumes less power than separate single-core chips. CMT exploits <strong>memory stall</strong>: processors are much faster than memory, so a core may spend up to ~50% of its time waiting for data; with multiple hardware threads the core switches to another thread while one waits.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.6" data-paper="F19" data-ch="ch3"><div class="qhead"><span class="qid">F19-Q2.6</span><span class="qtopic">Lines printed vs n (5 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>for (i = 0; i &lt; n; ++i) { if (fork()) printf(&quot;Fork!\n&quot;); else printf(&quot;Fork!\n&quot;); }
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Each iteration doubles the processes and every process prints one line: iteration i prints 2ⁱ lines → total <strong>2 + 4 + … + 2ⁿ = 2ⁿ⁺¹ − 2</strong> <span class="ok">✅</span></p>
+</div></details></div>
+<div class="qitem" id="F19-Q2.7" data-paper="F19" data-ch="ch3"><div class="qhead"><span class="qid">F19-Q2.7</span><span class="qtopic">fork()==fork() || fork()!=fork() (5 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>if (fork() == fork() || fork() != fork()) fork();
+printf(&quot;Fork!\n&quot;);
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><strong>23.</strong> After <code>fork()==fork()</code> there are 4 processes; only the one that got 0 twice is true → it skips the rest of <code>||</code> and forks → 2 lines. The other 3 run <code>fork()!=fork()</code> → 12 processes; 9 are true and fork again → 18; 3 false → 3. Total 2 + 18 + 3 = 23 <span class="ok">✅</span></p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.1" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.1</span><span class="qtopic">Which threads does the OS schedule (4 pts)</span><span class="qch">CH5</span></div><p>Which threads are scheduled by the OS? How does mapping user threads onto kernel threads/LWPs differ from CPU scheduling?</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>The OS schedules <strong>kernel-level threads</strong>. Scheduling user threads onto LWPs/kernel threads (PCS) is done by the thread library, usually by programmer-set priority, among threads of the <strong>same process</strong>; CPU scheduling (SCS) chooses which kernel thread runs on a CPU among <strong>all</strong> kernel threads in the system.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.2" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.2</span><span class="qtopic">FCFS problem; RR worse than FCFS (3 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>FCFS: <strong>convoy effect</strong> — short processes stuck behind a long one. RR has worse turnaround than FCFS when all processes have the <strong>same CPU burst length that is larger than the quantum</strong> (they all finish near the end).</p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.3" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.3</span><span class="qtopic">MLFQ approximates SJF (3 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Short interactive jobs finish in the top (high-priority) queue, while long CPU-bound jobs sink to lower queues — so short jobs are served first, like SJF. Advantage: <strong>no prior knowledge of CPU burst times is needed</strong>.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.4" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.4</span><span class="qtopic">EDF to t = 38 (6 pts)</span><span class="qch">CH5</span></div><p>P1 (period = deadline 10, t 4), P2 (16, 2), P3 (20, 8).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>0 P1 4 P2 6 P3 14 P1 18 P2 20 P1 24 P3 32 P1 36 P2 38</code> (deadline ties at t = 10 and 30 → the running P3 continues). No deadline missed.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.5" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.5</span><span class="qtopic">Least Used First (12 pts)</span><span class="qch">CH5</span></div><p>LUF picks the process that has used the fewest CPU cycles; tie → FCFS; preempted process goes to the end of the queue; scheduler runs on completion and on new arrival. P1 (0, 25), P2 (15, 25), P3 (25, 5), P4 (40, 5).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) <code>0 P1 15 P2 25 P3 30 P2 40 P4 45 P1 55 P2 60</code>
+(b) TAT / RT / WT: P1 55 / 15 / 30; P2 45 / 10 / 20; P3 5 / 5 / 0; P4 5 / 5 / 0.
+(c) Similar to SRTF: short jobs tend to get high priority. Different: under LUF a process that has already run a long time is likely to starve; under SRTF a process with a long burst is likely to starve from the beginning.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q3.6" data-paper="F19" data-ch="ch5"><div class="qhead"><span class="qid">F19-Q3.6</span><span class="qtopic">FCFS / SJF / RR4 / SRTF (12 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 8), P2 (7, 13), P3 (9, 1), P4 (11, 5), P5 (20, 7), P6 (27, 1).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li>FCFS <code>0 P1 8 P2 21 P3 22 P4 27 P5 34 P6 35</code> — WT 0,1,12,11,7,7 → <strong>6.33</strong></li>
+<li>SJF <code>0 P1 8 P2 21 P3 22 P4 27 P6 28 P5 35</code> — WT 0,1,12,11,8,0 → <strong>5.33</strong></li>
+<li>RR q=4 <code>0 P1 8 P2 12 P3 13 P4 17 P2 21 P4 22 P5 26 P2 30 P5 33 P6 34 P2 35</code> — WT 0,15,3,6,6,6 → <strong>6.0</strong> (corrected official)</li>
+<li>SRTF <code>0 P1 8 P2 9 P3 10 P2 11 P4 16 P2 20 P5 27 P6 28 P2 35</code> — WT 0,15,0,0,0,0 → <strong>2.5</strong> (official; keeping P2 on the tie at t=20 also gives 2.5)</li>
+</ul>
+</div></details></div>
+<div class="qitem" id="F19-Q4.1" data-paper="F19" data-ch="ch6"><div class="qhead"><span class="qid">F19-Q4.1</span><span class="qtopic">CS requirements (4 pts)</span><span class="qch">CH6</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>(1) <strong>Mutual exclusion</strong> — if a process is executing in its CS, no other process can be in its CS. (2) <strong>Progress</strong> — if no process is in its CS and some want to enter, the selection of the next one cannot be postponed indefinitely. (3) <strong>Bounded waiting</strong> — there is a bound on the number of times other processes may enter their CS after a process has requested entry and before that request is granted.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q4.2" data-paper="F19" data-ch="ch6"><div class="qhead"><span class="qid">F19-Q4.2</span><span class="qtopic">Binary semaphore vs mutex (3 pts)</span><span class="qch">CH6</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>No. A binary semaphore initialised to 1 can be used as a mutex lock, but it can also be used for other synchronization purposes (e.g., initialised to 0 for ordering/signalling).</p>
+</div></details></div>
+<div class="qitem" id="F19-Q4.3" data-paper="F19" data-ch="ch6"><div class="qhead"><span class="qid">F19-Q4.3</span><span class="qtopic">Possible values of c (8 pts)</span><span class="qch">CH6</span></div><p>a = 7, b = 2, c = 5. T1: <code>if (a &lt; 0) c = b - a; else c = b + a;</code> T2: <code>b = 8; a = -6;</code></p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><strong>14, 2, 9, 15, −4</strong> — (a&lt;0 branch: 8−(−6) = 14); else-branch: T2 done before c computed: 8+(−6) = 2; T2 after: 2+7 = 9; b written before read but a after: 8+7 = 15; b read before write, a written before read: 2+(−6) = −4.</p>
+</div></details></div>
+<div class="qitem" id="F19-Q4.4" data-paper="F19" data-ch="ch6"><div class="qhead"><span class="qid">F19-Q4.4</span><span class="qtopic">Semaphores L = 3, R = 0 with putc (10 pts)</span><span class="qch">CH6</span></div><p>P1: wait(L); putc('C'); signal(R). P2: wait(R); putc('A'); putc('B'); signal(R). P3: wait(R); putc('D').</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) <strong>3</strong> D's. (b) A's: min <strong>0</strong>, max <strong>infinite</strong>. (c) <code>CABABDCDABCABD</code> — <strong>No</strong> (after &quot;CABABDCD&quot;, R = 0, so P2 cannot print the next A before a third C). (d) <code>CABACDBCABDD</code> — <strong>Yes</strong>.</p>
+</div></details></div>
+<div class="qitem" id="F20-Q2.1" data-paper="F20" data-ch="ch2"><div class="qhead"><span class="qid">F20-Q2.1</span><span class="qtopic">Microkernel (4 pts)</span><span class="qch">CH2</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Main idea: remove all nonessential components from the kernel and implement them as system/user-level programs in separate address spaces; communicate by message passing. Advantage: small kernel, easier to extend and port, more secure and reliable. Disadvantage: performance suffers due to increased system-function overhead (user↔kernel message passing).</p>
+</div></details></div>
+<div class="qitem" id="F20-Q2.2" data-paper="F20" data-ch="ch2"><div class="qhead"><span class="qid">F20-Q2.2</span><span class="qtopic">Linker and loader (4 pts)</span><span class="qch">CH2</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Linker: combines several relocatable object modules into a single binary executable image (stored on disk). Loader: loads the executable into memory for execution.</p>
+</div></details></div>
+<div class="qitem" id="F20-Q2.3" data-paper="F20" data-ch="ch4"><div class="qhead"><span class="qid">F20-Q2.3</span><span class="qtopic">Heavyweight vs lightweight (4 pts)</span><span class="qch">CH4</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>A process is heavyweight because it owns an address space and resources; creating one duplicates program and data. A thread is lightweight — only an execution unit (PC, registers, stack) that shares code, data and files with other threads of its process, so creating it needs no duplication.</p>
+</div></details></div>
+<div class="qitem" id="F20-Q2.4" data-paper="F20" data-ch="ch5"><div class="qhead"><span class="qid">F20-Q2.4</span><span class="qtopic">Common vs per-processor ready queue (4 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Common queue: easy load balancing (no CPU idle while the queue is non-empty) but hard to keep processor affinity (and needs locking). Per-processor queues: natural processor affinity but need push/pull migration for load balancing.</p>
+</div></details></div>
+<div class="qitem" id="F20-Q2.5" data-paper="F20" data-ch="ch5"><div class="qhead"><span class="qid">F20-Q2.5</span><span class="qtopic">MLFQ benefits (4 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>(1) Resembles SJF/SRTF performance without prior knowledge of the next CPU burst (2 pts); (2) RR-like good response time for interactive jobs (1); (3) fair — all processes make progress (1).</p>
+</div></details></div>
+<div class="qitem" id="F20-Q3.1" data-paper="F20" data-ch="ch3"><div class="qhead"><span class="qid">F20-Q3.1</span><span class="qtopic">Possible outputs (10 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>if (fork() == 0) {
+    if (fork() &gt; 0) { printf(&quot;1&quot;); wait(NULL); printf(&quot;2&quot;); }
+    else printf(&quot;3&quot;);
+} else printf(&quot;4&quot;);
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>Unbuffered: <strong>8</strong> outputs — &quot;2&quot; after &quot;1&quot; and &quot;3&quot;; &quot;4&quot; anywhere: 1342, 1432, 3142, 4132, 3412, 4312, 1324, 3124. Buffered (&quot;1&quot; and &quot;2&quot; flushed together): 3 outputs — 4312, 3412, 3124.</p>
+</div></details></div>
+<div class="qitem" id="F20-Q3.2" data-paper="F20" data-ch="ch3"><div class="qhead"><span class="qid">F20-Q3.2</span><span class="qtopic">Count &quot;a&quot; (13 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>if (!fork()) { for (int i = 0; i &lt; n; i++) if (fork()) fork(); }
+fork(); printf(&quot;a&quot;);
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>First fork: the child enters the loop; each iteration every process becomes 3 → 3ⁿ processes from the child branch. Plus the original → 3ⁿ + 1. The final fork doubles → <strong>2(3ⁿ + 1) &quot;a&quot;s</strong> <span class="ok">✅</span></p>
+</div></details></div>
+<div class="qitem" id="F20-Q4.1" data-paper="F20" data-ch="ch5"><div class="qhead"><span class="qid">F20-Q4.1</span><span class="qtopic">FCFS / SJF / SRTF (9 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 9), P2 (3, 3), P3 (8, 2), P4 (10, 6), P5 (16, 8), P6 (20, 5).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><ul>
+<li>FCFS <code>0 P1 9 P2 12 P3 14 P4 20 P5 28 P6 33</code> → (0+6+4+4+4+8)/6 = <strong>4.33</strong></li>
+<li>SJF <code>0 P1 9 P3 11 P2 14 P4 20 P6 25 P5 33</code> → (0+8+1+4+9+0)/6 = <strong>3.67</strong></li>
+<li>SRTF <code>0 P1 3 P2 6 P1 8 P3 10 P1 14 P4 20 P6 25 P5 33</code> → (5+0+0+4+9+0)/6 = <strong>3.0</strong></li>
+</ul>
+</div></details></div>
+<div class="qitem" id="F20-Q4.2" data-paper="F20" data-ch="ch5"><div class="qhead"><span class="qid">F20-Q4.2</span><span class="qtopic">Two-level feedback queue with aging (10 pts)</span><span class="qch">CH5</span></div><p>Q0 RR 4 ms (high), Q1 FCFS; new → Q0; Q0 arrival preempts Q1; preempted Q1 process → head of Q1 with timer reset; a Q1 process whose timer reaches 8 ms rejoins Q0. P1 (0, 9), P2 (3, 3), P3 (8, 2), P4 (10, 9), P5 (13, 4), P6 (18, 5).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>0 P1 4 P2 7 P1 8 P3 10 P4 14 P5 18 P1 22 P6 26 P4 30 P6 31 P4 32</code> → WT (13+1+0+13+1+8)/6 = <strong>6</strong>. (P1 ages back to Q0 at 16; P4 at 22.)</p>
+</div></details></div>
+<div class="qitem" id="F20-Q4.3" data-paper="F20" data-ch="ch5"><div class="qhead"><span class="qid">F20-Q4.3</span><span class="qtopic">Priority + RR (8 pts)</span><span class="qch">CH5</span></div><p>Smaller number = higher priority; preemptive; same priority → RR q = 4. P1 (0, 9, 2), P2 (3, 3, 1), P3 (8, 5, 4), P4 (10, 2, 4), P5 (16, 8, 5), P6 (20, 5, 3).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>0 P1 3 P2 6 P1 12 P3 16 P4 18 P3 19 P5 20 P6 25 P5 32</code> → (3+0+6+6+8+0)/6 = <strong>3.83</strong></p>
+</div></details></div>
+<div class="qitem" id="F20-Q5" data-paper="F20" data-ch="ch6"><div class="qhead"><span class="qid">F20-Q5</span><span class="qtopic">Possible values of c (15 pts)</span><span class="qch">CH6</span></div><p>a = 7, b = 2. T1: <code>if (b &lt; 0) c = b - a; else c = b + a;</code> T2: <code>b = -8; a = 6;</code></p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><strong>−14, −15, −2, −1, 8, 9</strong> (2.5 marks each).</p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q1.1" data-paper="Sp21" data-ch="ch3"><div class="qhead"><span class="qid">Sp21-Q1.1</span><span class="qtopic">pid1/pid2 (5 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>pid1 = fork(); pid2 = fork();
+if (pid1 &gt; 0) if (pid2 == 0) fork();
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><strong>5</strong> — 4 processes after two forks; only the child created by the parent's second fork has pid1 &gt; 0 and pid2 == 0, so one more process <span class="ok">✅</span></p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q1.2" data-paper="Sp21" data-ch="ch3"><div class="qhead"><span class="qid">Sp21-Q1.2</span><span class="qtopic">Nested loop (5 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>if (fork() == 0) { for (int i = 0; i &lt; 5; i++) if (fork() == 0) fork(); }
+fork();
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><strong>(3⁵ + 1) × 2 = 488</strong> <span class="ok">✅</span></p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q1.3" data-paper="Sp21" data-ch="ch3"><div class="qhead"><span class="qid">Sp21-Q1.3</span><span class="qtopic">Output orderings (8 pts)</span><span class="qch">CH3</span></div><pre class="code" data-lang="c"><code>printf(&quot;A\n&quot;);
+if (fork() == 0) printf(&quot;B\n&quot;);
+else { printf(&quot;C\n&quot;); ___A___ }
+printf(&quot;D\n&quot;);
+</code></pre>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) empty: ABDCD, ABCDD, ACBDD, ACDBD. (b) <code>wait(NULL)</code>: ABDCD, ABCDD, ACBDD. (c) <code>printf(&quot;E\n&quot;)</code>: ABDCED, ABCDED, ABCEDD, ACBDED, ACBEDD, ACEBDD, ACEDBD.</p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q2.1" data-paper="Sp21" data-ch="ch5"><div class="qhead"><span class="qid">Sp21-Q2.1</span><span class="qtopic">FCFS / SJF / RR8 / SRTF (10 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 2), P2 (4, 12), P3 (6, 6), P4 (9, 4), P5 (13, 5).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>FCFS 7.2 · SJF 6.6 · RR(8) 7.6 · SRTF 4.2 (Gantt charts in Ch5 §14.9; note the idle gap 2–4).</p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q2.2" data-paper="Sp21" data-ch="ch5"><div class="qhead"><span class="qid">Sp21-Q2.2</span><span class="qtopic">MLFQ q=2, q=4, FCFS (8 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 10), P2 (10, 8), P3 (8, 30), P4 (16, 2), P5 (22, 8), P6 (6, 22).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>0 P1 2 P1 6 P6 8 P3 10 P2 12 P6 16 P4 18 P3 22 P5 24 P2 28 P5 32 P1 36 P6 52 P3 76 P2 78 P5 80</code> → WT 26, 60, 38, 0, 50, 24 → <strong>33</strong>.</p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q2.3" data-paper="Sp21" data-ch="ch5"><div class="qhead"><span class="qid">Sp21-Q2.3</span><span class="qtopic">EDF vs RM (8 pts)</span><span class="qch">CH5</span></div><p>P1 (1, 3, 3), P2 (2, 4, 4), 0–14, soft real-time.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>EDF <code>0 P1 1 P2 3 P1 4 P2 6 P1 7 idle 8 P2 10 P1 11 idle 12 P1 13 P2 14</code>; RM <code>0 P1 1 P2 3 P1 4 P2 6 P1 7 idle 8 P2 9 P1 10 P2 11 idle 12 P1 13 P2 14</code>. EDF is better: dynamic deadline-based priorities can meet more deadlines (up to 100% utilization) than RM's static priorities.</p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q3.1" data-paper="Sp21" data-ch="ch6"><div class="qhead"><span class="qid">Sp21-Q3.1</span><span class="qtopic">compare_and_reset spinlock (4 pts)</span><span class="qch">CH6</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>struct spinlock { int value = 0; };</code> · acquire: <code>while (compare_and_reset(&amp;lock-&gt;value, 0, 1) == 0) ;</code> · release: <code>lock-&gt;value = 0;</code></p>
+</div></details></div>
+<div class="qitem" id="Sp21-Q3.2" data-paper="Sp21" data-ch="ch6"><div class="qhead"><span class="qid">Sp21-Q3.2</span><span class="qtopic">Fix the bounded-waiting algorithm (7 pts)</span><span class="qch">CH6</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Problems: (1) only processes with index &gt; i are checked → lower-index processes can wait unboundedly; (2) the lock is never released when nobody is waiting. Fix: cyclic scan <code>j = (i + 1) % n; while ((j != i) &amp;&amp; !waiting[j]) j = (j + 1) % n; if (j == i) lock = 0; else waiting[j] = false;</code></p>
+</div></details></div>
+<div class="qitem" id="HW1-Q2.1" data-paper="HW1" data-ch="ch1"><div class="qhead"><span class="qid">HW1-Q2.1</span><span class="qtopic">AMAT + locality (6 pts)</span><span class="qch">CH1</span></div><p>Hit ratio 90%, hit time 2 ns, miss time 50 ns.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>0.9 × 2 + 0.1 × 50 = <strong>6.8 ns</strong>. Temporal: recently accessed items are likely accessed again (e.g., loop counter, loop body instructions). Spatial: items near recent accesses are likely accessed soon (e.g., sequential array elements a[i], a[i+1]).</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q2.2" data-paper="HW1" data-ch="ch1"><div class="qhead"><span class="qid">HW1-Q2.2</span><span class="qtopic">Multiprogramming vs time sharing (6 pts)</span><span class="qch">CH1</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Multiprogramming keeps several jobs in memory; when one waits for I/O, the CPU switches to another, so the CPU always has work → higher utilization. Time sharing switches among jobs so frequently (timer + CPU scheduling) that users can interact with each program while it runs → short response time, interactive computing.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q2.3" data-paper="HW1" data-ch="ch3"><div class="qhead"><span class="qid">HW1-Q2.3</span><span class="qtopic">State sequence (6 pts)</span><span class="qch">CH3</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>New → Ready → Running → Waiting → Ready → Running → Ready → Running → Terminated. When leaving Running, the PCB saves the process state, program counter, CPU registers, plus updated scheduling, accounting and I/O-status information.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q2.4" data-paper="HW1" data-ch="ch2"><div class="qhead"><span class="qid">HW1-Q2.4</span><span class="qtopic">read(): user → kernel → user (6 pts)</span><span class="qch">CH2</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>(1) read() in libc puts the system-call number and parameters in registers and executes a trap instruction. (2) The trap switches to kernel mode; the kernel indexes the system-call table and runs the read service. (3) The kernel stores the return value and executes return-from-trap, which switches back to user mode and resumes after the call.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q2.5" data-paper="HW1" data-ch="ch3"><div class="qhead"><span class="qid">HW1-Q2.5</span><span class="qtopic">Parent → child through a pipe (6 pts)</span><span class="qch">CH3</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Call <code>pipe(fd)</code> <strong>before</strong> <code>fork()</code>; after fork, the parent (writer) closes <code>fd[0]</code> and writes to <code>fd[1]</code>; the child (reader) closes <code>fd[1]</code> and reads from <code>fd[0]</code>; close the used ends when done.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q3.1" data-paper="HW1" data-ch="ch3"><div class="qhead"><span class="qid">HW1-Q3.1</span><span class="qtopic">Values of x (15 pts)</span><span class="qch">CH3</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>C1: 3, C2: 5, P: 2 (each process has its own copy of x). Outputs: &quot;C1: 3, C2: 5, P: 2&quot; or &quot;C2: 5, C1: 3, P: 2&quot;. Moving the first wait before <code>x *= 2</code> guarantees C1, C2, P order; values unchanged.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q3.2" data-paper="HW1" data-ch="ch3"><div class="qhead"><span class="qid">HW1-Q3.2</span><span class="qtopic">exec worker (15 pts)</span><span class="qch">CH3</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>3 processes (parent → child → grandchild; the grandchild execs worker). X is not printed (successful exec never returns). Outputs: A P W C D · A W P C D · A W C P D.</p>
+</div></details></div>
+<div class="qitem" id="HW1-Q3.3" data-paper="HW1" data-ch="ch3"><div class="qhead"><span class="qid">HW1-Q3.3</span><span class="qtopic">Pipe parent → child (10 pts)</span><span class="qch">CH3</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) Parent closes fd[0], writes to fd[1]; child closes fd[1], reads fd[0]; parent → child. (b) &quot;Child: 12&quot; then &quot;Parent: done&quot; — read blocks until data arrives, and the parent waits for the child. (c) No — separate pipe() calls after fork create two unrelated pipes, with no shared descriptors.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q2.1" data-paper="HW2" data-ch="ch4"><div class="qhead"><span class="qid">HW2-Q2.1</span><span class="qtopic">Different PC/registers (6 pts)</span><span class="qch">CH4</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Yes — each thread has its own PC, register set and stack; saved in its <strong>TCB</strong> when not running.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q2.2" data-paper="HW2" data-ch="ch4"><div class="qhead"><span class="qid">HW2-Q2.2</span><span class="qtopic">Many-to-one on 4 cores (6 pts)</span><span class="qch">CH4</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>No — all user threads map to one kernel thread, which runs on one core at a time; only concurrency, no parallelism (and one blocking call blocks all).</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q2.3" data-paper="HW2" data-ch="ch4"><div class="qhead"><span class="qid">HW2-Q2.3</span><span class="qtopic">Ctrl+C (6 pts)</span><span class="qch">CH4</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>Asynchronous (generated by an event external to the process). Yes — install a user-defined handler with <code>signal(SIGINT, handler)</code> to override the default (terminate).</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q2.4" data-paper="HW2" data-ch="ch5"><div class="qhead"><span class="qid">HW2-Q2.4</span><span class="qtopic">Hard affinity (6 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>No — hard affinity restricts T to CPU 0 and CPU 1; load balancing may move it between those two only.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q2.5" data-paper="HW2" data-ch="ch5"><div class="qhead"><span class="qid">HW2-Q2.5</span><span class="qtopic">RM vs EDF at t = 50 (6 pts)</span><span class="qch">CH5</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>No. RM picks A (shorter period, static) → B finishes at 85 and misses 80. EDF picks B (deadline 80 &lt; 100) → B finishes at 60, A at 85; both meet deadlines.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q3.1" data-paper="HW2" data-ch="ch4"><div class="qhead"><span class="qid">HW2-Q3.1</span><span class="qtopic">Amdahl (10 pts)</span><span class="qch">CH4</span></div><details><summary>顯示答案 Show answer</summary><div class="ans"><p>(a) 1/(0.2 + 0.8/4) = <strong>2.5</strong>. (b) N → ∞: 1/0.2 = <strong>5</strong>.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q3.2" data-paper="HW2" data-ch="ch5"><div class="qhead"><span class="qid">HW2-Q3.2</span><span class="qtopic">SRTF and RR q=3 (20 pts)</span><span class="qch">CH5</span></div><p>P1 (0, 7), P2 (1, 3), P3 (4, 5), P4 (10, 2).</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p>SRTF <code>0 P1 1 P2 4 P3 9 P1 10 P4 12 P1 17</code> → avg WT 2.5, avg TAT 6.75. RR(3) <code>0 P1 3 P2 6 P1 9 P3 12 P1 13 P4 15 P3 17</code> → avg WT 4.75, avg TAT 9.</p>
+</div></details></div>
+<div class="qitem" id="HW2-Q3.3" data-paper="HW2" data-ch="ch5"><div class="qhead"><span class="qid">HW2-Q3.3</span><span class="qtopic">MLFQ (10 pts)</span><span class="qch">CH5</span></div><p>Q0 RR4, Q1 RR8, Q2 FCFS; P1 (0, 20), P2 (1, 5), P3 (11, 2); preempted Q1 job keeps the unused part of its quantum.</p>
+<details><summary>顯示答案 Show answer</summary><div class="ans"><p><code>0 P1(Q0) 4 P2(Q0) 8 P1(Q1) 11 P3(Q0) 13 P1(Q1) 18 P2(Q1) 19 P1(Q2) 27</code>. At t = 11, P1 goes to the head of Q1 (ahead of P2) with 5 ms of its Q1 quantum left.</p>
+</div></details></div>
+<nav class="pager"><a href="glossary.html"><small>← 上一頁</small>Glossary A–Z</a><a class="next" href="quiz.html"><small>下一頁 →</small>MC 練習 Quiz</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+
+</div>
+<script>
+(function(){
+  var chips=document.querySelectorAll('.chip[data-paper], .chip[data-ch]');
+  function apply(){
+    var on={}; for(var i=0;i<chips.length;i++){var c=chips[i]; on[c.getAttribute('data-paper')||c.getAttribute('data-ch')]=c.classList.contains('on');}
+    var qs=document.querySelectorAll('.qitem');
+    for(var j=0;j<qs.length;j++){var q=qs[j]; q.style.display=(on[q.getAttribute('data-paper')]&&on[q.getAttribute('data-ch')])?'':'none';}
+  }
+  for(var i=0;i<chips.length;i++) chips[i].addEventListener('click',function(){this.classList.toggle('on');apply();});
+  document.getElementById('bank-open').onclick=function(){var d=document.querySelectorAll('.qitem details');for(var i=0;i<d.length;i++)d[i].open=true;};
+  document.getElementById('bank-close').onclick=function(){var d=document.querySelectorAll('.qitem details');for(var i=0;i<d.length;i++)d[i].open=false;};
+  if(location.hash){var el=document.getElementById(location.hash.slice(1)); if(el){var d=el.querySelector('details'); if(d) d.open=true;}}
+})();
+</script>
+</body>
+</html>

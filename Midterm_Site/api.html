@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API 速查 (C / Pthreads) · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="api">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api" class="active"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Reference</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="api-reference-linux-system-calls-pthreads">API Reference — Linux System Calls &amp; Pthreads（Lab / PA 編程題速查）</h1>
+<blockquote class="callout info">
+<p>Announcement：「There may be questions related to PA or coding questions using some APIs we discussed in our lab classes」→ 呢頁就係用嚟填空 / 寫 code。</p>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Process APIs</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Call</th>
+  <th>Header</th>
+  <th>Return</th>
+  <th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>pid_t fork(void)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>child: <strong>0</strong>；parent: <strong>child PID (&gt;0)</strong>；fail: <strong>−1</strong></td>
+  <td>child 由下一句開始；複製 address space（COW）</td>
+</tr>
+<tr>
+  <td><code>int execlp(const char *file, const char *arg0, ..., (char *)NULL)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td><strong>success: no return</strong>；fail: −1</td>
+  <td>用 PATH 搵 program；<strong>arg0 = program name</strong>；最後一定要 <code>NULL</code></td>
+</tr>
+<tr>
+  <td><code>int execvp(const char *file, char *const argv[])</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>同上</td>
+  <td><code>argv</code> 最後一個元素要係 <strong>NULL</strong>（PA1：所以 array size 係 9 而唔係 8）</td>
+</tr>
+<tr>
+  <td><code>int execl(path, arg0, ..., NULL)</code> / <code>execv(path, argv)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>同上</td>
+  <td>要 full path（冇 p = 唔搵 PATH）</td>
+</tr>
+<tr>
+  <td><code>pid_t wait(int *status)</code></td>
+  <td><code>&lt;sys/wait.h&gt;</code></td>
+  <td>terminated child 嘅 PID；冇 child → −1</td>
+  <td><code>wait(NULL)</code> 唔要 status；等<strong>任何一個</strong> child</td>
+</tr>
+<tr>
+  <td><code>pid_t waitpid(pid_t pid, int *status, int options)</code></td>
+  <td><code>&lt;sys/wait.h&gt;</code></td>
+  <td>該 child PID；error −1</td>
+  <td><code>waitpid(pid, &amp;status, 0)</code> 等指定 child；<code>WNOHANG</code> 唔 block</td>
+</tr>
+<tr>
+  <td><code>void exit(int status)</code></td>
+  <td><code>&lt;stdlib.h&gt;</code></td>
+  <td>—</td>
+  <td>結束 process，status 經 wait 交畀 parent（<code>WEXITSTATUS(status)</code>）</td>
+</tr>
+<tr>
+  <td><code>pid_t getpid(void)</code> / <code>getppid(void)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>自己 / parent PID</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>int chdir(const char *path)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>0 / −1</td>
+  <td>PA1 <code>cd</code>（唔可以用 exec 做 cd，因為要改 shell 自己嘅 cwd）</td>
+</tr>
+<tr>
+  <td><code>sighandler_t signal(int signum, sighandler_t handler)</code></td>
+  <td><code>&lt;signal.h&gt;</code></td>
+  <td>舊 handler</td>
+  <td><code>signal(SIGINT, handler)</code>；<code>SIG_IGN</code> 忽略；<code>SIG_DFL</code> default</td>
+</tr>
+<tr>
+  <td><code>int kill(pid_t pid, int sig)</code></td>
+  <td><code>&lt;signal.h&gt;</code></td>
+  <td>0 / −1</td>
+  <td>send signal to process</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 經典 fork–exec–wait</h3>
+<pre class="code" data-lang="c"><code>pid_t pid = fork();
+if (pid &lt; 0) { perror(&quot;fork&quot;); exit(1); }
+else if (pid == 0) {                       /* child */
+    execlp(&quot;ls&quot;, &quot;ls&quot;, &quot;-l&quot;, (char *)NULL);
+    perror(&quot;exec failed&quot;);                  /* only reached if exec fails */
+    exit(1);
+} else {                                   /* parent */
+    int status;
+    waitpid(pid, &amp;status, 0);              /* or wait(NULL) */
+}
+</code></pre>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 Signal handler（PA1 Feature 2）</h3>
+<pre class="code" data-lang="c"><code>void handle_sigint(int signum) {
+    printf(&quot;Myshell (pid=%d) terminates by Ctrl-C with signal: %d\n&quot;, getpid(), signum);
+    exit(0);
+}
+int main() { signal(SIGINT, handle_sigint); /* ... */ }
+</code></pre>
+<ul>
+<li>SIGINT = <strong>2</strong>（Ctrl-C）；SIGKILL (9)、SIGSTOP 唔可以 catch。</li>
+</ul>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. File I/O（POSIX，唔係 stdio）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Call</th>
+  <th>Return</th>
+  <th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>int open(const char *path, int flags[, mode_t mode])</code> <code>&lt;fcntl.h&gt;</code></td>
+  <td><strong>lowest unused fd</strong> / −1</td>
+  <td>flags：<code>O_RDONLY</code>、<code>O_WRONLY</code>、<code>O_RDWR</code>、<code>O_CREAT</code>、<code>O_TRUNC</code>、<code>O_APPEND</code>；建立檔案要 mode（e.g. <code>0644</code>）</td>
+</tr>
+<tr>
+  <td><code>ssize_t read(int fd, void *buf, size_t count)</code></td>
+  <td>bytes read；<strong>0 = EOF</strong>；−1 error</td>
+  <td>blocking（pipe 冇 data 會等；所有 write ends close 晒先 return 0）</td>
+</tr>
+<tr>
+  <td><code>ssize_t write(int fd, const void *buf, size_t count)</code></td>
+  <td>bytes written / −1</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>int close(int fd)</code></td>
+  <td>0 / −1</td>
+  <td><strong>用完要 close</strong>，尤其 pipe write end</td>
+</tr>
+<tr>
+  <td><code>int dup(int oldfd)</code></td>
+  <td>新 fd = <strong>lowest unused</strong></td>
+  <td><code>close(0); dup(fin);</code> → fd 0 指向 file</td>
+</tr>
+<tr>
+  <td><code>int dup2(int oldfd, int newfd)</code></td>
+  <td>newfd</td>
+  <td>newfd 已開 → 先 close；<code>dup2(fd, 1)</code> = stdout 指向 fd</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>fd 0 = stdin，1 = stdout，2 = stderr</strong>（<code>STDIN_FILENO</code>, <code>STDOUT_FILENO</code>, <code>STDERR_FILENO</code>）。</li>
+<li><strong>Output redirection</strong>（<code>cmd &gt; out.txt</code>）：</li>
+</ul>
+<pre class="code" data-lang="c"><code>int fout = open(&quot;out.txt&quot;, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+dup2(fout, STDOUT_FILENO);  close(fout);   /* then exec */
+</code></pre>
+<ul>
+<li><strong>Input redirection</strong>（<code>cmd &lt; in.txt</code>）：</li>
+</ul>
+<pre class="code" data-lang="c"><code>int fin = open(&quot;in.txt&quot;, O_RDONLY);
+dup2(fin, STDIN_FILENO);  close(fin);      /* or: close(0); dup(fin); */
+</code></pre>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Pipes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Call</th>
+  <th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>int pipe(int fd[2])</code> <code>&lt;unistd.h&gt;</code></td>
+  <td><strong>fd[0] = read end，fd[1] = write end</strong>；0 / −1；<strong>一定喺 fork() 之前 call</strong></td>
+</tr>
+<tr>
+  <td><code>int mkfifo(const char *path, mode_t mode)</code> <code>&lt;sys/stat.h&gt;</code></td>
+  <td>named pipe（FIFO），之後用 <code>open()</code>/<code>read()</code>/<code>write()</code>；要 <code>unlink()</code> 刪除</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 Parent → child</h3>
+<pre class="code" data-lang="c"><code>int fd[2]; pipe(fd);
+if (fork() == 0) {               /* child: reader */
+    close(fd[1]);
+    int n; read(fd[0], &amp;n, sizeof(n));
+    close(fd[0]); exit(0);
+} else {                         /* parent: writer */
+    close(fd[0]);
+    int n = 6; write(fd[1], &amp;n, sizeof(n));
+    close(fd[1]); wait(NULL);
+}
+</code></pre>
+<h3 id="s3-2"><a class="anchor" href="#s3-2">#</a>3.2 Shell pipeline <code>ls | wc -l</code></h3>
+<pre class="code" data-lang="c"><code>int fd[2]; pipe(fd);
+if (fork() == 0) {               /* child 1: ls → pipe */
+    dup2(fd[1], STDOUT_FILENO);
+    close(fd[0]); close(fd[1]);
+    execlp(&quot;ls&quot;, &quot;ls&quot;, (char *)NULL);
+}
+if (fork() == 0) {               /* child 2: pipe → wc */
+    dup2(fd[0], STDIN_FILENO);
+    close(fd[0]); close(fd[1]);
+    execlp(&quot;wc&quot;, &quot;wc&quot;, &quot;-l&quot;, (char *)NULL);
+}
+close(fd[0]); close(fd[1]);      /* parent MUST close both, else wc never sees EOF */
+wait(NULL); wait(NULL);
+</code></pre>
+<ul>
+<li><strong>Multi-level pipe（PA1 Feature 5）</strong>：n segments → n−1 pipes；segment i：<code>dup2(fds[i-1][0], 0)</code>（if i &gt; 0）、<code>dup2(fds[i][1], 1)</code>（if i &lt; n−1）；每個 child close 所有 pipe fds；parent close 所有 fds 再 wait 全部。</li>
+</ul>
+<h3 id="s3-3"><a class="anchor" href="#s3-3">#</a>3.3 常見錯誤</h3>
+<ol>
+<li><code>pipe()</code> 喺 <code>fork()</code> 之後 call → 兩條唔相關嘅 pipe（HW1 Q3.3c）。</li>
+<li>冇 close 未用嘅 write end → reader <code>read()</code> 永遠唔會得到 EOF（hang）。</li>
+<li><code>write(fd[0], …)</code> / <code>read(fd[1], …)</code> 搞錯方向（<strong>0 讀 1 寫</strong>：記「0 = stdin-like，1 = stdout-like」）。</li>
+<li><code>read</code>/<code>write</code> 第二個參數要 <strong>address</strong>（<code>&amp;cnt</code>），第三個係 <strong>size</strong>（<code>sizeof(int)</code>）。</li>
+</ol>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. Pthreads（<code>#include &lt;pthread.h&gt;</code>，compile with <code>-pthread</code>）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Call</th>
+  <th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>int pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</code></td>
+  <td>return 0 = success；attr 用 <code>NULL</code>；start routine signature <code>void *f(void *)</code></td>
+</tr>
+<tr>
+  <td><code>int pthread_join(pthread_t tid, void **retval)</code></td>
+  <td>等 thread 結束（類似 wait）；<code>retval</code> 可 NULL</td>
+</tr>
+<tr>
+  <td><code>void pthread_exit(void *retval)</code></td>
+  <td>thread 自己結束</td>
+</tr>
+<tr>
+  <td><code>int pthread_cancel(pthread_t tid)</code></td>
+  <td>request cancellation（default <strong>deferred</strong>）</td>
+</tr>
+<tr>
+  <td><code>pthread_t pthread_self(void)</code></td>
+  <td>自己 tid</td>
+</tr>
+<tr>
+  <td><code>int pthread_kill(pthread_t tid, int sig)</code></td>
+  <td>signal 指定 thread</td>
+</tr>
+</tbody>
+</table></div>
+<pre class="code" data-lang="c"><code>void *worker(void *arg) { int id = *(int *)arg; printf(&quot;thread %d\n&quot;, id); return NULL; }
+int main() {
+    pthread_t t[3]; int id[3];
+    for (int i = 0; i &lt; 3; i++) { id[i] = i; pthread_create(&amp;t[i], NULL, worker, &amp;id[i]); }
+    for (int i = 0; i &lt; 3; i++) pthread_join(t[i], NULL);
+    return 0;
+}
+</code></pre>
+<h3 id="s4-1"><a class="anchor" href="#s4-1">#</a>4.1 Mutex</h3>
+<pre class="code" data-lang="c"><code>pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;   /* or pthread_mutex_init(&amp;m, NULL) */
+pthread_mutex_lock(&amp;m);   /* critical section */   pthread_mutex_unlock(&amp;m);
+pthread_mutex_destroy(&amp;m);
+</code></pre>
+<h3 id="s4-2"><a class="anchor" href="#s4-2">#</a>4.2 POSIX unnamed semaphore（<code>#include &lt;semaphore.h&gt;</code>）</h3>
+<pre class="code" data-lang="c"><code>sem_t s;
+sem_init(&amp;s, 0, 1);    /* pshared = 0 → shared between threads of this process; initial value 1 */
+sem_wait(&amp;s);          /* P(): if value &gt; 0 decrement, else block */
+sem_post(&amp;s);          /* V(): increment, wake a waiter */
+sem_destroy(&amp;s);
+</code></pre>
+<ul>
+<li><strong>Ordering</strong>：<code>sem_init(&amp;s, 0, 0)</code>；先做嘅 thread 做完 <code>sem_post(&amp;s)</code>，後做嘅 thread 開頭 <code>sem_wait(&amp;s)</code>。</li>
+<li><strong>Mutual exclusion</strong>：init 1；<code>sem_wait</code> → CS → <code>sem_post</code>。</li>
+<li><strong>Counting resources</strong>：init = 資源數量 n。</li>
+</ul>
+<h3 id="s4-3"><a class="anchor" href="#s4-3">#</a>4.3 Condition variables</h3>
+<pre class="code" data-lang="c"><code>pthread_mutex_t m; pthread_cond_t c; int ready = 0;
+/* waiter */
+pthread_mutex_lock(&amp;m);
+while (!ready) pthread_cond_wait(&amp;c, &amp;m);   /* releases m while sleeping, re-acquires on wake */
+pthread_mutex_unlock(&amp;m);
+/* signaller */
+pthread_mutex_lock(&amp;m); ready = 1; pthread_cond_signal(&amp;c); pthread_mutex_unlock(&amp;m);
+</code></pre>
+<ul>
+<li>一定要持有 mutex 先 call；用 <strong>while</strong>（唔係 if）再 check 條件。</li>
+</ul>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Compile / Run（Lab 1–2）</h2>
+<pre class="code" data-lang="bash"><code>gcc -pedantic -Wall -Wextra -std=c99 -o myshell myshell.c
+gcc prog.c -o prog -pthread        # pthread programs
+gcc main.c -o main -lm             # link math library (linker!)
+./prog
+</code></pre>
+<ul>
+<li><code>gcc -c main.c</code> → <code>main.o</code>（compiler）；<code>gcc -o main main.o -lm</code>（linker）；<code>./main</code>（loader）<span class="sref">[2.32]</span>。</li>
+</ul>
+
+<nav class="pager"><a href="ch6.html"><small>← 上一頁</small>Ch6 Synchronization</a><a class="next" href="glossary.html"><small>下一頁 →</small>Glossary A–Z</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. Process APIs</a>
+<a class="l3" href="#s1-1">1.1 經典 fork–exec–wait</a>
+<a class="l3" href="#s1-2">1.2 Signal handler（PA1 Feature 2）</a>
+<a class="l2" href="#s2">2. File I/O（POSIX，唔係 stdio）</a>
+<a class="l2" href="#s3">3. Pipes</a>
+<a class="l3" href="#s3-1">3.1 Parent → child</a>
+<a class="l3" href="#s3-2">3.2 Shell pipeline ls | wc -l</a>
+<a class="l3" href="#s3-3">3.3 常見錯誤</a>
+<a class="l2" href="#s4">4. Pthreads（#include &lt;pthread.h&gt;，compile with -pthread）</a>
+<a class="l3" href="#s4-1">4.1 Mutex</a>
+<a class="l3" href="#s4-2">4.2 POSIX unnamed semaphore（#include &lt;semaphore.h&gt;）</a>
+<a class="l3" href="#s4-3">4.3 Condition variables</a>
+<a class="l2" href="#s5">5. Compile / Run（Lab 1–2）</a></aside>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch2 OS Structures · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch2">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2" class="active"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-2-operating-system-structures">Chapter 2 — Operating-System Structures（作業系統結構）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：Ch2 每年都有 <strong>3–5 題 MC</strong> + <strong>1–2 題 short question</strong>。必考：<strong>API vs system call（點解要分開）</strong>、<strong>printf() → write()</strong>、<strong>parameter passing 三種方法</strong>、<strong>linker vs loader</strong>、<strong>monolithic / layered / microkernel / LKM / hybrid 比較</strong>（優缺點）、<strong>policy vs mechanism</strong>、<strong>OS services</strong>。
+⚠️ <strong>Dual-mode / interrupt / trap</strong> 今個 term 放咗喺 <strong>Ch3 slides（3.x）</strong>，見 Ch3 notes §0。</p>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Operating System Services（OS 服務）<span class="sref">[2.4–2.7]</span></h2>
+<p>OS provides an environment for <strong>execution of programs</strong> and <strong>other services to programs and users</strong>。分兩組：</p>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 對 user 有用嘅服務（helpful to the user）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Service</th>
+  <th>解釋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>User interface (UI)</strong></td>
+  <td><strong>CLI (command-line)</strong>, <strong>GUI</strong>, <strong>touch-screen</strong></td>
+</tr>
+<tr>
+  <td><strong>Program execution</strong></td>
+  <td>load a program into memory and run it; end execution <strong>normally or abnormally (indicating error)</strong></td>
+</tr>
+<tr>
+  <td><strong>I/O operations</strong></td>
+  <td>running program may require I/O（file 或 I/O device）</td>
+</tr>
+<tr>
+  <td><strong>File-system manipulation</strong></td>
+  <td>read/write/create/delete/search files &amp; directories, list info, <strong>permission management</strong></td>
+</tr>
+<tr>
+  <td><strong>Communications</strong></td>
+  <td>processes exchange information（同一部機或 network）via <strong>shared memory</strong> or <strong>message passing (packets moved by the OS)</strong></td>
+</tr>
+<tr>
+  <td><strong>Error detection</strong></td>
+  <td>errors <strong>may occur in CPU and memory, in I/O devices, in user programs</strong>；OS takes appropriate actions；<strong>debugging facilities</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 確保系統本身有效運作（efficient operation via resource sharing）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Service</th>
+  <th>解釋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Resource allocation</strong></td>
+  <td>多 user/job 同時跑 → 分配 <strong>CPU cycles, memory, file storage, I/O devices</strong></td>
+</tr>
+<tr>
+  <td><strong>Logging (accounting)</strong></td>
+  <td><strong>keep track of which users use how much and what kinds of computer resources</strong></td>
+</tr>
+<tr>
+  <td><strong>Protection and security</strong></td>
+  <td><strong>Protection</strong>: ensure all access to system resources is controlled；<strong>Security</strong>: defend from outsiders → <strong>user authentication</strong>, defend external I/O devices from invalid access</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout warn">
+<p>⚠️ <strong>S26 MC5 陷阱</strong>：「<strong>Errors only occur in memory and I/O devices</strong>」→ <strong>False</strong>（CPU、memory、I/O devices、user programs 都可以出錯）。
+<span class="ok">✅</span>「Logging service should keep track of computer resources that each user uses」→ True。</p>
+</blockquote>
+<ul>
+<li>Summary 補充：OS services 兩大類 —（1）<strong>enforce protection among concurrent processes</strong>（process 只可以存取自己 address space；唔可以直接存取 hardware）；（2）<strong>provide functionalities not directly supported by hardware</strong>（memory management、file systems）。</li>
+<li>[2.7/2.13 圖] user &amp; system programs → user interfaces (GUI/touch/CLI) → <strong>system calls</strong> → services (program execution, I/O, file systems, communication, resource allocation, accounting, error detection, protection &amp; security) → OS → hardware。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch2_p13.png" alt="OS services and the system-call layer" loading="lazy"><figcaption>OS services and the system-call layer <span class="sref">[2.13]</span></figcaption></figure>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. User Interfaces <span class="sref">[2.8–2.12]</span></h2>
+<ul>
+<li><strong>CLI / command interpreter</strong> — allows <strong>direct command entry</strong>。<ul>
+<li><strong>Sometimes implemented in kernel, sometimes by system programs.</strong></li>
+<li>有多個 flavor → <strong>shells</strong>（C shell, <strong>Bourne-Again shell (bash)</strong>, Korn shell）。</li>
+<li><strong>Shell 嘅主要功能：(1) fetches a command from user, (2) interprets it, (3) executes it.</strong> ⭐（PA1 myshell 就係做呢樣）</li>
+</ul>
+</li>
+<li><strong>GUI</strong> — user-friendly <strong>desktop metaphor</strong>；icons；mouse；<strong>invented at Xerox PARC (early 1970s)</strong>，first widely used in <strong>Apple Macintosh (1984)</strong>。Windows = GUI + CLI &quot;command&quot; shell；Mac OS X = <strong>&quot;Aqua&quot; GUI</strong> + UNIX kernel；Unix/Linux = CLI + optional GUI（KDE, GNOME）。</li>
+<li><strong>Touchscreen</strong> — gestures, virtual keyboard, voice command（Siri）。</li>
+</ul>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. System Calls ⭐⭐ <span class="sref">[2.13–2.26]</span></h2>
+<h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 定義</h3>
+<ul>
+<li><strong>System calls provide the programming interface to the services provided by the OS.</strong>（Sp21 MC：「___ provide an interface to the services provided by an OS」→ <strong>System calls</strong>）</li>
+<li>通常以 <strong>high-level language (C/C++) functions</strong> 提供；<strong>certain low-level tasks written in assembly</strong> for accessing hardware。</li>
+<li>例：<code>cp in.txt out.txt</code> 涉及<strong>一連串 system calls</strong>（acquire input file name、open input file、create output file、loop read/write、close、write completion message、terminate normally）。</li>
+</ul>
+<h3 id="s3-2"><a class="anchor" href="#s3-2">#</a>3.2 API (Application Programming Interface) <span class="sref">[2.15]</span></h3>
+<ul>
+<li><strong>API specifies a set of functions available to application programmers, including the parameters passed to each function and the return values it may expect.</strong></li>
+<li><strong>The functions that make up an API invoke the actual system calls on behalf of the programmer.</strong><ul>
+<li>例：Windows <code>CreateProcess()</code> invokes <code>NTCreateProcess()</code> system call。</li>
+</ul>
+</li>
+<li>Programmer 經 OS 提供嘅 <strong>library</strong> 用 API；UNIX/Linux C → <strong>libc</strong>。</li>
+<li><strong>三大 API</strong>：<strong>Win32 API</strong>（Windows）、<strong>POSIX API</strong>（UNIX, Linux, Mac OS X）、<strong>Java API</strong>（JVM）。</li>
+<li><span class="sref">[2.16]</span> <code>ssize_t read(int fd, void *buf, size_t count)</code> — <code>fd</code> file descriptor；<code>buf</code> buffer；<code>count</code> max bytes；<strong>return 0 = end of file；−1 = error</strong>。</li>
+</ul>
+<h3 id="s3-3"><a class="anchor" href="#s3-3">#</a>3.3 點解用 API 而唔直接 call system call？⭐（F19 Q1.3、S26 MC6）<span class="sref">[2.17]</span></h3>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>(1) <strong>Program portability</strong> — a program using an API can compile and run on any system that supports the same API, even though the implementation of system calls varies from machine to machine. (2) <strong>Hide the complex details of system calls</strong> — actual system calls are often more detailed and difficult to work with; the caller only needs to obey the API and understand what the OS will do, not how the system call is implemented.</em></p>
+</blockquote>
+<ul>
+<li>S26 MC6 答案：<strong>APIs provide a more convenient programming interface</strong>。</li>
+<li><span class="no">❌</span>「APIs always execute faster than system calls」、<span class="no">❌</span>「APIs can bypass kernel protection」、<span class="no">❌</span>「APIs eliminate the need for linkers and loaders」。</li>
+<li>F20 MC4：「Programmers interface with ___ to obtain services from the OS」→ <strong>APIs</strong>（best answer）。</li>
+</ul>
+<h3 id="s3-4"><a class="anchor" href="#s3-4">#</a>3.4 System Call Implementation <span class="sref">[2.18–2.19]</span></h3>
+<ul>
+<li>大部分語言嘅 <strong>run-time environment (RTE)</strong>（a set of functions built into libraries）提供 <strong>system-call interface</strong>，作為連接 OS system calls 嘅 <strong>link</strong>。</li>
+<li><strong>Each system call is associated with an identity number</strong>；system-call interface <strong>maintains a table indexed by these numbers</strong>。</li>
+<li>System-call interface 做三件事：<strong>intercepts function calls in the API → invokes the necessary system call within the OS → returns the status of the system call and return value(s)</strong>。</li>
+<li><strong>The caller knows nothing about how a system call is implemented.</strong>（只需要 obey API）</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch2_p19.png" alt="API – system call – OS relationship" loading="lazy"><figcaption>API – system call – OS relationship <span class="sref">[2.19]</span></figcaption></figure>
+<ul>
+<li>[2.19 圖]：user application 呼叫 <code>open()</code> → (user mode) <strong>system call interface</strong> → (kernel mode) 用 index <em>i</em> 查 table → implementation of <code>open()</code> → return。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>HW1 Q2.4：user program call read() 點樣 user→kernel→user？（三步）</strong></p>
+<ol>
+<li><em>The program calls the <code>read()</code> API in libc (user mode); the library/system-call interface puts the system-call number and parameters in registers (or a block/stack) and executes a <strong>trap (system-call) instruction</strong>.</em></li>
+<li><em>The trap switches the CPU to <strong>kernel mode</strong> (mode bit 1→0); the kernel uses the system-call number to index the <strong>system-call table</strong> and runs the <code>read()</code> service routine (which may block waiting for the device).</em></li>
+<li><em>When finished, the kernel puts the return value/status in a register, executes a <strong>return-from-trap</strong> which resets the mode to <strong>user mode</strong>, and control returns to the instruction after the call.</em></li>
+</ol>
+<ul>
+<li>HW1 MC6 答案：<strong>The API and run-time environment use the system-call interface to invoke the corresponding kernel service, and control later returns to the application.</strong></li>
+</ul>
+</blockquote>
+<h3 id="s3-5"><a class="anchor" href="#s3-5">#</a>3.5 System Call Parameter Passing ⭐ <span class="sref">[2.20–2.21]</span></h3>
+<p>三種方法（F20 MC5：<strong>All of the above</strong>）：</p>
+<ol>
+<li><strong>Registers</strong> — simplest；但可能 parameters 多過 registers。</li>
+<li><strong>Block (table) method</strong> — parameters stored in a <strong>block/table in memory</strong>, <strong>address of the block passed in a register</strong>（Linux &amp; Solaris 用）。</li>
+<li><strong>Stack method</strong> — parameters <strong>pushed onto the stack by the program and popped off by the OS</strong>。</li>
+</ol>
+<ul>
+<li><strong>Block and stack methods do not limit the number or length of parameters.</strong></li>
+</ul>
+<h3 id="s3-6"><a class="anchor" href="#s3-6">#</a>3.6 Types of System Calls（六類）⭐ <span class="sref">[2.22–2.25]</span></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>類別</th>
+  <th>例子</th>
+  <th>UNIX 例</th>
+  <th>Windows 例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Process control</strong></td>
+  <td>create/terminate process, end/abort, load/execute, get/set attributes, wait for time, wait/signal event, allocate/free memory, dump memory, debugger, <strong>locks</strong></td>
+  <td><code>fork()</code>, <code>exit()</code>, <code>wait()</code></td>
+  <td><code>CreateProcess()</code>, <code>ExitProcess()</code>, <code>WaitForSingleObject()</code></td>
+</tr>
+<tr>
+  <td><strong>File management</strong></td>
+  <td>create/delete, open/close, read/write/reposition, get/set attributes</td>
+  <td><code>open()</code>, <code>read()</code>, <code>write()</code>, <code>close()</code></td>
+  <td><code>CreateFile()</code>, <code>ReadFile()</code>, <code>WriteFile()</code>, <code>CloseHandle()</code></td>
+</tr>
+<tr>
+  <td><strong>Device management</strong></td>
+  <td>request/release device, read/write, get/set attributes, attach/detach</td>
+  <td><code>ioctl()</code>, <code>read()</code>, <code>write()</code></td>
+  <td><code>SetConsoleMode()</code>, <code>ReadConsole()</code>, <code>WriteConsole()</code></td>
+</tr>
+<tr>
+  <td><strong>Information maintenance</strong></td>
+  <td>get/set time/date, system data, attributes</td>
+  <td><code>getpid()</code>, <code>alarm()</code>, <code>sleep()</code></td>
+  <td><code>GetCurrentProcessID()</code>, <code>SetTimer()</code>, <code>Sleep()</code></td>
+</tr>
+<tr>
+  <td><strong>Communications</strong></td>
+  <td>create/delete connection, send/receive messages (<strong>message passing</strong>), <strong>shared-memory</strong> create/access regions</td>
+  <td><code>pipe()</code>, <code>shm_open()</code>, <code>mmap()</code></td>
+  <td><code>CreatePipe()</code>, <code>CreateFileMapping()</code>, <code>MapViewOfFile()</code></td>
+</tr>
+<tr>
+  <td><strong>Protection</strong></td>
+  <td>control access, get/set permissions, allow/deny user access</td>
+  <td><code>chmod()</code>, <code>umask()</code>, <code>chown()</code></td>
+  <td><code>SetFileSecurity()</code>, ...</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s3-7"><a class="anchor" href="#s3-7">#</a>3.7 Standard C Library Example ⭐（S26 MC8）<span class="sref">[2.26]</span></h3>
+<ul>
+<li><strong>C program invoking <code>printf()</code> library call, which calls the <code>write()</code> system call.</strong></li>
+<li><span class="ok">✅</span> <strong>&quot;printf() invokes write() system call to get service from OS&quot;</strong></li>
+<li><span class="no">❌</span> 「printf() and write() are both system calls」（printf 係 library function）</li>
+<li><span class="no">❌</span> 「program enters kernel mode immediately when printf() is called」（printf 喺 user mode 處理 formatting/buffering，到 write() 先 trap 入 kernel）</li>
+<li><span class="no">❌</span> 「write() invokes printf()」</li>
+</ul>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. System Programs（系統程式）<span class="sref">[2.27–2.30]</span></h2>
+<ul>
+<li><strong>System services / system programs / system utilities provide a convenient environment for program development and execution.</strong></li>
+<li>有啲只係 <strong>user interfaces to system calls</strong>；有啲複雜得多。</li>
+<li><strong>The view of the OS seen by most users is defined by the application and system programs, not the actual system calls.</strong>（GUI 同 CLI 用同一套 system calls，但 user 睇落好唔同）</li>
+<li><strong>類別</strong>：<ul>
+<li><strong>File management</strong> — create, delete, copy, rename, print, list files/directories</li>
+<li><strong>Status information</strong> — date, time, available memory, disk space, number of users；performance, logging, debugging info</li>
+<li><strong>File modification</strong> — text editors；search/transform file contents</li>
+<li><strong>Programming-language support</strong> — compilers, assemblers, debuggers, interpreters</li>
+<li><strong>Program loading and execution</strong> — absolute loaders, relocatable loaders, linkage editors, overlay loaders, debugging systems</li>
+<li><strong>Communications</strong> — virtual connections among processes/users/systems（message, web, email, remote login, file transfer）</li>
+<li><strong>Background services</strong> — launch at boot；有啲跑到系統關機 → <strong>services, subsystems, daemons</strong>（disk checking, process scheduling, error logging）</li>
+</ul>
+</li>
+<li><strong>Application programs</strong> — <strong>not part of the OS</strong>（browsers, word processors, spreadsheets, databases, games）。</li>
+</ul>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Linkers and Loaders ⭐⭐（F19 Q1.1、F20 Q2.2 都考過）<span class="sref">[2.31–2.32]</span></h2>
+<pre class="code" data-lang=""><code>main.c --(compiler: gcc -c main.c)--&gt; main.o (relocatable object file)
+main.o + other object files + libraries --(linker: gcc -o main main.o -lm)--&gt; main (executable file)
+main --(loader: ./main)--&gt; program in memory  (+ dynamically linked libraries)
+</code></pre>
+<ul>
+<li><strong>Source code is compiled into relocatable object files</strong>（designed to be loaded into any physical memory location）。</li>
+<li><strong>Linker combines these relocatable object files into a single binary executable file</strong>（along with libraries if needed, e.g. <code>-lm</code> math library）。</li>
+<li><strong>Programs reside on secondary storage as binary executables, which must be brought into memory by the loader to be executed.</strong></li>
+<li><strong>Relocation</strong> assigns final addresses to program parts and adjusts code &amp; data to match those addresses。</li>
+<li>Modern OS <strong>don't link libraries statically</strong>；而係用 <strong>dynamically linked libraries (DLLs in Windows)</strong> — <strong>loaded when needed, shared by all programs using the same version (loaded only once)</strong> → 慳 memory，避免 link 用唔到嘅 library。</li>
+<li>Object files / executables 有 <strong>standard formats</strong>（machine code + symbol table；Linux = <strong>ELF</strong>）→ OS 知點 load 同 start。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch2_p32.png" alt="Role of the linker and loader" loading="lazy"><figcaption>Role of the linker and loader <span class="sref">[2.32]</span></figcaption></figure>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>The <strong>linker</strong> combines several relocatable object files (generated by the compiler), together with any needed libraries, into a single binary executable file stored on disk. The <strong>loader</strong> loads the binary executable file into memory (possibly together with dynamically linked libraries) so that it can be run on a CPU.</em></p>
+</blockquote>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. OS Design and Implementation <span class="sref">[2.33–2.37]</span></h2>
+<h3 id="s6-1"><a class="anchor" href="#s6-1">#</a>6.1 Design goals <span class="sref">[2.33]</span></h3>
+<ul>
+<li>Design 受 <strong>choice of hardware, type of system</strong>（desktop, mobile, distributed, real-time）影響；先定 <strong>goals and specifications</strong>。</li>
+<li><strong>User goals</strong>：convenient to use, easy to learn and use, reliable, safe, fast。</li>
+<li><strong>System goals</strong>：easy to design, implement, maintain; flexible, reliable, error-free, efficient。</li>
+</ul>
+<h3 id="s6-2"><a class="anchor" href="#s6-2">#</a>6.2 Policy vs Mechanism ⭐ <span class="sref">[2.34]</span></h3>
+<ul>
+<li><strong>Policy: What will be done?　Mechanism: How to do it?</strong></li>
+<li>例：<strong>A timer is a mechanism for ensuring CPU protection, but deciding how long the timer is set for a particular user is a policy decision.</strong></li>
+<li><strong>Separation of policy from mechanism allows flexibility if policy decisions are changed later</strong>（同一個 mechanism 可以支持「I/O-intensive 優先」或者相反嘅 policy）。</li>
+<li>總結：<strong>goals → determine policies → implemented through mechanisms</strong>。</li>
+</ul>
+<h3 id="s6-3"><a class="anchor" href="#s6-3">#</a>6.3 Implementation <span class="sref">[2.35]</span></h3>
+<ul>
+<li>早期用 <strong>assembly</strong>；而家多數用 <strong>C/C++</strong>；最底層 kernel 可能仍用 assembly。Android：system libraries C/C++，frameworks Java。</li>
+<li><strong>Advantages of high-level languages</strong>：<strong>easier to port to other hardware</strong>；code written faster, more compact, easier to understand and debug；compiler 進步 → recompile 就變好。</li>
+<li><strong>Disadvantages</strong>：reduced speed、increased storage requirements（今日唔係大問題）。</li>
+</ul>
+<h3 id="s6-4"><a class="anchor" href="#s6-4">#</a>6.4 Examples <span class="sref">[2.36–2.37]</span></h3>
+<ul>
+<li><strong>MS-DOS</strong>：<strong>single-tasking</strong>；開機 invoke shell；<strong>no process created</strong>；single memory space；load program overwriting all but the kernel；program exit → shell reloaded。</li>
+<li><strong>FreeBSD</strong>（Unix variant）：<strong>multitasking</strong>；user login → shell；<strong>shell executes <code>fork()</code> to create a new process, <code>exec()</code> to load a new program into the process</strong>；shell <strong>waits for the process to terminate</strong> or continues with user commands（background）；需要 CPU scheduling、process coordination、memory management。</li>
+</ul>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. Operating System Structure ⭐⭐⭐（必考比較題）<span class="sref">[2.38–2.53]</span></h2>
+<h3 id="s7-0"><a class="anchor" href="#s7-0">#</a>7.0 一覽表</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Structure</th>
+  <th>核心概念</th>
+  <th>優點</th>
+  <th>缺點</th>
+  <th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Simple structure</strong></td>
+  <td>無 well-defined structure</td>
+  <td>most functionality in least space</td>
+  <td>interfaces/levels 唔分明；<strong>app 可直接 access I/O</strong>；no dual mode/no hardware protection</td>
+  <td><strong>MS-DOS</strong></td>
+</tr>
+<tr>
+  <td><strong>Monolithic</strong></td>
+  <td><strong>all kernel functionality in a single, static binary file running in a single address space</strong></td>
+  <td><strong>performance</strong>：system-call interface overhead 好少，kernel 內部溝通快</td>
+  <td><strong>difficult to implement, debug, maintain/modify</strong>；<strong>tightly coupled</strong></td>
+  <td><strong>Original UNIX</strong>, Linux, Windows（largely）</td>
+</tr>
+<tr>
+  <td><strong>Layered</strong></td>
+  <td>layer 0 = hardware … layer N = user interface；每層只用下層服務</td>
+  <td><strong>simplicity of construction and debugging</strong>；<strong>information hiding</strong></td>
+  <td><strong>難定義 layers</strong>；<strong>performance overhead</strong>（traverse 多層）</td>
+  <td>TCP/IP networks；(pure layered OS 好少)</td>
+</tr>
+<tr>
+  <td><strong>Microkernel</strong></td>
+  <td><strong>remove nonessential components from kernel, implement them as user-level programs in separate address spaces</strong>；靠 <strong>message passing</strong></td>
+  <td><strong>easier to extend</strong>、<strong>easier to port</strong>、<strong>more secure and reliable</strong>（less code in kernel mode）</td>
+  <td><strong>performance suffers</strong> due to <strong>increased system-function overhead / user–kernel communication / message copying</strong></td>
+  <td><strong>Mach</strong>, Darwin（macOS/iOS 部分）, Windows NT（layered microkernel）</td>
+</tr>
+<tr>
+  <td><strong>Loadable kernel modules (LKMs)</strong></td>
+  <td>core kernel + <strong>dynamically loaded modules（boot time or run time）</strong></td>
+  <td>唔使 recompile/reboot；<strong>any module can call any other module</strong>；<strong>no message passing → more efficient than microkernel</strong></td>
+  <td>（仍喺 kernel mode，module 出錯可影響 kernel）</td>
+  <td><strong>Linux</strong>（device drivers, file systems）, Solaris</td>
+</tr>
+<tr>
+  <td><strong>Hybrid</strong></td>
+  <td>混合多種結構</td>
+  <td>performance + security + usability</td>
+  <td>複雜</td>
+  <td><strong>Linux</strong>（monolithic + modular）, <strong>Windows</strong>（monolithic + microkernel-like <strong>personalities</strong> + LKMs）, <strong>macOS/iOS</strong>（Darwin = Mach + BSD）</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s7-1"><a class="anchor" href="#s7-1">#</a>7.1 Simple Structure — MS-DOS <span class="sref">[2.39]</span></h3>
+<ul>
+<li><strong>Written to provide the most functionality in the least space</strong>；not carefully divided into modules。</li>
+<li><strong>Application programs can access I/O directly</strong>（interfaces/levels 唔分開）。</li>
+<li>Written for <strong>Intel 8088 — no dual mode and no hardware protection</strong>。</li>
+</ul>
+<h3 id="s7-2"><a class="anchor" href="#s7-2">#</a>7.2 Monolithic Structure — Original UNIX ⭐ <span class="sref">[2.40–2.42]</span></h3>
+<ul>
+<li><strong>Traditional UNIX kernel = everything below the system-call interface and above the physical hardware.</strong></li>
+</ul>
+<figure class="fig"><img src="assets/img/ch2_p40.png" alt="Original UNIX: monolithic structure" loading="lazy"><figcaption>Original UNIX: monolithic structure <span class="sref">[2.40]</span></figcaption></figure>
+<ul>
+<li><strong>Place all functionality of the kernel into a single, static binary file that runs in a single address space.</strong></li>
+<li><strong>UNIX = two separable parts: kernel + system programs</strong>；kernel 再分成 interfaces 同 device drivers。</li>
+<li><strong>Drawback</strong>：enormous functionalities combined into one level → <strong>difficult to implement, debug, and maintain</strong>。</li>
+<li><strong>Advantage</strong>：<strong>distinct performance advantage — very little overhead in the system-call interface, and communication within the kernel is fast.</strong> → 所以 UNIX、Linux、Windows 仍然用。</li>
+<li>Sp21 MC：Original UNIX 採用 → <strong>Monolithic structure</strong>。</li>
+<li><strong>Linux</strong> <span class="sref">[2.42]</span>：based on UNIX；<strong>monolithic — runs entirely in kernel mode in a single address space</strong>；apps 用 <strong>glibc</strong> 同 system call interface 溝通；<strong>modular design 可以 run time 改 kernel（LKM）</strong>。</li>
+</ul>
+<h3 id="s7-3"><a class="anchor" href="#s7-3">#</a>7.3 Modular Design <span class="sref">[2.43]</span></h3>
+<ul>
+<li>Monolithic = <strong>tightly coupled system</strong>（改一部分影響其他部分）。</li>
+<li><strong>Loosely coupled system</strong>：分成細 components，每個有 specific/limited 功能 → <strong>changes in one component affect only that component</strong> → 更自由靈活。</li>
+<li><strong>Layered approach 係 modular design 嘅其中一種。</strong></li>
+</ul>
+<h3 id="s7-4"><a class="anchor" href="#s7-4">#</a>7.4 Layered Approach ⭐ <span class="sref">[2.44–2.45]</span></h3>
+<ul>
+<li><strong>OS divided into layers, each built on top of lower layers. Bottom layer (layer 0) = hardware; highest (layer N) = user interface.</strong></li>
+<li>每層有 data structures + functions，可被上層調用、可調用下層。</li>
+<li><strong>Information hiding</strong>：上層唔需要知下層點 implement，只需知 <strong>what</strong> these operations do（interface）；每層隱藏自己嘅 data structures、operations、hardware。</li>
+<li><strong>Main advantage：simplicity of construction and debugging</strong>（由最底層開始逐層 debug）。</li>
+<li>成功例子：<strong>computer networks（TCP/IP）</strong>、web applications。</li>
+<li><strong>Few OSes use a pure layered approach because</strong>：<ol>
+<li><strong>Significant challenges in appropriately defining layers and their functionalities</strong></li>
+<li><strong>Overall performance affected by the overhead of traversing multiple layers to obtain a service</strong></li>
+</ol>
+</li>
+<li>Trend：<strong>fewer layers with more functionality</strong>，modularized code。</li>
+<li>S26 MC9 <span class="ok">✅</span>：<strong>The interfaces between adjacent layers are usually well defined</strong>。<span class="no">❌</span> any layer may directly access any other layer；<span class="no">❌</span> eliminates all performance overhead；<span class="no">❌</span> pure layered is dominant。</li>
+</ul>
+<h3 id="s7-5"><a class="anchor" href="#s7-5">#</a>7.5 Microkernel ⭐⭐ <span class="sref">[2.46–2.48]</span></h3>
+<ul>
+<li>Kernel 變大難管理 → <strong>removing all nonessential components from the kernel and implementing them as system or user-level programs in separate address spaces</strong> → <strong>much smaller kernel</strong>。</li>
+<li><strong>Mach</strong>（CMU, mid-1980s）；best-known：<strong>Darwin</strong>（Mac OS X/iOS，包含 Mach microkernel）。</li>
+<li>微核心通常提供：<strong>minimal process and memory management + communication facility (IPC)</strong>。</li>
+<li><strong>Main function：provide communication between client programs and services running in user space through message passing.</strong> 例：app 要讀 file → 同 <strong>file server</strong> 經 microkernel <strong>exchange messages</strong>，兩者<strong>唔直接 interact</strong>。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch2_p47.png" alt="Microkernel: services in user mode talk via message passing" loading="lazy"><figcaption>Microkernel: services in user mode talk via message passing <span class="sref">[2.47]</span></figcaption></figure>
+<ul>
+<li><strong>Advantages</strong>：<ul>
+<li><strong>Easier to extend</strong> — new services added to <strong>user space without modifying the kernel</strong></li>
+<li>Kernel 要改時改動較少（kernel 細）</li>
+<li><strong>Easier to port to new architectures</strong></li>
+<li><strong>More secure and reliable</strong> — less code in kernel mode；<strong>if a service fails, the rest of the OS remains untouched</strong></li>
+</ul>
+</li>
+<li><strong>Drawbacks</strong>：<ul>
+<li><strong>Performance can suffer due to increased system-function overhead (user space ↔ kernel space communication)</strong></li>
+<li>Two user-level services communicate → <strong>messages must be copied between services in separate address spaces</strong></li>
+<li>Windows NT（layered microkernel）比 Windows 95 慢 → Windows XP 變返 more monolithic。</li>
+</ul>
+</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F20 Q2.1 Model answer</strong>：<em>Main idea: a microkernel removes all nonessential components from the kernel and implements them as system or user-level programs in separate address spaces; the kernel keeps only minimal process/memory management and IPC (message passing). Advantage: easier to extend/port, more secure and reliable since less code runs in kernel mode. Disadvantage: performance suffers due to increased system-function overhead — message passing / copying between user space and kernel space.</em></p>
+</blockquote>
+<blockquote class="callout warn">
+<p>⚠️ <strong>S26 MC7</strong>：「microkernel typically has better performance than monolithic」→ <strong>False</strong>。（「runs memory management in user space」亦被接受為 false，因為 minimal memory management 喺 kernel 入面。）HW1 MC5 <span class="ok">✅</span>「microkernel keeps only essential functions in the kernel and provides other services outside the kernel through message passing」。</p>
+</blockquote>
+<h3 id="s7-6"><a class="anchor" href="#s7-6">#</a>7.6 Loadable Kernel Modules (LKMs) — Modular Approach ⭐⭐ <span class="sref">[2.49–2.51]</span></h3>
+<ul>
+<li><strong>Best current methodology for OS design.</strong></li>
+<li><strong>Kernel has a set of core components and links in additional services via modules, either at boot time or during run time.</strong></li>
+<li>好處：<strong>dynamic linking is preferable to adding features directly to the kernel, which would require recompiling the entire kernel every time</strong>。例：kernel 內有 CPU scheduling + memory management，<strong>file systems 經 loadable modules 加入</strong>。</li>
+<li><strong>Similar to layered</strong>：each kernel section has <strong>well-defined, protected interfaces</strong>；<strong>but more flexible — any module can call any other module</strong>（無上下層限制）。</li>
+<li><strong>Similar to microkernel</strong>：primary module 只有 core functions + 知點 load/communicate 其他 modules；<strong>but more efficient — modules do not need message passing to communicate</strong>。</li>
+<li><strong>Linux uses LKMs primarily for device drivers and file systems</strong>；可以 boot/run time <strong>insert</strong> 或 <strong>remove</strong>。例：插 USB，kernel 冇 driver → dynamic load。</li>
+<li>→ <strong>dynamic and modular kernel while keeping the performance benefits of a monolithic system</strong>。</li>
+<li><span class="sref">[2.51]</span> Solaris：core kernel + scheduling classes, file systems, loadable system calls, executable formats, STREAMS modules, misc modules, device &amp; bus drivers。</li>
+<li>F20 MC6：「core components in kernel + adds services via modules during run time」→ <strong>LKMs</strong>。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q1.4 Model answer（LKM vs layered）</strong>：<em>Similarity: like a layered design, OS functionality is divided into modules, each with a well-defined (protected) interface. Difference: LKM is much more flexible — any module can call any other module directly, with no higher/lower layer restriction (and modules can be loaded/removed at run time).</em></p>
+</blockquote>
+<h3 id="s7-7"><a class="anchor" href="#s7-7">#</a>7.7 Hybrid Systems <span class="sref">[2.52–2.59]</span></h3>
+<ul>
+<li><strong>Very few OSes adopt a single strictly defined structure → hybrid systems</strong> combine approaches for <strong>performance, security, usability</strong>。</li>
+<li><strong>Linux</strong>：<strong>monolithic</strong>（single address space → efficient）+ <strong>modular</strong>（LKM）。</li>
+<li><strong>Windows</strong>：<strong>largely monolithic</strong>，但保留 microkernel 特色 — <strong>separate subsystems (personalities) running as user-mode processes</strong>；亦支援 dynamically loadable kernel modules。</li>
+<li><strong>macOS / iOS</strong> <span class="sref">[2.54–2.57]</span>：kernel environment <strong>Darwin = Mach microkernel + BSD UNIX kernel</strong>（<strong>XNU kernel</strong>，hybrid）。<ul>
+<li><strong>Two system-call interfaces</strong>：<strong>Mach system calls (traps)</strong> + <strong>BSD system calls (POSIX)</strong>。</li>
+<li><strong>Mach</strong> → memory management, CPU scheduling, IPC；<strong>BSD</strong> → POSIX API, networking, file system, security。</li>
+<li><strong>I/O kit</strong> for device drivers；dynamically loadable modules = <strong>kernel extensions (kexts)</strong>。</li>
+<li>Mac：<strong>Aqua</strong> UI（mouse/trackpad）、<strong>Cocoa</strong>（Objective-C API）、Core frameworks（QuickTime, OpenGL）。</li>
+<li>iOS：<strong>Springboard</strong> UI（touch）、<strong>Cocoa Touch</strong>、Media services、Core services（cloud, databases）；<strong>ARM</strong>（vs Intel）；不能原生跑 Mac apps。</li>
+</ul>
+</li>
+<li><strong>Android</strong> <span class="sref">[2.58–2.59]</span>：Open Handset Alliance（Google）；<strong>open-source</strong>（iOS closed-source）；layered；<strong>Android API for Java</strong> → 跑喺 <strong>Android RunTime (ART)</strong>（VM optimized for mobile）；<strong>JNI (Java Native Interface)</strong> bypass VM 存取 hardware（<strong>not portable</strong>）；libraries：webkit, SQLite, SSL；<strong>HAL (hardware abstraction layer)</strong> → consistent view；<strong>Bionic</strong> C library（唔係 glibc）；modified Linux kernel（power management）。</li>
+<li><strong>iOS vs Android</strong>（summary）：相同 — 都基於現有 kernel、software stack、developer frameworks；唔同 — iOS closed / Android open；Objective-C vs Java；<strong>Android uses a VM, iOS executes natively</strong>。</li>
+</ul>
+<h3 id="s7-8"><a class="anchor" href="#s7-8">#</a>7.8 Summary in OS Design <span class="sref">[2.53]</span>（原句，MC 用）</h3>
+<ul>
+<li><strong>Monolithic</strong>: no structure; all functionality in a single static binary in a single address space; difficult to modify; <strong>primary benefit is efficiency</strong>.</li>
+<li><strong>Layered</strong>: discrete layers (bottom = hardware interface, top = user interface); <strong>not ideal for OS due to performance problems and difficulty in defining layers</strong>.</li>
+<li><strong>Microkernel</strong>: minimal kernel; most services run as user-level applications; <strong>communication via message passing</strong>.</li>
+<li><strong>LKM</strong>: services through modules <strong>loaded and removed during runtime</strong>.</li>
+<li><strong>Many contemporary OSes are hybrid: monolithic kernel + modules.</strong></li>
+</ul>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. History of OS <span class="sref">[2.60]</span></h2>
+<ul>
+<li>硬件貴、人平：<strong>Hand programmed (1945–55)</strong> → <strong>Batch processing (1955–65)</strong> → <strong>Multiprogramming (1965–80)</strong></li>
+<li>硬件平、人貴：<strong>Time sharing</strong> → <strong>Personal computer</strong> → <strong>Distributed OS</strong> → <strong>Real-time OS</strong></li>
+</ul>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. 補充：Protection &amp; Security（Chapter 2 summary）</h2>
+<ul>
+<li><strong>Protection</strong> — controlling access of users/processes to resources。<strong>Access right</strong> = permission to perform operations on an object；<strong>Domain</strong> = a set of access rights；process 喺 domain 入面執行。</li>
+<li><strong>Security</strong> — defend system against internal/external attacks（DoS, worms, viruses）。</li>
+</ul>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. 常見陷阱 &amp; MC 速查</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>printf() is a system call</td>
+  <td><span class="no">❌</span>（library function，calls write()）</td>
+</tr>
+<tr>
+  <td>API always faster than system calls</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>API can bypass kernel protection</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Parameters can be passed by registers, block/table, stack</td>
+  <td><span class="ok">✅</span>（all of the above）</td>
+</tr>
+<tr>
+  <td>Block &amp; stack methods limit number of parameters</td>
+  <td><span class="no">❌</span>（<strong>do not</strong> limit）</td>
+</tr>
+<tr>
+  <td>Shell may be implemented in kernel or as system program</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Linker loads program into memory</td>
+  <td><span class="no">❌</span>（loader 做）</td>
+</tr>
+<tr>
+  <td>DLLs are loaded once and shared</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Microkernel has better performance than monolithic</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Microkernel: services communicate by message passing</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Microkernel easier to port and extend</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Layered: any layer may call any other layer</td>
+  <td><span class="no">❌</span>（LKM 先可以 any module calls any module）</td>
+</tr>
+<tr>
+  <td>Layered: main advantage = simplicity of construction &amp; debugging</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>LKM requires recompiling entire kernel</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>LKM more efficient than microkernel (no message passing)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Monolithic: fast but hard to maintain</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Original UNIX = monolithic</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Linux = monolithic + modular (hybrid)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Windows NT = layered microkernel</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Policy = how; mechanism = what</td>
+  <td><span class="no">❌</span>（<strong>policy = what，mechanism = how</strong>）</td>
+</tr>
+<tr>
+  <td>Darwin = Mach + BSD</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Android apps run on ART VM; iOS runs natively</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s11"><a class="anchor" href="#s11">#</a>11. Past-paper 題目（Ch2）</h2>
+<ol>
+<li><strong>S26 MC5</strong> false about OS services → <strong>&quot;Errors only occur in memory and I/O devices&quot;</strong></li>
+<li><strong>S26 MC6</strong> advantage of API → <strong>more convenient programming interface</strong></li>
+<li><strong>S26 MC7</strong> false about microkernel → <strong>better performance than monolithic</strong>（C 亦接受）</li>
+<li><strong>S26 MC8</strong> printf/write → <strong>printf() invokes write() system call</strong></li>
+<li><strong>S26 MC9</strong> layered → <strong>interfaces between adjacent layers are well defined</strong></li>
+<li><strong>F19 Q1.1 / F20 Q2.2</strong> linker vs loader（§5）</li>
+<li><strong>F19 Q1.3</strong> 點解分開 API 同 system call（§3.3）</li>
+<li><strong>F19 Q1.4</strong> LKM vs layered（§7.6）</li>
+<li><strong>F20 MC4</strong> APIs；<strong>MC5</strong> all of the above；<strong>MC6</strong> LKMs；<strong>Q2.1</strong> microkernel（§7.5）</li>
+<li><strong>Sp21 MC</strong>：two modes → <strong>user mode and kernel mode</strong>；interface to OS services → <strong>system calls</strong>；original UNIX → <strong>monolithic</strong></li>
+<li><strong>HW1 MC5</strong> microkernel true statement；<strong>MC6</strong> read() path；<strong>MC7</strong> privileged instruction in user mode → <strong>trap to OS</strong>；<strong>Q2.4</strong> read() user→kernel→user</li>
+</ol>
+<hr />
+<h2 id="s12"><a class="anchor" href="#s12">#</a>12. 自我測驗</h2>
+<ol>
+<li>寫出 system call 六大類別。</li>
+<li>點解 block/stack parameter passing 優於 registers？（no limit on number/length）</li>
+<li>LKM 同 microkernel 有咩相似同唔同？（both: core kernel small; LKM no message passing → efficient）</li>
+<li>舉例說明 policy vs mechanism。（timer = mechanism; how long = policy）</li>
+<li>FreeBSD shell 點樣 run 一個 program？（fork → exec → wait）</li>
+</ol>
+
+<nav class="pager"><a href="ch1.html"><small>← 上一頁</small>Ch1 Introduction</a><a class="next" href="ch3.html"><small>下一頁 →</small>Ch3 Processes</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. Operating System Services（OS 服務）[2.4–2.7]</a>
+<a class="l3" href="#s1-1">1.1 對 user 有用嘅服務（helpful to the user）</a>
+<a class="l3" href="#s1-2">1.2 確保系統本身有效運作（efficient operation via resource sharing）</a>
+<a class="l2" href="#s2">2. User Interfaces [2.8–2.12]</a>
+<a class="l2" href="#s3">3. System Calls ⭐⭐ [2.13–2.26]</a>
+<a class="l3" href="#s3-1">3.1 定義</a>
+<a class="l3" href="#s3-2">3.2 API (Application Programming Interface) [2.15]</a>
+<a class="l3" href="#s3-3">3.3 點解用 API 而唔直接 call system call？⭐（F19 Q1.3、S26 MC6）[2.17]</a>
+<a class="l3" href="#s3-4">3.4 System Call Implementation [2.18–2.19]</a>
+<a class="l3" href="#s3-5">3.5 System Call Parameter Passing ⭐ [2.20–2.21]</a>
+<a class="l3" href="#s3-6">3.6 Types of System Calls（六類）⭐ [2.22–2.25]</a>
+<a class="l3" href="#s3-7">3.7 Standard C Library Example ⭐（S26 MC8）[2.26]</a>
+<a class="l2" href="#s4">4. System Programs（系統程式）[2.27–2.30]</a>
+<a class="l2" href="#s5">5. Linkers and Loaders ⭐⭐（F19 Q1.1、F20 Q2.2 都考過）[2.31–2.32]</a>
+<a class="l2" href="#s6">6. OS Design and Implementation [2.33–2.37]</a>
+<a class="l3" href="#s6-1">6.1 Design goals [2.33]</a>
+<a class="l3" href="#s6-2">6.2 Policy vs Mechanism ⭐ [2.34]</a>
+<a class="l3" href="#s6-3">6.3 Implementation [2.35]</a>
+<a class="l3" href="#s6-4">6.4 Examples [2.36–2.37]</a>
+<a class="l2" href="#s7">7. Operating System Structure ⭐⭐⭐（必考比較題）[2.38–2.53]</a>
+<a class="l3" href="#s7-0">7.0 一覽表</a>
+<a class="l3" href="#s7-1">7.1 Simple Structure — MS-DOS [2.39]</a>
+<a class="l3" href="#s7-2">7.2 Monolithic Structure — Original UNIX ⭐ [2.40–2.42]</a>
+<a class="l3" href="#s7-3">7.3 Modular Design [2.43]</a>
+<a class="l3" href="#s7-4">7.4 Layered Approach ⭐ [2.44–2.45]</a>
+<a class="l3" href="#s7-5">7.5 Microkernel ⭐⭐ [2.46–2.48]</a>
+<a class="l3" href="#s7-6">7.6 Loadable Kernel Modules (LKMs) — Modular Approach ⭐⭐ [2.49–2.51]</a>
+<a class="l3" href="#s7-7">7.7 Hybrid Systems [2.52–2.59]</a>
+<a class="l3" href="#s7-8">7.8 Summary in OS Design [2.53]（原句，MC 用）</a>
+<a class="l2" href="#s8">8. History of OS [2.60]</a>
+<a class="l2" href="#s9">9. 補充：Protection &amp; Security（Chapter 2 summary）</a>
+<a class="l2" href="#s10">10. 常見陷阱 &amp; MC 速查</a>
+<a class="l2" href="#s11">11. Past-paper 題目（Ch2）</a>
+<a class="l2" href="#s12">12. 自我測驗</a></aside>
+</div>
+
+</body>
+</html>

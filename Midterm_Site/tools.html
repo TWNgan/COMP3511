@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+<link rel="stylesheet" href="assets/sched.css?v=1793172171">
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="tools">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools" class="active"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Practice</span></div>
+
+<h1>工具 Tools</h1>
+<p>CPU scheduling 模擬器（跟本科 convention：response time = end of first run − arrival；MLFQ preempted → head of queue + 剩餘 quantum），
+同埋考試常用計算機。考試唔可以用電腦，所以用嚟<b>練習同對答案</b>。</p>
+<h2 id="scheduler">🗓️ CPU Scheduling Simulator</h2>
+<div id="sched-app"><p class="muted">（載入中… 如果冇顯示，請確認 assets/sched.js 存在）</p></div>
+<h2 id="calculators">🧮 Calculators</h2>
+<div class="calc" id="calc-amdahl"><h3>Amdahl's Law</h3>
+ <label>輸入係 <select id="am-mode"><option value="serial">serial 比例 S</option><option value="parallel">parallel 比例</option></select></label>
+ <label>比例 (0–1) <input id="am-s" type="number" step="0.01" value="0.25"></label>
+ <label>cores N <input id="am-n" type="number" value="2"></label>
+ <div class="out" id="am-out"></div>
+ <h4>反向：想要 speedup X（N cores）需要幾多 serial？</h4>
+ <label>X <input id="amr-x" type="number" step="0.1" value="3"></label><label>N <input id="amr-n" type="number" value="4"></label>
+ <div class="out" id="amr-out"></div>
+</div>
+<div class="calc"><h3>Average Memory Access Time</h3>
+ <label>hit ratio (0–1 或 %) <input id="am-h" type="number" step="0.01" value="0.9"></label>
+ <label>hit time <input id="am-ht" type="number" value="2"></label>
+ <label><select id="am-mtype"><option value="time">miss time</option><option value="penalty">miss penalty</option></select> <input id="am-mt" type="number" value="50"></label>
+ <div class="out" id="amat-out"></div>
+</div>
+<div class="calc"><h3>Exponential Averaging τ(n+1) = α·t(n) + (1−α)·τ(n)</h3>
+ <label>α <input id="ea-a" type="number" step="0.05" value="0.5"></label>
+ <label>τ0 <input id="ea-t0" type="number" value="10"></label>
+ <label>actual bursts <input id="ea-ts" value="6 4 6 4 13 13 13" style="width:220px"></label>
+ <div class="out" id="ea-out"></div>
+</div>
+<div class="calc"><h3>Little's Formula n = λ × W（留空要計嗰格）</h3>
+ <label>n <input id="li-n" type="number" value="12"></label>
+ <label>λ <input id="li-l" type="number" value="3"></label>
+ <label>W <input id="li-w" type="number"></label>
+ <div class="out" id="li-out"></div>
+</div>
+<div class="calc"><h3>Real-time utilization & RM bound</h3>
+ <label>每行一個 task：<code>processing_time period</code></label><br>
+ <textarea id="rt-tasks" rows="4" cols="30">25 50
+35 80</textarea>
+ <div class="out" id="rt-out"></div>
+</div>
+<div class="calc"><h3>fork() pattern counter</h3>
+ <label>pattern <select id="fk-pat">
+  <option value="f1">loop n: fork();</option>
+  <option value="f2">loop n: fork(); fork();</option>
+  <option value="f3">loop n: if (fork()) fork();</option>
+  <option value="f4">loop n: if (fork()==0) fork();</option>
+  <option value="f5">loop n: if (fork()) fork(); else break;</option>
+  <option value="f6">loop n: if (fork()) printf else printf (lines)</option>
+  <option value="f7">if(!fork()){loop n: if(fork()) fork();} fork(); printf</option>
+ </select></label>
+ <label>n <input id="fk-n" type="number" value="3"></label>
+ <div class="out" id="fk-out"></div>
+</div>
+
+<nav class="pager"><a href="quiz.html"><small>← 上一頁</small>MC 練習 Quiz</a><span></span></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#scheduler">CPU Scheduling Simulator</a>
+<a class="l2" href="#calculators">Calculators</a></aside>
+</div>
+<script src="assets/sched.js?v=1793172171"></script><script src="assets/sched-ui.js?v=1793172171"></script><script src="assets/tools.js?v=1793172171"></script>
+</body>
+</html>

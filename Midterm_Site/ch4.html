@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch4 Threads · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch4">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4" class="active"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-4-threads-concurrency">Chapter 4 — Threads &amp; Concurrency（線程與並行）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：Ch4 通常 <strong>3–4 題 MC</strong> + 有機會 1 題 short question。必考：
+<strong>thread 有乜自己私有 / 乜同其他 thread 共享</strong>、<strong>benefits（4 個）</strong>、<strong>concurrency vs parallelism</strong>、<strong>data vs task parallelism</strong>、<strong>Amdahl's Law 計算</strong>、<strong>multithreading models（many-to-one / one-to-one / many-to-many）</strong>、<strong>signals（sync vs async）</strong>、<strong>thread cancellation（asynchronous vs deferred）</strong>、<strong>fork()/exec() semantics</strong>、<strong>Linux clone()</strong>、<strong>heavyweight vs lightweight</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Motivation &amp; Overview（動機）<span class="sref">[4.4–4.6]</span></h2>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 點解要 multithreading？</h3>
+<ul>
+<li>好多 applications 本身係 multithreaded：<ul>
+<li><strong>Web browser</strong>：一個 thread display images/text，另一個 thread 由 network retrieve data。</li>
+<li><strong>Word processor</strong>：display graphics、respond to keystrokes、background spelling &amp; grammar checking。</li>
+</ul>
+</li>
+<li><strong>Most OS kernels are multithreaded</strong>（Linux boot 時建立多個 kernel threads：managing devices、memory management、interrupt handling）。</li>
+<li><strong>Take advantage of processing capabilities on multicore systems</strong>（data mining、graphics、AI）。</li>
+<li>⭐ <strong>Process creation is heavy-weight while thread creation is light-weight</strong> — threads of the same process <strong>share code, data and other resources</strong>。</li>
+<li>其他例子 <span class="sref">[4.5]</span>：embedded systems（elevators, planes）、OS kernels、<strong>database servers</strong>、<strong>network servers</strong>（file/web server、airline reservation）、parallel programming。</li>
+</ul>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 Thread 定義 ⭐⭐ <span class="sref">[4.6]</span></h3>
+<ul>
+<li><strong>A thread is a basic unit of CPU utilization</strong> — independently scheduled and run（<strong>an instance of execution</strong>）。</li>
+<li><strong>每個 thread 私有（per-thread）</strong>：<strong>thread ID, program counter (PC), register set, stack</strong></li>
+<li><strong>同一 process 嘅 threads 共享（shared）</strong>：<strong>code (text), data (global variables), heap, open files, signals</strong>（及其他 OS resources）</li>
+</ul>
+<pre class="code" data-lang=""><code> single-threaded process        multithreaded process
+ ┌──────┬──────┬──────┐        ┌──────┬──────┬──────┐
+ │ code │ data │ files│        │ code │ data │ files│   ← shared
+ ├──────┼──────┼──────┤        ├──────┼──────┼──────┤
+ │ regs │  PC  │stack │        │ regs │ regs │ regs │   ← private
+ └──────┴──────┴──────┘        │stack │stack │stack │      (per thread)
+                               │  PC  │  PC  │  PC  │
+                               └──────┴──────┴──────┘
+</code></pre>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q2.3</strong>：unique to each thread → <strong>program counter, registers, stack, thread ID (thread state)</strong>；shared → <strong>code, data, files (heap)</strong>。
+⚠️ <strong>F20 MC11</strong>：NOT shared by threads in the same process → <strong>Stack</strong>。</p>
+</blockquote>
+<figure class="fig"><img src="assets/img/ch4_p6.png" alt="Single- vs multithreaded process" loading="lazy"><figcaption>Single- vs multithreaded process <span class="sref">[4.6]</span></figcaption></figure>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. Benefits（四大好處）⭐⭐ <span class="sref">[4.7]</span></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Benefit</th>
+  <th>解釋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Responsiveness</strong></td>
+  <td><strong>may allow continued execution if part of a process (one thread) is blocked</strong> — 對 interactive / UI applications 特別重要</td>
+</tr>
+<tr>
+  <td><strong>Resource sharing</strong></td>
+  <td><strong>threads share the resources of a process by default</strong> — 比 shared memory / message passing 容易（同一 address space）</td>
+</tr>
+<tr>
+  <td><strong>Economy</strong></td>
+  <td><strong>thread creation is much cheaper than process creation</strong>（less time &amp; memory）；<strong>context switching between threads is faster</strong> than between processes</td>
+</tr>
+<tr>
+  <td><strong>Scalability</strong></td>
+  <td>process <strong>can take advantage of multicore architectures</strong>（threads run in parallel）</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout answer">
+<p>📝 HW2 MC1：app 喺一個 thread blocked 時仍然 respond user → <strong>Responsiveness</strong>。</p>
+</blockquote>
+<h3 id="s2-1"><a class="anchor" href="#s2-1">#</a>2.1 Heavyweight vs Lightweight（F20 Q2.3）⭐</h3>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>A process is called a heavyweight process because creating it requires allocating a new address space and duplicating the program, data and other resources (PCB, memory, open files) — time- and resource-consuming. A thread is lightweight because it only contains an execution unit (thread ID, PC, registers, stack, TCB) and shares the code, data and open files of its process; creating a thread needs no duplication of program and data, and context switching between threads of the same process is cheaper since the address space stays the same.</em></p>
+</blockquote>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Multicore Programming（多核心編程）⭐ <span class="sref">[4.8–4.11]</span></h2>
+<h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 五大挑戰 <span class="sref">[4.9]</span></h3>
+<ol>
+<li><strong>Dividing tasks</strong> — how to divide into separate, concurrent tasks</li>
+<li><strong>Balance</strong> — each task performs an &quot;equal&quot; amount of work（value）</li>
+<li><strong>Data splitting</strong> — data must be divided to run on separate cores</li>
+<li><strong>Data dependency</strong> — <strong>if there is a data dependency, synchronization is required</strong></li>
+<li><strong>Testing and debugging</strong> — <strong>different execution paths make debugging difficult</strong></li>
+</ol>
+<h3 id="s3-2"><a class="anchor" href="#s3-2">#</a>3.2 Concurrency vs Parallelism ⭐⭐ <span class="sref">[4.9–4.10]</span></h3>
+<ul>
+<li><strong>Parallelism</strong> — <strong>a system can perform more than one task simultaneously</strong>（需要 multicore / multiprocessor）。</li>
+<li><strong>Concurrency</strong> — <strong>supports more than one task making progress</strong>；<strong>on a single core, the scheduler provides concurrency by multiplexing over time</strong>。</li>
+<li><strong>Single-core：only concurrency is possible；multicore：parallelism possible.</strong></li>
+<li><strong>Concurrency without parallelism 係可以嘅；parallelism 一定 concurrent。</strong></li>
+</ul>
+<figure class="fig"><img src="assets/img/ch4_p10.png" alt="Concurrency vs parallelism" loading="lazy"><figcaption>Concurrency vs parallelism <span class="sref">[4.10]</span></figcaption></figure>
+<pre class="code" data-lang=""><code> Single core (concurrency):   T1 T2 T3 T4 T1 T2 T3 T4 T1 ...   (time →)
+ Two cores (parallelism):     core 0: T1 T3 T1 T3 ...
+                              core 1: T2 T4 T2 T4 ...
+</code></pre>
+<blockquote class="callout warn">
+<p>⚠️ <strong>S26 MC16</strong>：<span class="ok">✅</span>「<strong>Concurrency can be supported on a single processor core through time multiplexing by the scheduler</strong>」。
+✗「Concurrency means performing more than one task at exactly the same time」（嗰個係 parallelism）
+✗「Parallelism means tasks only make progress over time on a single core」
+✗「Testing and debugging become easier in multicore systems」
+<strong>Sp21 MC</strong>：multiple tasks make progress on a single processor → <strong>concurrency</strong>。</p>
+</blockquote>
+<h3 id="s3-3"><a class="anchor" href="#s3-3">#</a>3.3 Data vs Task Parallelism ⭐ <span class="sref">[4.11]</span></h3>
+<ul>
+<li><strong>Data parallelism</strong> — <strong>distributes subsets of the same data across multiple cores, same operation on each core</strong>（e.g. 分開 sum 一個 array 嘅兩半；distributed ML）。</li>
+<li><strong>Task parallelism</strong> — <strong>distributes threads (tasks) across cores, each thread performing a unique operation</strong>。</li>
+<li><strong>Not mutually exclusive</strong> — an application may use both（hybrid）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 HW2 MC2：「Threads on different cores perform the <strong>same operation on different subsets of an array</strong>」→ <strong>data parallelism</strong>。「One thread handles input, another does spell-check」→ task parallelism。</p>
+</blockquote>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. Amdahl's Law ⭐⭐⭐（計數題必考）<span class="sref">[4.12–4.13]</span></h2>
+<ul>
+<li><strong>S = serial portion，1 − S = parallel portion，N = number of processing cores</strong>。</li>
+<li><strong>As N → ∞, speedup → 1/S.</strong></li>
+<li><strong>Serial portion has a disproportionate effect on performance gained by adding cores.</strong></li>
+<li>Amdahl's Law identifies <strong>theoretical speedup in latency at a fixed workload</strong>。</li>
+</ul>
+<blockquote class="callout formula">
+<p>🧮 <strong>speedup ≤ 1 / ( S + (1 − S) / N )</strong></p>
+</blockquote>
+<h3 id="s4-1"><a class="anchor" href="#s4-1">#</a>4.1 例子（全部計算過）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>題目</th>
+  <th>S</th>
+  <th>N</th>
+  <th>計算</th>
+  <th>Speedup</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Slide：75% parallel</td>
+  <td>0.25</td>
+  <td>2</td>
+  <td>1/(0.25 + 0.75/2) = 1/0.625</td>
+  <td><strong>1.6</strong></td>
+</tr>
+<tr>
+  <td>Sp21 MC：30% serial</td>
+  <td>0.3</td>
+  <td>7</td>
+  <td>1/(0.3 + 0.7/7) = 1/0.4</td>
+  <td><strong>2.5</strong></td>
+</tr>
+<tr>
+  <td>HW2 Q3.1(a)：20% serial</td>
+  <td>0.2</td>
+  <td>4</td>
+  <td>1/(0.2 + 0.8/4) = 1/0.4</td>
+  <td><strong>2.5</strong></td>
+</tr>
+<tr>
+  <td>HW2 Q3.1(b)</td>
+  <td>0.2</td>
+  <td>∞</td>
+  <td>1/S = 1/0.2</td>
+  <td><strong>5</strong></td>
+</tr>
+<tr>
+  <td>S26 MC17 A：81% parallel</td>
+  <td>0.19</td>
+  <td>3</td>
+  <td>1/(0.19 + 0.27) = 1/0.46</td>
+  <td>2.17</td>
+</tr>
+<tr>
+  <td>S26 MC17 B：81% parallel</td>
+  <td>0.19</td>
+  <td>5</td>
+  <td>1/(0.19 + 0.162) = 1/0.352</td>
+  <td>2.84</td>
+</tr>
+<tr>
+  <td><strong>S26 MC17 C：61% parallel</strong></td>
+  <td>0.39</td>
+  <td>3</td>
+  <td>1/(0.39 + 0.2033) = 1/0.5933</td>
+  <td><strong>1.69 <span class="ok">✅</span>（1.6–1.7）</strong></td>
+</tr>
+<tr>
+  <td>S26 MC17 D：61% parallel</td>
+  <td>0.39</td>
+  <td>5</td>
+  <td>1/(0.39 + 0.122) = 1/0.512</td>
+  <td>1.95</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s4-2"><a class="anchor" href="#s4-2">#</a>4.2 解題 tips</h3>
+<ul>
+<li>留意題目畀 <strong>parallel %</strong> 定 <strong>serial %</strong>（S = serial！）。</li>
+<li>反向題：要 speedup = X with N cores → 解 S：<strong>S = (1/X − 1/N) / (1 − 1/N)</strong>。</li>
+<li>例：想 4 cores 有 3× speedup → S = (1/3 − 1/4)/(1 − 1/4) = (1/12)/(3/4) = <strong>1/9 ≈ 11.1% serial</strong>。</li>
+<li>Speedup 上限永遠 <strong>≤ N</strong> 同 <strong>≤ 1/S</strong>。</li>
+</ul>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Multithreaded Process &amp; TCB ⭐ <span class="sref">[4.14–4.18]</span></h2>
+<h3 id="s5-1"><a class="anchor" href="#s5-1">#</a>5.1 Multithreaded process <span class="sref">[4.14]</span></h3>
+<ul>
+<li><strong>More than one instance of execution</strong>，每個有自己 PC。</li>
+<li><strong>Threads share the same address space → can access the same data.</strong></li>
+<li><strong>Each thread has its own private set of registers.</strong></li>
+<li><strong>Context switch between two threads (T1 → T2) of the same process</strong>：save T1's register state, restore T2's；<strong>address space remains the same → overhead is much smaller</strong>。<strong>Switching to a thread of a different process → more overhead.</strong></li>
+<li><strong>Overlap of I/O with other activities within a single program</strong>（一個 thread 用 CPU，另一個做 I/O）。</li>
+</ul>
+<h3 id="s5-2"><a class="anchor" href="#s5-2">#</a>5.2 Thread Control Block (TCB) ⭐ <span class="sref">[4.15]</span></h3>
+<ul>
+<li><strong>Thread = single unique execution context = lightweight process</strong>：PC, registers, execution flags, stack。</li>
+<li>Thread 喺 processor 執行 = <strong>resident in the registers</strong>；<strong>PC register holds the address of the executing instruction</strong>。</li>
+<li><strong>Each thread has a TCB</strong>：<ul>
+<li><strong>Execution state</strong>：CPU registers, program counter, <strong>pointer to stack</strong></li>
+<li><strong>Scheduling info</strong>：state, priority, CPU time</li>
+<li><strong>Accounting info</strong></li>
+<li><strong>Various pointers</strong>（implementing scheduling queues）</li>
+<li><strong>Pointer to enclosing process (PCB)</strong></li>
+</ul>
+</li>
+<li>⚠️ Sp21 MC：<strong>NOT in TCB → Process identifier</strong>（PID 喺 PCB；TCB 只有 pointer to enclosing process）。</li>
+</ul>
+<h3 id="s5-3"><a class="anchor" href="#s5-3">#</a>5.3 Shared vs Private state <span class="sref">[4.16]</span> ⭐</h3>
+<ul>
+<li><strong>Threads encapsulate concurrency — &quot;active&quot; component；address space encapsulates protection — &quot;passive&quot; part.</strong></li>
+<li><strong>Shared by all threads in a process</strong>：<strong>contents of memory (global variables, heap)</strong>；<strong>I/O state (file descriptors, network connections)</strong></li>
+<li><strong>Private to each thread (kept in TCB)</strong>：<strong>CPU registers (including PC)</strong>；<strong>execution stack (parameters, temporary variables, saved PC)</strong></li>
+<li><strong>If a process has multiple threads, there is no &quot;process state&quot;, only the state of each thread</strong>（summary）。</li>
+</ul>
+<h3 id="s5-4"><a class="anchor" href="#s5-4">#</a>5.4 Thread lifecycle <span class="sref">[4.17–4.18]</span></h3>
+<ul>
+<li><strong>new → ready → running → waiting → terminated</strong>（同 process 一樣）。</li>
+<li><strong>&quot;Active&quot; threads are represented by their TCBs; TCBs are organized into queues by state</strong>（ready queue、各 device queues：tape unit、disk unit、ethernet…，每個 queue 有自己 scheduling policy）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>HW2 Q2.1</strong>：同一 process 兩個 threads 可唔可以有唔同 PC / register 值？→ <strong>Yes</strong> — 每個 thread 係獨立 flow of execution，有自己 PC、register set、stack；唔 running 時存喺 <strong>TCB (Thread Control Block)</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. User Threads vs Kernel Threads ⭐⭐ <span class="sref">[4.19–4.20]</span></h2>
+<ul>
+<li><strong>User threads</strong> — independently executable entities within a program, <strong>created and managed by a user-level thread library</strong>；<strong>visible only to programmers and unknown to the kernel</strong> → <strong>cannot be scheduled on a CPU directly</strong>。</li>
+<li><strong>Kernel threads</strong> — <strong>supported and managed by the OS</strong>；<strong>can be scheduled and executed on a CPU</strong>（Windows, Linux, macOS, iOS, Android 都支援）。</li>
+<li>⭐ <strong>OS only manages and schedules kernel threads.</strong>（F19 Q3.1：OS 排程嘅係 <strong>kernel-level threads</strong>）</li>
+<li><strong>Three primary thread libraries</strong>：<strong>POSIX Pthreads</strong>、<strong>Windows threads</strong>、<strong>Java threads</strong>（對應 POSIX API、Win32 API、Java API）。</li>
+<li>F20 MC12：provides API for creating and managing threads → <strong>Thread library (e.g. POSIX Pthreads)</strong>。</li>
+<li>If a program defines no user threads, there is no kernel thread to schedule for it（user threads = concurrent &amp; modular entities OS 可利用）。</li>
+<li><strong>TCB 只同 kernel thread 關聯</strong>；<strong>kernel thread is the only thing the CPU scheduler schedules</strong>（summary）。</li>
+</ul>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. Multithreading Models ⭐⭐⭐ <span class="sref">[4.21–4.26]</span></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>Mapping</th>
+  <th>優點</th>
+  <th>缺點</th>
+  <th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Many-to-One</strong></td>
+  <td>many user threads → <strong>1 kernel thread</strong></td>
+  <td>thread management 喺 user space（efficient）</td>
+  <td><strong>one thread blocking (blocking system call) blocks the entire process</strong>；<strong>cannot run in parallel on multicore</strong>（only one kernel thread active at a time）</td>
+  <td><strong>Solaris Green Threads, GNU Portable Threads</strong>（few systems now）</td>
+</tr>
+<tr>
+  <td><strong>One-to-One</strong></td>
+  <td>each user thread → <strong>its own kernel thread</strong></td>
+  <td><strong>maximum concurrency</strong>（another thread runs when one blocks）；<strong>parallel on multicore</strong></td>
+  <td><strong>creating a user thread requires creating a kernel thread → overhead</strong>；<strong>number of threads per process may be restricted</strong></td>
+  <td><strong>Windows, Linux</strong>（<strong>most common now</strong>）</td>
+</tr>
+<tr>
+  <td><strong>Many-to-Many</strong></td>
+  <td>many user threads → <strong>smaller or equal number</strong> of kernel threads</td>
+  <td>flexible；OS 可預先建立足夠 kernel threads（<strong>thread pool</strong>）；user threads 數目唔受 kernel threads 限制</td>
+  <td><strong>difficult to implement</strong> in practice</td>
+  <td>Windows ThreadFiber package（otherwise uncommon）</td>
+</tr>
+<tr>
+  <td><strong>Two-level</strong></td>
+  <td>many-to-many <strong>+ allows a user thread to be bound to a kernel thread</strong></td>
+  <td>更靈活</td>
+  <td>複雜</td>
+  <td>—</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Many-to-one 同 many-to-many 要決定邊個 user thread map 去 kernel thread → process-contention scope (PCS)</strong>（Ch5）。</li>
+<li><strong>Concurrency 比較</strong>：many-to-one &lt; many-to-many &lt; one-to-one。</li>
+<li><strong>Most OSes now use the one-to-one model</strong>（cores 多咗，限制 kernel threads 數目冇咁重要）<span class="sref">[4.26]</span>。</li>
+<li><strong>LWP (lightweight process)</strong>（summary）：user 同 kernel threads 之間嘅 intermediate data structure；<strong>對 thread library 嚟講 LWP 好似一個 virtual processor</strong>，library 將 user thread schedule 落 LWP；<strong>每個 LWP attached to a kernel thread</strong>；kernel thread block → LWP 都 block。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>MC 陷阱</strong>：</p>
+<ul>
+<li>F20 MC13 ✗「<strong>A user thread can be mapped to more than one kernel thread</strong>」（冇 one-to-many）；<span class="ok">✅</span> kernel threads scheduled by OS；<span class="ok">✅</span> users manage user threads；<span class="ok">✅</span> one user thread → at most one kernel thread。</li>
+<li>Sp21 MC ✗「<strong>The many-to-many model is easy to implement in practice</strong>」。<span class="ok">✅</span> many-to-one = many user → single kernel；<span class="ok">✅</span> one-to-one more concurrency than many-to-one；<span class="ok">✅</span> most OS now one-to-one。</li>
+<li><strong>HW2 Q2.2</strong>：many-to-one 喺 4 cores 可唔可以 parallel？→ <strong>No</strong>，只有一個 kernel thread，OS 只 schedule kernel threads，一次只可以喺一個 core 上跑（只有 concurrency 冇 parallelism）；一個 thread blocking system call 仲會 block 成個 process。</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. Threading Issues ⭐⭐ <span class="sref">[4.27–4.33]</span></h2>
+<h3 id="s8-1"><a class="anchor" href="#s8-1">#</a>8.1 fork() and exec() semantics <span class="sref">[4.28]</span></h3>
+<ul>
+<li><strong>Does <code>fork()</code> called by a thread duplicate only the calling thread or all threads?</strong></li>
+<li><strong>Some UNIX systems have two versions of fork().</strong></li>
+<li><strong>If <code>exec()</code> is called immediately after forking → duplicating only the calling thread is appropriate</strong>（exec 會取代成個 process）。</li>
+<li><strong><code>exec()</code> works as normal — replaces the entire process including all threads.</strong></li>
+</ul>
+<h3 id="s8-2"><a class="anchor" href="#s8-2">#</a>8.2 Signal Handling ⭐⭐ <span class="sref">[4.29–4.31]</span></h3>
+<ul>
+<li><strong>Signals notify a process that a particular event has occurred.</strong></li>
+<li><strong>Synchronous signals</strong> — <strong>illegal memory access, division by 0</strong> → <strong>delivered to the same process that performed the operation causing the signal</strong>。</li>
+<li><strong>Asynchronous signals</strong> — <strong>generated by an event external to the running process</strong>：<strong>terminating with <Ctrl><C></strong>、<strong>timer expires</strong>（<code>kill</code>）。</li>
+<li>處理：有啲 ignore，有啲（illegal memory access）terminate program。</li>
+<li><strong>Signal handling pattern</strong>：(1) <strong>generated</strong> by an event → (2) <strong>delivered</strong> to a process → (3) <strong>handled</strong> by a <strong>default</strong> or <strong>user-defined</strong> handler。</li>
+<li><strong>Every signal has a default handler (kernel); a user-defined handler can override the default.</strong></li>
+<li><strong>Multithreaded process 要 deliver 去邊？四個選擇</strong>：<ol>
+<li><strong>To the thread to which the signal applies</strong></li>
+<li><strong>To every thread in the process</strong></li>
+<li><strong>To certain threads in the process</strong></li>
+<li><strong>Assign a specific thread to receive all signals for the process</strong></li>
+</ol>
+</li>
+<li><strong>Synchronous signals → delivered to the thread causing the signal</strong>（not others）。</li>
+<li><strong>Some asynchronous signals (e.g. terminate process, Ctrl-C) → sent to all threads.</strong></li>
+<li>UNIX：<code>kill(pid_t pid, int signal)</code>（deliver to a process）；Pthreads：<code>pthread_kill(pthread_t tid, int signal)</code>（deliver to a specific thread）。</li>
+<li>⚠️ 留意：slide 3.41 將 <code>signal()</code> 寫成「send a notification to another process」，但實際 <strong>deliver</strong> 用 <code>kill()</code>（4.31）；<code>signal(SIGINT, handler)</code> 係<strong>安裝 user-defined handler</strong>（PA1）。MC 照題目用字揀。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>S26 MC18</strong> ✗「<strong>All signals should be delivered to all threads in a process</strong>」。<span class="ok">✅</span> signals can be received sync or async；<span class="ok">✅</span> users can define custom handlers；<span class="ok">✅</span> different signals can have different handlers。
+📝 HW2 MC3：<strong>division by zero → synchronous；timer expiration → asynchronous</strong>。
+📝 <strong>HW2 Q2.3 (Ctrl+C)</strong>：<em>Asynchronous — Ctrl+C makes the terminal send SIGINT, generated by an event external to the running process. Yes, the program can handle it differently: register a user-defined handler with <code>signal(SIGINT, handler)</code> (or <code>sigaction</code>), which overrides the default handler (terminate). (SIGKILL/SIGSTOP cannot be caught.)</em> — PA1 myshell 就係用 <code>signal(SIGINT, handle_sigint)</code>。</p>
+</blockquote>
+<h3 id="s8-3"><a class="anchor" href="#s8-3">#</a>8.3 Thread Cancellation ⭐ <span class="sref">[4.32–4.33]</span></h3>
+<ul>
+<li><strong>Terminating a thread before it has finished；the thread to be cancelled = target thread.</strong></li>
+<li><strong>Asynchronous cancellation</strong> — <strong>terminates the target thread immediately</strong>（可能喺 critical update 中途 → OS 未必可以 reclaim 所有 resources）。</li>
+<li><strong>Deferred cancellation</strong> — <strong>the target thread periodically checks whether it should terminate, allowing it to terminate itself in an orderly fashion</strong>（<strong>preferred</strong>）。</li>
+<li><strong>Invoking cancellation only requests it; actual cancellation depends on thread state and type.</strong></li>
+<li><strong>Pthreads：if cancellation is disabled, it remains pending until enabled；default type is deferred.</strong></li>
+<li>Code <span class="sref">[4.33]</span>：</li>
+</ul>
+<pre class="code" data-lang="c"><code>#include &lt;pthread.h&gt;
+pthread_t tid;
+pthread_create(&amp;tid, 0, worker, NULL);   /* worker = start routine */
+pthread_cancel(tid);                     /* request cancellation */
+pthread_join(tid, NULL);                 /* wait for thread to terminate */
+</code></pre>
+<blockquote class="callout answer">
+<p>📝 HW2 MC4：deferred cancellation → <strong>target thread periodically checks whether it should terminate</strong>。</p>
+</blockquote>
+<h3 id="s8-4"><a class="anchor" href="#s8-4">#</a>8.4 Thread-Local Storage（課本補充，Sp21 MC 考過）</h3>
+<ul>
+<li><strong>Thread-local storage (TLS) is data that is unique to each thread</strong>（類似 static data 但每個 thread 一份；同 local variables 唔同，local 只喺一個 function call 內存在）。</li>
+</ul>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. OS Examples <span class="sref">[4.34–4.38]</span></h2>
+<h3 id="s9-1"><a class="anchor" href="#s9-1">#</a>9.1 Windows Threads</h3>
+<ul>
+<li>Windows application = separate process，每個 process 可有多個 threads；<strong>Windows uses the one-to-one mapping</strong>。</li>
+<li>Thread 組成：<strong>thread ID, register set, program counter, separate user and kernel stacks, private data storage area</strong>（run-time libraries / DLLs 用）。</li>
+<li><strong>Register set + stacks + private storage area = context of the thread.</strong></li>
+<li>數據結構：<ul>
+<li><strong>ETHREAD (executive thread block)</strong> — pointer to process &amp; to KTHREAD（kernel space）</li>
+<li><strong>KTHREAD (kernel thread block)</strong> — scheduling &amp; synchronization info, <strong>kernel-mode stack</strong>, pointer to TEB（kernel space）</li>
+<li><strong>TEB (thread environment block)</strong> — thread id, <strong>user-mode stack</strong>, <strong>thread-local storage</strong>（<strong>user space</strong>）</li>
+</ul>
+</li>
+</ul>
+<h3 id="s9-2"><a class="anchor" href="#s9-2">#</a>9.2 Linux Threads ⭐ <span class="sref">[4.37–4.38]</span></h3>
+<ul>
+<li><strong>Linux does not differentiate between threads and processes — both are called tasks.</strong></li>
+<li><strong>A thread in Linux is a process that may share certain resources with other threads</strong>；每個 thread 有自己 <code>task_struct</code>。</li>
+<li>對比 Windows：Windows 一個 PCB（shared resources）指向兩個 TCB；<strong>Linux 就係兩個 normal task_struct，set up to share resources</strong>。</li>
+<li><strong><code>clone()</code></strong> 用 flags 指定 share 咩：</li>
+</ul>
+<pre class="code" data-lang="c"><code>clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);
+</code></pre>
+<ul>
+<li>CLONE_VM：share <strong>address space</strong>；CLONE_FS：share file-system info；CLONE_FILES：share <strong>open files</strong>；CLONE_SIGHAND：share <strong>signal handlers</strong>。</li>
+<li><strong>Instead of copying all data structures like fork(), the new task points to the parent's data structures depending on the flags.</strong></li>
+<li><strong>A normal <code>fork()</code> can be implemented as <code>clone(SIGCHLD, 0)</code></strong>（乜都唔 share → 等於 process）。</li>
+</ul>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. Pthreads API 速查（Lab 4 / Ch6 都用）</h2>
+<pre class="code" data-lang="c"><code>#include &lt;pthread.h&gt;
+int pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*start)(void *), void *arg);
+int pthread_join(pthread_t tid, void **retval);     /* wait for thread tid */
+void pthread_exit(void *retval);
+int pthread_cancel(pthread_t tid);
+pthread_t pthread_self(void);
+/* mutex */
+pthread_mutex_t m; pthread_mutex_init(&amp;m, NULL);
+pthread_mutex_lock(&amp;m); /* critical section */ pthread_mutex_unlock(&amp;m);
+/* semaphore */
+#include &lt;semaphore.h&gt;
+sem_t s; sem_init(&amp;s, 0 /*shared between threads*/, 1 /*initial value*/);
+sem_wait(&amp;s); /* P / wait: decrement or block */ sem_post(&amp;s); /* V / signal: increment */
+</code></pre>
+<ul>
+<li>編譯：<code>gcc prog.c -lpthread</code>（或 <code>-pthread</code>）。</li>
+<li>典型 pattern：</li>
+</ul>
+<pre class="code" data-lang="c"><code>void *worker(void *arg) { int id = *(int *)arg; ...; return NULL; }
+int main() {
+    pthread_t t[4]; int ids[4];
+    for (int i = 0; i &lt; 4; i++) { ids[i] = i; pthread_create(&amp;t[i], NULL, worker, &amp;ids[i]); }
+    for (int i = 0; i &lt; 4; i++) pthread_join(t[i], NULL);
+}
+</code></pre>
+<ul>
+<li>⚠️ 傳 <code>&amp;i</code>（loop variable）畀多個 thread 會 race（i 會變）→ 用 <code>ids[i]</code> array。</li>
+</ul>
+<hr />
+<h2 id="s11"><a class="anchor" href="#s11">#</a>11. 常見陷阱 &amp; MC 速查</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Each thread has its own address space and file descriptors</td>
+  <td><span class="no">❌</span>（share）</td>
+</tr>
+<tr>
+  <td>Threads of the same process cannot run concurrently on multiple cores</td>
+  <td><span class="no">❌</span>（one-to-one 可以 parallel）</td>
+</tr>
+<tr>
+  <td>Thread creation is usually faster than process creation</td>
+  <td><span class="ok">✅</span>（S26 MC15）</td>
+</tr>
+<tr>
+  <td>Multithreaded process can't use multicore</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Stack is shared among threads</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Heap / global data shared</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Concurrency possible on single core</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Parallelism possible on single core</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Data parallelism = same operation on different data subsets</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>As N→∞, Amdahl speedup → 1/S</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Speedup can exceed N</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>OS schedules user threads directly</td>
+  <td><span class="no">❌</span>（kernel threads）</td>
+</tr>
+<tr>
+  <td>Many-to-one allows parallelism on multicore</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Many-to-one: one blocking call blocks whole process</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>One-to-one: maximum concurrency, but overhead of kernel threads</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Many-to-many easy to implement</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>User thread can map to multiple kernel threads</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Most OS use one-to-one now</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Division by zero → asynchronous signal</td>
+  <td><span class="no">❌</span>（synchronous）</td>
+</tr>
+<tr>
+  <td>Ctrl-C → asynchronous</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>All signals delivered to all threads</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>User-defined handler can override default</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Asynchronous cancellation = target checks periodically</td>
+  <td><span class="no">❌</span>（嗰個係 deferred）</td>
+</tr>
+<tr>
+  <td>Pthreads default cancellation type = deferred</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Linux distinguishes threads and processes</td>
+  <td><span class="no">❌</span>（both tasks）</td>
+</tr>
+<tr>
+  <td>fork() = clone(SIGCHLD, 0)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>PID is in TCB</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Windows uses one-to-one</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s12"><a class="anchor" href="#s12">#</a>12. Past-paper 題目（Ch4）</h2>
+<ul>
+<li><strong>S26 MC15</strong>：true about multithreaded process → <strong>C. Thread creation is usually faster than process creation</strong></li>
+<li><strong>S26 MC16</strong>：concurrency/parallelism → <strong>C</strong></li>
+<li><strong>S26 MC17</strong>：Amdahl 1.6–1.7 → <strong>C (61%, 3 cores) = 1.69</strong></li>
+<li><strong>S26 MC18</strong>：false about signals → <strong>C. All signals delivered to all threads</strong></li>
+<li><strong>F19 Q2.3</strong>：unique vs shared（§1.2）；<strong>Q3.1</strong>：OS schedules kernel threads；user-thread → kernel-thread/LWP scheduling = <strong>PCS (process-contention scope)</strong>，within the same process, based on priority set by programmer；CPU scheduling (SCS) 喺全系統 kernel threads 之間揀</li>
+<li><strong>F20 MC11</strong> stack；<strong>MC12</strong> thread library；<strong>MC13</strong> user thread → multiple kernel threads（false）；<strong>Q2.3</strong> heavyweight vs lightweight</li>
+<li><strong>Sp21 MC</strong>：Amdahl 30% serial 7 cores → <strong>2.5</strong>；TCB 唔包括 <strong>process identifier</strong>；single processor 多 task progress → <strong>concurrency</strong>；many-to-many easy to implement（false）；TLS → <strong>unique to each thread</strong></li>
+<li><strong>HW2</strong>：MC1 responsiveness、MC2 data parallelism、MC3 sync/async、MC4 deferred、Q2.1 TCB、Q2.2 many-to-one、Q2.3 Ctrl+C、Q3.1 Amdahl（2.5；5）</li>
+</ul>
+<hr />
+<h2 id="s13"><a class="anchor" href="#s13">#</a>13. 自我測驗</h2>
+<ol>
+<li>列出 multithreading 四個 benefits。</li>
+<li>50% serial 嘅 program 用 4 cores speedup？（1/(0.5+0.125) = <strong>1.6</strong>）；無限 cores？（<strong>2</strong>）</li>
+<li>Many-to-one model 兩大缺點？</li>
+<li>點解 exec() 緊接 fork() 時只複製 calling thread 就夠？</li>
+<li>Deferred vs asynchronous cancellation？邊個 preferred？點解？</li>
+<li>Linux 點樣建立 thread？（clone() with CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND）</li>
+</ol>
+
+<nav class="pager"><a href="ch3.html"><small>← 上一頁</small>Ch3 Processes</a><a class="next" href="ch5.html"><small>下一頁 →</small>Ch5 CPU Scheduling</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. Motivation &amp; Overview（動機）[4.4–4.6]</a>
+<a class="l3" href="#s1-1">1.1 點解要 multithreading？</a>
+<a class="l3" href="#s1-2">1.2 Thread 定義 ⭐⭐ [4.6]</a>
+<a class="l2" href="#s2">2. Benefits（四大好處）⭐⭐ [4.7]</a>
+<a class="l3" href="#s2-1">2.1 Heavyweight vs Lightweight（F20 Q2.3）⭐</a>
+<a class="l2" href="#s3">3. Multicore Programming（多核心編程）⭐ [4.8–4.11]</a>
+<a class="l3" href="#s3-1">3.1 五大挑戰 [4.9]</a>
+<a class="l3" href="#s3-2">3.2 Concurrency vs Parallelism ⭐⭐ [4.9–4.10]</a>
+<a class="l3" href="#s3-3">3.3 Data vs Task Parallelism ⭐ [4.11]</a>
+<a class="l2" href="#s4">4. Amdahl&#x27;s Law ⭐⭐⭐（計數題必考）[4.12–4.13]</a>
+<a class="l3" href="#s4-1">4.1 例子（全部計算過）</a>
+<a class="l3" href="#s4-2">4.2 解題 tips</a>
+<a class="l2" href="#s5">5. Multithreaded Process &amp; TCB ⭐ [4.14–4.18]</a>
+<a class="l3" href="#s5-1">5.1 Multithreaded process [4.14]</a>
+<a class="l3" href="#s5-2">5.2 Thread Control Block (TCB) ⭐ [4.15]</a>
+<a class="l3" href="#s5-3">5.3 Shared vs Private state [4.16] ⭐</a>
+<a class="l3" href="#s5-4">5.4 Thread lifecycle [4.17–4.18]</a>
+<a class="l2" href="#s6">6. User Threads vs Kernel Threads ⭐⭐ [4.19–4.20]</a>
+<a class="l2" href="#s7">7. Multithreading Models ⭐⭐⭐ [4.21–4.26]</a>
+<a class="l2" href="#s8">8. Threading Issues ⭐⭐ [4.27–4.33]</a>
+<a class="l3" href="#s8-1">8.1 fork() and exec() semantics [4.28]</a>
+<a class="l3" href="#s8-2">8.2 Signal Handling ⭐⭐ [4.29–4.31]</a>
+<a class="l3" href="#s8-3">8.3 Thread Cancellation ⭐ [4.32–4.33]</a>
+<a class="l3" href="#s8-4">8.4 Thread-Local Storage（課本補充，Sp21 MC 考過）</a>
+<a class="l2" href="#s9">9. OS Examples [4.34–4.38]</a>
+<a class="l3" href="#s9-1">9.1 Windows Threads</a>
+<a class="l3" href="#s9-2">9.2 Linux Threads ⭐ [4.37–4.38]</a>
+<a class="l2" href="#s10">10. Pthreads API 速查（Lab 4 / Ch6 都用）</a>
+<a class="l2" href="#s11">11. 常見陷阱 &amp; MC 速查</a>
+<a class="l2" href="#s12">12. Past-paper 題目（Ch4）</a>
+<a class="l2" href="#s13">13. 自我測驗</a></aside>
+</div>
+
+</body>
+</html>

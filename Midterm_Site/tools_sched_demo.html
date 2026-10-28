@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPU scheduling simulator - COMP3511 midterm</title>
+<style>
+  /* Stand-in for the main site's theme variables, so this page works on its own. */
+  :root {
+    --bg: #f7f7f5; --fg: #1f1f1e; --muted: #66655f; --card: #ffffff; --border: #e1e0d9;
+    --accent: #2a78d6; --accent2: #eb6834;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  [data-theme="dark"] {
+    --bg: #0f0f0e; --fg: #f0efec; --muted: #a9a8a0; --card: #1a1a19; --border: #383835;
+    --accent: #3987e5; --accent2: #d95926;
+  }
+  html { background: var(--bg); color: var(--fg); }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 1.3rem; margin: 4px 0; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9rem; flex-basis: 100%; }
+  #theme { font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--card); color: var(--fg); }
+</style>
+<link rel="stylesheet" href="assets/sched.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>CPU scheduling simulator</h1>
+    <button type="button" id="theme">Dark mode</button>
+    <p>Standalone test page for assets/sched.js, sched-ui.js and sched.css. Pick an exam example or type your own processes.</p>
+  </header>
+  <div id="sched-app"></div>
+</main>
+<script src="assets/sched.js"></script>
+<script src="assets/sched-ui.js"></script>
+<script>
+  (function () {
+    var btn = document.getElementById('theme'), root = document.documentElement;
+    function sync() { btn.textContent = root.getAttribute('data-theme') === 'dark' ? 'Light mode' : 'Dark mode'; }
+    btn.addEventListener('click', function () {
+      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      sync();
+    });
+    sync();
+  })();
+</script>
+</body>
+</html>

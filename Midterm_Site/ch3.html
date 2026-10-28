@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch3 Processes · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch3">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3" class="active"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-3-processes">Chapter 3 — Processes（進程 / 行程）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：Ch3 係<strong>分數最多</strong>嘅章節之一。必考：</p>
+<ol>
+<li><strong>fork() 計數 / process tree / possible outputs</strong>（每年 2–3 題，8–13 分一題）</li>
+<li><strong>fork + exec + wait 成功/失敗情況</strong>、<strong>pipe / dup 填空</strong>（S26 Q3.3）</li>
+<li>MC：<strong>process state、PCB、context switch、schedulers、zombie/orphan、pipes（ordinary vs named）、interrupt、DMA、dual mode</strong>
+⚠️ 今個 term <strong>interrupt / DMA / dual-mode</strong> 喺 Ch3 slides（3.21–3.31）。</li>
+</ol>
+</blockquote>
+<hr />
+<h2 id="s0"><a class="anchor" href="#s0">#</a>0. Computer-System Operation：I/O、Interrupt、DMA、Dual Mode <span class="sref">[3.21–3.31]</span></h2>
+<h3 id="s0-1"><a class="anchor" href="#s0-1">#</a>0.1 I/O 基本運作 <span class="sref">[3.21]</span></h3>
+<ul>
+<li><strong>I/O devices and the CPU execute concurrently and asynchronously.</strong></li>
+<li><strong>Each device controller is in charge of a particular device type and has a local buffer.</strong></li>
+<li><strong>Device controller moves data between the peripheral devices and its local buffer storage.</strong>（I/O = device ↔ controller local buffer）</li>
+<li><strong>CPU moves data from/to main memory to/from local buffers</strong>（typically for slow devices: keyboard, mouse）。</li>
+<li><strong>Device controller informs the CPU that it has finished an operation by causing an interrupt.</strong><ul>
+<li>Input device：data available in local buffer；Output device：I/O operation completed。</li>
+</ul>
+</li>
+</ul>
+<h3 id="s0-2"><a class="anchor" href="#s0-2">#</a>0.2 Interrupts ⭐⭐ <span class="sref">[3.22–3.24]</span></h3>
+<ul>
+<li><strong>An I/O device may trigger an interrupt by sending a signal to the CPU</strong>（經 <strong>interrupt-request line</strong>）。CPU <strong>handles the interrupt and then returns to the interrupted instruction</strong>。</li>
+<li><strong>Interrupts are widely used to handle asynchronous events — device controllers and hardware faults.</strong></li>
+<li><strong>Interrupt transfers control to an interrupt service routine (ISR) or interrupt handler — part of kernel code.</strong></li>
+<li><strong>Interrupt vector</strong>（summary）：a table/array holding the <strong>addresses of the interrupt handlers</strong>；每個 interrupt 有 unique <strong>interrupt number</strong> 作為 index。</li>
+<li>運作（summary）：CPU <strong>每執行完一條 instruction 就 sense interrupt-request line</strong> → 有 signal → 讀 interrupt number → 用佢做 index 入 interrupt vector → jump 去 handler。</li>
+<li><strong>兩條 interrupt request lines</strong>（summary）：<ul>
+<li><strong>Nonmaskable interrupt</strong> — reserved for events like <strong>unrecoverable memory errors, power failure</strong></li>
+<li><strong>Maskable interrupt</strong> — <strong>can be turned off by the CPU</strong> before executing critical instruction sequences；device controllers 用（可以 delay）</li>
+</ul>
+</li>
+<li><strong>Interrupt priority levels</strong> ⭐ — <strong>a high-priority interrupt can preempt the execution of a low-priority interrupt</strong>；CPU 可以 defer low-priority interrupts 而唔使 mask 全部。</li>
+<li><strong>A trap or exception is a software-generated interrupt caused either by an error (e.g., arithmetic error / divide by zero) or a user request (a system call).</strong> ⭐</li>
+<li><strong>All modern operating systems are interrupt-driven</strong>；每秒幾百個 interrupts。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>MC 陷阱</strong>：</p>
+<ul>
+<li>S26 MC1 ✗「<strong>All interrupts are serviced in exactly the same way, with no difference in priority</strong>」（有 priority levels）</li>
+<li>HW1 MC2 ✗「<strong>Interrupts can only be generated by I/O devices</strong>」（software trap/exception 都係）；<span class="ok">✅</span> hardware interrupts asynchronous；<span class="ok">✅</span> trap caused by error or system call；<span class="ok">✅</span> different priority levels</li>
+<li>F20 MC3 ✗「<strong>Interrupt allows software to access hardware including the CPU</strong>」（嗰個係 <strong>system call</strong> 嘅作用）</li>
+<li>Sp21 MC2：直接 trigger interrupt 嘅 event → <strong>I/O job completion</strong></li>
+</ul>
+</blockquote>
+<h3 id="s0-3"><a class="anchor" href="#s0-3">#</a>0.3 DMA (Direct Memory Access) ⭐⭐ <span class="sref">[3.25–3.26]</span></h3>
+<ul>
+<li><strong>Programmed I/O</strong> — <strong>CPU runs special I/O instructions to move one byte at a time between memory and slow devices</strong>（keyboard, mouse）。</li>
+<li><strong>DMA</strong> — for <strong>fast devices and large amounts of data</strong>：<strong>DMA controller bypasses the CPU to transfer data between I/O device and memory directly</strong>；CPU/OS 只係 <strong>initialize</strong> DMA controller。→ <strong>relieves the CPU from slow data movement</strong>。</li>
+<li>步驟：OS writes <strong>DMA command block</strong> into memory（<strong>source and destination addresses, read or write mode, number of bytes</strong>）→ writes location of command block to DMA controller → <strong>bus mastering</strong>（DMA controller grabs bus from CPU）→ <strong>when done, sends an interrupt to the CPU to signal completion</strong>。</li>
+<li><strong>Six-step DMA transfer <span class="sref">[3.26]</span></strong>：<ol>
+<li>Device driver is told to transfer disk data to buffer at address X</li>
+<li>Device driver tells disk controller to transfer C bytes from disk to buffer at address X</li>
+<li>Disk controller initiates DMA transfer</li>
+<li>Disk controller sends each byte to DMA controller</li>
+<li>DMA controller transfers bytes to buffer X, increasing memory address and decreasing C until C = 0</li>
+<li><strong>When C = 0, DMA interrupts CPU to signal transfer completion</strong></li>
+</ol>
+</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch3_p26.png" alt="Six-step DMA transfer" loading="lazy"><figcaption>Six-step DMA transfer <span class="sref">[3.26]</span></figcaption></figure>
+<blockquote class="callout warn">
+<p>⚠️ <strong>MC 陷阱</strong>：</p>
+<ul>
+<li>HW1 MC1 ✗「<strong>DMA controller sends an interrupt after every byte</strong>」→ 只係 <strong>block 完成後 interrupt 一次</strong></li>
+<li>S26 MC2 <span class="ok">✅</span>「<strong>DMA allows data transfer between device and memory with less CPU involvement</strong>」</li>
+<li>✗「DMA eliminates interrupts completely」；✗「CPU and DMA can't execute concurrently」；✗「DMA for slow devices, CPU for fast devices」（相反）</li>
+</ul>
+</blockquote>
+<h3 id="s0-4"><a class="anchor" href="#s0-4">#</a>0.4 Dual-mode Operation ⭐⭐ <span class="sref">[3.27–3.31]</span></h3>
+<ul>
+<li><strong>Dual-mode operation allows the OS to protect itself and other system components.</strong></li>
+<li><strong>User mode</strong> vs <strong>kernel mode</strong>（亦叫 supervisor / system / privileged mode）— distinguish execution of OS code and user code。</li>
+<li><strong>Provides the basic means of protecting the OS from errant users, and errant users from one another.</strong></li>
+<li><strong>Mode bit provided by hardware：user mode = 1，kernel mode = 0.</strong> ⭐</li>
+<li><strong>Privileged instructions — can only be executed in kernel mode</strong>，例：<strong>I/O control, timer management, interrupt management</strong>（summary：set timer value, clear memory, disable interrupts, modify device-status table, access I/O devices）。</li>
+<li><strong>If a privileged instruction is attempted in user mode, the hardware treats it as illegal and traps it to the OS.</strong>（HW1 MC7 答案 A）</li>
+<li><strong>Beyond two modes</strong>：<strong>Intel — four protection rings（ring 0 = kernel, ring 3 = user；rings 1, 2 rarely used）</strong>；<strong>ARMv8 — seven modes</strong>；<strong>CPUs supporting virtualization have a separate VMM mode（more privileges than user, fewer than kernel）</strong>。VMM 做 <strong>machine switch</strong>（save entire machine state 包括 privileged hardware state）。</li>
+<li><strong>Initial control in kernel mode → set to user mode when giving control to user app → back to kernel via interrupt, trap, or system call.</strong></li>
+<li><strong>Timer</strong> — ensures a user program always returns control to the OS（防止 infinite loop 霸住 CPU）；設定 timer 係 privileged。</li>
+<li><strong>System call</strong>：user mode → kernel mode to fulfil request；<strong>return from system call resets it to user mode</strong>。</li>
+</ul>
+<h3 id="s0-5"><a class="anchor" href="#s0-5">#</a>0.5 Three Types of Mode Transfer（user → kernel）⭐ <span class="sref">[3.31]</span></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Type</th>
+  <th>性質</th>
+  <th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>System call</strong></td>
+  <td>user process <strong>requests a service</strong> from OS；&quot;like a function call but outside the user process&quot;</td>
+  <td><code>exit()</code>, <code>write()</code>, <code>read()</code></td>
+</tr>
+<tr>
+  <td><strong>Interrupt</strong></td>
+  <td><strong>external, asynchronous</strong> events；<strong>independent of user process</strong></td>
+  <td>timer, I/O completion</td>
+</tr>
+<tr>
+  <td><strong>Trap / Exception</strong></td>
+  <td><strong>internal, synchronous</strong> events in the process</td>
+  <td><strong>protection violation (segmentation fault)</strong>, <strong>divide by zero</strong></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Process Concept（進程概念）<span class="sref">[3.4–3.8]</span></h2>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 Four Fundamental OS Concepts <span class="sref">[3.4]</span></h3>
+<ol>
+<li><strong>Process</strong> — <strong>an instance of an executing program</strong>；consists of <strong>an address space and one or more threads of control</strong>。</li>
+<li><strong>Thread</strong> — <strong>a single unique execution context</strong>；fully describes program state — <strong>program counter, registers, execution flags, stack</strong>。</li>
+<li><strong>Address space</strong> — program 喺自己嘅 address space 執行，<strong>distinct from other programs'</strong>（logical/virtual address，Ch9–10）。</li>
+<li><strong>Dual-mode operation</strong> — basic protection（見 §0.4）。</li>
+</ol>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 Process 嘅組成部分 <span class="sref">[3.5]</span> ⭐</h3>
+<ul>
+<li><strong>Text section</strong> — the program code</li>
+<li><strong>Current activity</strong> — <strong>program counter</strong>, processor registers</li>
+<li><strong>Stack</strong> — <strong>temporary data when invoking functions: function parameters, return addresses, local variables</strong> ⭐（Sp21 MC 答案：stack）</li>
+<li><strong>Data section</strong> — <strong>global variables</strong></li>
+<li><strong>Heap</strong> — <strong>memory dynamically allocated during run time</strong>（<code>malloc()</code> / <code>free()</code>）</li>
+<li><strong>Program = passive entity</strong>（executable file on disk）；<strong>Process = active entity</strong>（有 PC 指住下一條 instruction + associated resources）。</li>
+<li><strong>A program becomes a process when an executable file is loaded into memory</strong>（double-click icon / shell command）。</li>
+<li><strong>One program can be executed by multiple processes.</strong></li>
+<li>A process can be an execution environment for other programs（例：<strong>JVM</strong> 執行 Java program）。</li>
+</ul>
+<h3 id="s1-3"><a class="anchor" href="#s1-3">#</a>1.3 Loading a program into memory <span class="sref">[3.7]</span></h3>
+<ol>
+<li><strong>Load code and static data</strong>（initialized variables）into the address space</li>
+<li><strong>Allocate the runtime stack</strong>；fill in <code>main()</code> parameters <strong>argc, argv</strong></li>
+<li><strong>Allocate heap</strong>（<code>malloc()</code> / <code>free()</code>）</li>
+<li><strong>Other initialization (I/O)</strong> — UNIX：每個 process 預設有 <strong>three open file descriptors: stdin (0), stdout (1), stderr (2)</strong> ⭐</li>
+</ol>
+<h3 id="s1-4"><a class="anchor" href="#s1-4">#</a>1.4 Memory Layout of a C Program <span class="sref">[3.8]</span></h3>
+<pre class="code" data-lang=""><code> high address ┌──────────────────────┐
+              │ argc, argv           │  (separate section for main() params)
+              ├──────────────────────┤
+              │ stack   ↓            │  local vars, params, return addr
+              │                      │
+              │ heap    ↑            │  malloc()
+              ├──────────────────────┤
+              │ uninitialized data   │  (bss)  ┐ global data
+              │ initialized data     │         ┘
+              ├──────────────────────┤
+ low address  │ text (code)          │
+              └──────────────────────┘
+</code></pre>
+<ul>
+<li><strong>Global data section is divided into (1) initialized data and (2) uninitialized data.</strong></li>
+</ul>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. Process State（進程狀態）⭐⭐ <span class="sref">[3.9]</span></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>State</th>
+  <th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>New</strong></td>
+  <td>process is being created — <strong>allocating resources</strong></td>
+</tr>
+<tr>
+  <td><strong>Ready</strong></td>
+  <td><strong>waiting to be assigned to a CPU core</strong></td>
+</tr>
+<tr>
+  <td><strong>Running</strong></td>
+  <td><strong>instructions are being executed</strong> on a CPU</td>
+</tr>
+<tr>
+  <td><strong>Waiting</strong></td>
+  <td><strong>waiting for some event(s)</strong> to occur（I/O completion, signal）</td>
+</tr>
+<tr>
+  <td><strong>Terminated</strong></td>
+  <td>finished execution — <strong>deallocating resources</strong></td>
+</tr>
+</tbody>
+</table></div>
+<pre class="code" data-lang=""><code>   new --admitted--&gt; ready &lt;--interrupt-- running --exit--&gt; terminated
+                       |  ----scheduler dispatch----&gt;   |
+                       ^                                v
+                       +--I/O or event completion-- waiting &lt;--I/O or event wait--+
+</code></pre>
+<p><strong>轉換（F19 Q2.1 答案）</strong>：</p>
+<ul>
+<li>New → Ready：<strong>admitted</strong></li>
+<li>Ready → Running：<strong>scheduler dispatch</strong>（CPU scheduling）</li>
+<li>Running → Ready：<strong>interrupt</strong>（e.g. timer / time slice expired / preempted）</li>
+<li>Running → Waiting：<strong>I/O or event wait</strong></li>
+<li>Waiting → Ready：<strong>I/O or event completion</strong></li>
+<li>Running → Terminated：<strong>exit</strong></li>
+</ul>
+<figure class="fig"><img src="assets/img/ch3_p9.png" alt="Process state diagram" loading="lazy"><figcaption>Process state diagram <span class="sref">[3.9]</span></figcaption></figure>
+<blockquote class="callout answer">
+<p>📝 <strong>HW1 Q2.3</strong>：admitted → dispatched → disk I/O → I/O completes → timer interrupt → dispatched → exits
+<strong>New → Ready → Running → Waiting → Ready → Running → Ready → Running → Terminated</strong>
+離開 Running 時 OS 喺 <strong>PCB</strong> 記錄：<strong>process state, program counter, CPU registers</strong>（context），以及更新 scheduling info、accounting info（CPU time used）、I/O status（e.g. pending I/O request）。</p>
+</blockquote>
+<blockquote class="callout warn">
+<p>⚠️ 注意：<strong>Waiting → Running 係冇嘅</strong>（要先返 Ready）；<strong>Ready → Waiting 亦冇</strong>。
+S26 MC14：令 process 離開 running state 嘅 event → <strong>It issues an I/O request</strong>（call function / 加 local variable / read cache 都唔會）。
+Sp21 MC6：might force a process to leave the CPU → <strong>all of the above</strong>（fork system call、I/O request、interrupt）。</p>
+</blockquote>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Process Control Block (PCB) ⭐ <span class="sref">[3.10, 3.13]</span></h2>
+<p><strong>PCB（又叫 task control block）= information associated with each process</strong>（kernel data structure）：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Field</th>
+  <th>內容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Process state</strong></td>
+  <td>running, waiting, etc.</td>
+</tr>
+<tr>
+  <td><strong>Program counter</strong></td>
+  <td>location of the next instruction to execute</td>
+</tr>
+<tr>
+  <td><strong>CPU registers</strong></td>
+  <td>accumulators, index registers, <strong>stack pointers</strong>, general-purpose registers, condition codes</td>
+</tr>
+<tr>
+  <td><strong>CPU-scheduling information</strong></td>
+  <td><strong>priorities, pointers to scheduling queues</strong>, scheduling parameters</td>
+</tr>
+<tr>
+  <td><strong>Memory-management information</strong></td>
+  <td>memory allocated（page tables / segment tables）</td>
+</tr>
+<tr>
+  <td><strong>Accounting information</strong></td>
+  <td>CPU used, clock time elapsed, time limits</td>
+</tr>
+<tr>
+  <td><strong>I/O status information</strong></td>
+  <td>I/O devices allocated, <strong>list of open files</strong></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>每個 process 有 unique <strong>PID (process identifier)</strong>（UNIX/Linux 係 positive integer；<strong>PID 1 = init / systemd</strong>，root process）。</li>
+<li><strong>Process table / process list</strong> — kernel data structure keeping track of all processes（indexed by PID, pointing to PCBs）。</li>
+<li><strong>Linux</strong> <span class="sref">[3.13]</span>：<strong>task list = circular doubly linked list</strong> of <strong><code>struct task_struct</code></strong>（process descriptor = PCB）：<code>pid_t pid; long state; unsigned int time_slice; struct task_struct *parent; struct list_head children; struct files_struct *files; struct mm_struct *mm;</code></li>
+</ul>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. Threads（簡介，詳見 Ch4）<span class="sref">[3.11–3.12]</span></h2>
+<ul>
+<li><strong>A thread is represented by a program counter, registers, execution flags, and a stack — part of a process.</strong></li>
+<li>一個 thread 喺 CPU 執行 = 佢嘅 state 喺 CPU <strong>hardware registers</strong>。</li>
+<li><strong>Multiple threads of a process run within the same address space (share code, data, files); each thread has its own thread state.</strong>（multicore 上可以 parallel）</li>
+<li>例：web browser 一個 thread display、一個 thread 由 network 拎 data。</li>
+<li>傳統 process（single thread）= <strong>heavy-weight process</strong>。</li>
+</ul>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Process Scheduling（進程排程）⭐ <span class="sref">[3.14–3.18]</span></h2>
+<h3 id="s5-1"><a class="anchor" href="#s5-1">#</a>5.1 基本</h3>
+<ul>
+<li><strong>Objective of multiprogramming：have some process running at all times to maximize CPU utilization.</strong></li>
+<li><strong>Process scheduler</strong> — selects an available process (in memory) for execution on a CPU core。</li>
+<li><strong>Single CPU core → never more than one process running at a time.</strong></li>
+<li><strong>Degree of multiprogramming = number of processes currently residing in memory.</strong> ⭐（Sp21 MC）</li>
+<li><strong>I/O-bound process</strong> — more time doing I/O；<strong>many short CPU bursts</strong>。</li>
+<li><strong>CPU-bound process</strong> — infrequent I/O；<strong>few very long CPU bursts</strong>。</li>
+</ul>
+<h3 id="s5-2"><a class="anchor" href="#s5-2">#</a>5.2 Scheduling Queues <span class="sref">[3.15–3.16]</span></h3>
+<ul>
+<li><strong>Ready queue</strong> — processes in main memory, ready and waiting to execute</li>
+<li><strong>Wait queues</strong> — processes waiting for an event（e.g. I/O completion）</li>
+<li><strong>Processes migrate among the various queues during their lifetime.</strong></li>
+<li><strong>Queueing diagram</strong> <span class="sref">[3.16]</span>：ready queue → CPU → 出口有：<strong>I/O request</strong>（→ I/O wait queue → I/O → ready）、<strong>time slice expired</strong>（→ ready）、<strong>create child process</strong>（→ child termination wait queue）、<strong>wait for an interrupt</strong>（→ interrupt wait queue → interrupt occurs → ready）。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch3_p16.png" alt="Queueing diagram" loading="lazy"><figcaption>Queueing diagram <span class="sref">[3.16]</span></figcaption></figure>
+<ul>
+<li>Summary：<strong>the state of a process can be determined by which queue it resides on</strong>（running 嗰個例外）。</li>
+</ul>
+<h3 id="s5-3"><a class="anchor" href="#s5-3">#</a>5.3 Schedulers ⭐⭐ <span class="sref">[3.17–3.18]</span></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Scheduler</th>
+  <th>又叫</th>
+  <th>做咩</th>
+  <th>頻率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Long-term scheduler</strong></td>
+  <td><strong>job scheduler</strong></td>
+  <td><strong>selects which processes should be brought into memory</strong>（from job queue, after resource allocation）；<strong>dictates the degree of multiprogramming</strong>；aims for a <strong>good process mix</strong> of I/O-bound and CPU-bound；mainframes/minicomputers 用，<strong>PC 冇</strong></td>
+  <td><strong>very infrequent</strong>（seconds, minutes）→ may be slow</td>
+</tr>
+<tr>
+  <td><strong>Short-term scheduler</strong></td>
+  <td><strong>CPU scheduler</strong></td>
+  <td><strong>selects a process from the ready queue to execute next and allocates a CPU core</strong></td>
+  <td><strong>very frequent</strong>（milliseconds）→ <strong>must be fast</strong></td>
+</tr>
+<tr>
+  <td><strong>Medium-term scheduler</strong></td>
+  <td>—</td>
+  <td><strong>reduces degree of multiprogramming</strong> — <strong>removes a process from memory, stores it on disk, brings it back later = swapping</strong>（swap space）</td>
+  <td>需要時</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>F20 MC10：「___ swaps a process out of memory and temporarily stores it on disk」→ <strong>medium-term scheduler</strong>。</li>
+<li>Sp21 MC：「selects from the ready queue to execute on the CPU」→ <strong>short-term scheduler</strong>。</li>
+</ul>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. Context Switch（上下文切換）⭐⭐ <span class="sref">[3.19–3.20]</span></h2>
+<ul>
+<li><strong>When the CPU switches to another process, the OS must save the state of the old process and load the saved state of the new process via a context switch.</strong></li>
+<li><strong>Context of a process is represented in the PCB</strong>（or thread）：registers, program counter, stack pointer。</li>
+<li><strong>Context-switch time is pure overhead — the system does no useful work while switching.</strong></li>
+<li><strong>The more complex the OS and the PCB, the longer the context switch.</strong></li>
+<li>速度取決於 <strong>memory speed, number of registers to copy, special instructions (load/store all registers)</strong> → <strong>highly dependent on hardware</strong>。</li>
+<li><strong>Some processors provide multiple sets of registers（SUN UltraSPARC）→ context switch = changing a pointer to another register set.</strong></li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ S26 MC11 <span class="ok">✅</span>「<strong>During context switch, OS saves the state of one process/thread and restores another</strong>」。
+✗「Context switch means switching from user mode to kernel mode」（嗰個係 <strong>mode switch</strong>，唔係 context switch）
+✗「requires same hardware on all architectures」；✗「shorter if OS is more complex」</p>
+</blockquote>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. Process Creation（建立進程）⭐⭐⭐ <span class="sref">[3.32–3.46]</span></h2>
+<h3 id="s7-1"><a class="anchor" href="#s7-1">#</a>7.1 概念</h3>
+<ul>
+<li><strong>Parent process creates child processes → tree of processes.</strong> 每個 process 有 unique <strong>pid</strong>。</li>
+<li>Linux tree <span class="sref">[3.33]</span>：<code>systemd (pid 1)</code> 有三個 children：<code>logind (8415)</code>、<code>python (2808)</code>、<code>sshd (3028)</code>；<code>logind</code> → <code>bash (8416)</code> → <code>ps (9298)</code>、<code>vim (9204)</code>；<code>sshd (3028)</code> → <code>sshd (3610)</code> → <code>tcsh (4005)</code>。</li>
+<li>Child 需要 resources（CPU time, memory, files, I/O devices）；parent 可傳 initialization data。</li>
+<li><strong>Resource sharing 三種選擇</strong> <span class="sref">[3.34]</span>：<ol>
+<li><strong>Parent and children share (almost) all resources</strong> — <code>fork()</code></li>
+<li><strong>Children share a subset of parent's resources</strong> — <code>clone()</code>（Ch4）</li>
+<li><strong>Parent and child share no resources</strong></li>
+</ol>
+</li>
+<li><strong>Execution 兩種選擇</strong>：<ol>
+<li><strong>Parent continues to execute concurrently with its children</strong>（例：<code>a.out &amp;</code>）</li>
+<li><strong>Parent waits until some or all of its children have terminated</strong>（例：shell 等 <code>a.out</code> 完成）</li>
+</ol>
+</li>
+<li><strong>Address space 兩種選擇</strong> <span class="sref">[3.35]</span>：<ol>
+<li><strong>Child is a duplicate of the parent (same program and data)</strong> — UNIX/Linux <code>fork()</code></li>
+<li><strong>Child has a new program loaded into it</strong> — <code>exec()</code></li>
+</ol>
+</li>
+</ul>
+<h3 id="s7-2"><a class="anchor" href="#s7-2">#</a>7.2 fork() ⭐⭐⭐ <span class="sref">[3.35–3.39]</span></h3>
+<ul>
+<li><strong><code>fork()</code> creates a new process that duplicates the entire address space of the parent. Both processes continue execution at the instruction after <code>fork()</code>.</strong></li>
+<li><strong>Return value</strong>（each process receives exactly one return value）<span class="sref">[3.36–3.37]</span>：</li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Return value</th>
+  <th>喺邊個 process</th>
+  <th>意思</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>&gt; 0</strong></td>
+  <td><strong>parent</strong></td>
+  <td>值 = <strong>PID of the newly created child</strong></td>
+</tr>
+<tr>
+  <td><strong>= 0</strong></td>
+  <td><strong>child</strong></td>
+  <td>新建嘅 child</td>
+</tr>
+<tr>
+  <td><strong>&lt; 0（−1）</strong></td>
+  <td><strong>parent (original)</strong></td>
+  <td><strong>fork failed</strong>，<strong>no child created</strong>，errno set</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>All state of the parent is duplicated in the child</strong>：memory (program, data), <strong>file descriptors</strong>…；每個 process 有<strong>自己一份</strong> program 同 data（time consuming）。</li>
+<li><strong>Steps to implement fork()</strong> <span class="sref">[3.38]</span>：<ol>
+<li><strong>Create and initialize the PCB</strong> in the kernel</li>
+<li><strong>Create a new address space</strong>（allocate memory）</li>
+<li><strong>Initialize the address space with a copy of the parent's entire address space</strong>（time consuming）</li>
+<li><strong>Inherit the execution context of the parent</strong>（e.g. open files）</li>
+<li><strong>Inform the CPU scheduler that the child is ready to run</strong></li>
+</ol>
+</li>
+<li><strong>Parent vs Child after fork()</strong> <span class="sref">[3.39]</span>：<ul>
+<li><strong>Duplicated</strong>：address space, <strong>global &amp; local variables</strong>, current working directory, root directory, process resources, resource limits, <strong>program counter (PC)</strong>…</li>
+<li><strong>Different</strong>：<strong>PID</strong>, <strong>return value from fork()</strong>, running time, running state</li>
+</ul>
+</li>
+<li>⚠️ <strong>Child 改 variable 唔會影響 parent</strong>（各自一份 copy）— HW1 MC9 ✗「If the child changes a global variable, the parent's copy changes automatically」。</li>
+<li>⚠️ <strong>Execution order of parent and child depends on the scheduler</strong> unless synchronization（<code>wait()</code>）is used。</li>
+<li>F20 MC7 ✗「<strong>The parent process waits until the completion of the child process</strong>」（fork 本身唔會等，要 <code>wait()</code>）。</li>
+<li>Sp21 MC ✗「<strong>The child process can call wait() in order to finish earlier than the parent</strong>」。</li>
+</ul>
+<h3 id="s7-3"><a class="anchor" href="#s7-3">#</a>7.3 Copy-on-Write (COW) &amp; clone() <span class="sref">[3.46]</span></h3>
+<ul>
+<li><strong>Process creation in UNIX is unique — separated into two system calls: <code>fork()</code> and <code>exec()</code>.</strong>（其他 OS：create new address space + read executable + start 一次過）</li>
+<li><strong>Linux implements fork() with copy-on-write (COW) pages</strong> — parent and child <strong>share a single copy</strong>；<strong>copying is delayed until a page is written</strong>。若 <code>fork()</code> 後即刻 <code>exec()</code>，pages <strong>never need to be copied</strong> → <strong>greatly speeds up process creation</strong>。</li>
+<li><strong>Linux also implements fork() via <code>clone()</code></strong>（more general；flags 指定 share 邊啲 resources）。</li>
+</ul>
+<h3 id="s7-4"><a class="anchor" href="#s7-4">#</a>7.4 exec / wait / exit / signal <span class="sref">[3.41–3.43]</span></h3>
+<ul>
+<li><strong><code>exec()</code> / <code>execlp()</code></strong> — <strong>changes the program being run by the current process</strong>；<strong>creates a new process image from a regular executable file</strong>（<strong>replaces the address space</strong>；<strong>成功就唔會 return</strong>，fail 先 return −1 並繼續執行下一行）。</li>
+<li><strong><code>wait()</code></strong> — wait for a (child) process to finish；<code>pid = wait(&amp;status);</code> 返回 terminated child 嘅 PID，<code>status</code> 存 exit status。</li>
+<li><strong><code>exit()</code></strong> — terminate the current process and free all its resources。</li>
+<li><strong><code>signal()</code></strong> — send a notification to another process（slide 3.41 原文）。<ul>
+<li>⚠️ slides 前後唔一致：slide 4.31 話真正 <strong>deliver</strong> signal 畀 process 嘅 UNIX function 係 <strong><code>kill(pid, signal)</code></strong>；而實際 UNIX 嘅 <code>signal(SIGINT, handler)</code> 係<strong>裝 handler</strong>（PA1 就係咁用）。MC 照題目用字對返邊張 slide 作答。</li>
+</ul>
+</li>
+<li>經典 code <span class="sref">[3.42]</span>：</li>
+</ul>
+<pre class="code" data-lang="c"><code>pid = fork();
+if (pid &lt; 0) { fprintf(stderr, &quot;Fork Failed&quot;); exit(-1); }   /* error */
+else if (pid == 0) { execlp(&quot;/bin/ls&quot;, &quot;ls&quot;, NULL); }        /* child */
+else { wait(NULL); printf(&quot;Child Complete&quot;); exit(0); }      /* parent */
+</code></pre>
+<ul>
+<li><strong>Implementing a shell</strong> <span class="sref">[3.43]</span>：loop <code>readAndParseCmdLine</code> → <code>fork()</code> → child <code>exec(prog, args)</code>（NOT REACHED after）→ parent <code>wait(child_pid)</code>。</li>
+<li>F19 Q2.4：shell 要 start new process 必須用嘅兩個 system calls → <strong>fork()</strong>（clones the current process）+ <strong>exec()</strong>（overlays a new program onto the calling process）。</li>
+</ul>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. Process Termination（終止）⭐⭐ <span class="sref">[3.47–3.50]</span></h2>
+<ul>
+<li>Process 執行完最後一句 → <strong><code>exit()</code></strong> 要求 OS 刪除佢；可以經 <strong><code>wait()</code></strong> 回傳 <strong>status value</strong> 畀 parent。</li>
+<li><strong>Resources (memory, open files, I/O buffers) are deallocated and reclaimed by the OS.</strong></li>
+<li><strong>Parent can terminate children</strong>：<code>abort()</code>（UNIX/Linux）、<code>TerminateProcess()</code>（Windows）；parent 需要知 child PID（由 fork() 返回）。理由：child <strong>exceeded allocated resources</strong>；<strong>task no longer required</strong>；<strong>parent is exiting</strong>（有啲 OS 唔准 child 冇 parent）。</li>
+<li><strong>Cascading termination</strong> — if a process terminates, <strong>all its children must also be terminated</strong>（initiated by OS）。</li>
+<li>Normal termination：<code>exit()</code> 直接或間接被 call（C runtime library 預設 call <code>exit()</code>）。</li>
+</ul>
+<h3 id="s8-1"><a class="anchor" href="#s8-1">#</a>8.1 Zombie ⭐⭐</h3>
+<ul>
+<li><strong>A process that has terminated, but whose parent has not yet called <code>wait()</code>, is a zombie process.</strong></li>
+<li>佢嘅 <strong>entry in the process table, PID, and PCB still exist</strong>（因為 process table entry 存住 <strong>exit status</strong>）；其他 resources 已釋放；<strong>not runnable</strong>（冇 address space）。</li>
+<li><strong>All processes transition into the zombie state before termination, but generally only briefly.</strong></li>
+<li><strong>Once the parent calls <code>wait()</code>, the zombie's PID, process-table entry and PCB are released.</strong></li>
+<li>S26 MC13 <span class="ok">✅</span>「<strong>A zombie process has terminated but its parent has not yet collected its status</strong>」；✗ still executing user code；✗ created when exec() fails；✗ owns no PID。</li>
+</ul>
+<h3 id="s8-2"><a class="anchor" href="#s8-2">#</a>8.2 Orphan ⭐</h3>
+<ul>
+<li><strong>If a parent terminates without invoking <code>wait()</code>, its child becomes an orphan</strong>（如果冇 cascading，可能仍 runnable，最終變 zombie）。</li>
+<li><strong><code>init</code> / <code>systemd</code> is assigned as the new parent and periodically calls <code>wait()</code></strong> → 收集 exit status，釋放 PID 同 process-table entry。</li>
+</ul>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. fork() 解題大法 ⭐⭐⭐（考試必用）</h2>
+<h3 id="s9-1"><a class="anchor" href="#s9-1">#</a>9.1 基本規則</h3>
+<ol>
+<li><strong>每 call 一次 fork()，「每個執行到嗰句嘅 process」都會變兩個</strong>：parent（return child PID &gt; 0 → <strong>true</strong>）、child（return 0 → <strong>false</strong>）。</li>
+<li><strong>Child 由 fork() 下一句開始行</strong>，有 parent 所有 variables 嘅 <strong>copy</strong>（包括 loop counter <code>i</code>）。</li>
+<li><strong>n 句連續 fork()（無條件）→ 2ⁿ processes。</strong></li>
+<li><strong>Short-circuit evaluation</strong> ⭐：<ul>
+<li><code>A &amp;&amp; B</code>：A <strong>false (0 → child)</strong> 就<strong>唔會</strong>執行 B；A <strong>true (parent)</strong> 先執行 B。</li>
+<li><code>A || B</code>：A <strong>true (parent)</strong> 就<strong>唔會</strong>執行 B；A <strong>false (child)</strong> 先執行 B。</li>
+</ul>
+</li>
+<li><strong>printf 次數 = 執行到該句 printf 嘅 process 數目</strong>（每個 printf 位置分開計）。</li>
+<li><code>return</code> / <code>exit()</code> / <code>break</code> 會令 process 停止繼續 loop 或者唔再執行後面。</li>
+<li><code>exec()</code> 成功 → 之後嘅 code <strong>唔會執行</strong>；失敗 → return −1 繼續。</li>
+</ol>
+<h3 id="s9-2"><a class="anchor" href="#s9-2">#</a>9.2 常見 pattern 公式（全部已用真 C 程式驗證 <span class="ok">✅</span>）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Code（每個 iteration，所有 process 都繼續 loop）</th>
+  <th>每 iteration 每個 process 變成</th>
+  <th>n 次後 processes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>fork();</code></td>
+  <td>2</td>
+  <td><strong>2ⁿ</strong></td>
+</tr>
+<tr>
+  <td><code>fork(); fork();</code> <span class="sref">[3.44]</span></td>
+  <td>4</td>
+  <td><strong>4ⁿ</strong>（slide：10 次 → 4¹⁰）</td>
+</tr>
+<tr>
+  <td><code>if (fork()) fork();</code> <span class="sref">[3.45]</span></td>
+  <td>3（parent 再 fork 一次）</td>
+  <td><strong>3ⁿ</strong>（slide：3¹⁰）</td>
+</tr>
+<tr>
+  <td><code>if (fork() == 0) fork();</code>（Sp21 MC8）</td>
+  <td>3（child 再 fork）</td>
+  <td><strong>3ⁿ</strong>（n=3 → <strong>27</strong>）</td>
+</tr>
+<tr>
+  <td><code>if (fork() &amp;&amp; fork()) ...</code>/<code>fork() || fork()</code></td>
+  <td>3</td>
+  <td>3ⁿ</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s9-3"><a class="anchor" href="#s9-3">#</a>9.3 有 break / return 嘅 loop（追蹤「仲 active」嘅 process）</h3>
+<p><strong>S26 Q3.1</strong>：</p>
+<pre class="code" data-lang="c"><code>for (int i = 0; i &lt; n; i++) {
+    if (fork()) fork();   // parent: fork 多一次
+    else break;            // 第一個 child: break（停 loop）
+}
+</code></pre>
+<ul>
+<li>每個 active process 每 iteration：第一個 fork 產生 child（→ else → <strong>break</strong>，停）；parent 再 fork 一次，<strong>新 child（第二個）繼續 loop</strong>（佢喺 if branch 入面，return 0 但已經喺 if 入面）。</li>
+<li>所以 1 個 active → 3 個 processes，其中 <strong>2 個繼續 active</strong>、1 個 stopped。</li>
+<li><strong>A_k = 2^k</strong>（iteration k 開始前 active 數）；每 iteration 新增 2^k 個 break。</li>
+<li><strong>Total processes = 2ⁿ (active) + (2ⁿ − 1) (stopped) = 2ⁿ⁺¹ − 1</strong>；<strong>break 次數 = 2ⁿ − 1</strong>。</li>
+<li>n = 2：<strong>7 processes，3 breaks</strong> <span class="ok">✅</span>；n = 3：15 processes，7 breaks <span class="ok">✅</span>。</li>
+<li>Process tree（n=2）：P0 → P1 (break), P2 → {P5 (break), P6}, P3 (break), P4… （P0 第 0 輪產生 P1(break)、P2；第 1 輪產生 P3(break)、P4；P2 第 1 輪產生 P5(break)、P6）</li>
+</ul>
+<pre class="code" data-lang=""><code>P0
+├── P1   (break at i=0)
+├── P2   (continues)
+│   ├── P5 (break at i=1)
+│   └── P6
+├── P3   (break at i=1)
+└── P4
+</code></pre>
+<p><strong>S26 MC10</strong>：</p>
+<pre class="code" data-lang="c"><code>for (i = 0; i &lt; 3; i++) {
+    if (fork() == 0) { fork(); printf(&quot;X &quot;); return 1; }
+}
+printf(&quot;Y &quot;);
+</code></pre>
+<ul>
+<li>只有 original parent 繼續 loop；每 iteration 產生 1 個 child，child 再 fork → 2 個 process 各印 &quot;X &quot; 後 return。</li>
+<li>3 iterations → 3 × 2 = 6 個 process 印 X；original 印 1 個 Y。<strong>Total = 7 processes, X = 6, Y = 1 → 答案 C</strong> <span class="ok">✅</span></li>
+</ul>
+<h3 id="s9-4"><a class="anchor" href="#s9-4">#</a>9.4 Short-circuit 題</h3>
+<p><strong>Sp21 MC7</strong>：<code>if (fork() || fork()) { fork(); }</code></p>
+<ul>
+<li>P0：fork1 → P0 得 &gt;0（true）→ <strong>跳過第二個 fork</strong> → 入 if → fork → 2 個</li>
+<li>C1（fork1 得 0）→ 執行 fork2：C1 得 &gt;0（true）→ 入 if → fork → 2 個；C2 得 0 → false → 唔入 if → 1 個</li>
+<li><strong>Total = 2 + 2 + 1 = 5</strong> <span class="ok">✅</span></li>
+</ul>
+<p><strong>F19 Q2.7</strong>：<code>if (fork() == fork() || fork() != fork()) fork(); printf(&quot;Fork!\n&quot;);</code></p>
+<ul>
+<li><code>fork() == fork()</code>：4 個 processes，返回值組合 (x,y)：P0 (c1,c2) 唔等；C2 (c1,0) 唔等；C1 (0,c3) 唔等；<strong>C3 (0,0) 相等 → true</strong>（只有收到兩次 0 嗰個 grandchild）。</li>
+<li>C3：|| 短路 → 執行 body fork() → <strong>2 個</strong> process 印。</li>
+<li>其餘 3 個 process 執行 <code>fork() != fork()</code> → 每個變 4 個 = 12；每組 4 個入面 3 個 true（(c,c')、(0,c)、(c,0)），1 個 false (0,0)。</li>
+<li>9 個 true → fork → <strong>18</strong>；3 個 false → <strong>3</strong>。</li>
+<li><strong>Total = 2 + 18 + 3 = 23 lines</strong> <span class="ok">✅</span></li>
+</ul>
+<h3 id="s9-5"><a class="anchor" href="#s9-5">#</a>9.5 Nested / combined</h3>
+<p><strong>Sp21 Q1.1</strong>：</p>
+<pre class="code" data-lang="c"><code>pid1 = fork(); pid2 = fork();
+if (pid1 &gt; 0) if (pid2 == 0) fork();
+</code></pre>
+<ul>
+<li>兩個 fork 後 4 個 processes；只有「pid1 &gt; 0（P0 或 P0 嘅第二個 child）且 pid2 == 0」嘅 <strong>P0 第二個 fork 生出嘅 child</strong> 符合 → 再 fork 1 次 → <strong>5 processes</strong> <span class="ok">✅</span></li>
+</ul>
+<p><strong>Sp21 Q1.2</strong>：</p>
+<pre class="code" data-lang="c"><code>if (fork() == 0) { for (int i = 0; i &lt; 5; i++) if (fork() == 0) fork(); }
+fork();
+</code></pre>
+<ul>
+<li>第一個 fork：child 入 loop；loop 5 次，每次每個 process 變 3 個 → <strong>3⁵ = 243</strong>（包括 child 自己）。</li>
+<li>加 original parent = 243 + 1 = 244；最後 fork 全部 ×2 → <strong>(3⁵ + 1) × 2 = 488</strong> <span class="ok">✅</span></li>
+</ul>
+<p><strong>F20 Q3.2</strong>：</p>
+<pre class="code" data-lang="c"><code>if (!fork()) { for (int i = 0; i &lt; n; i++) if (fork()) fork(); }
+fork(); printf(&quot;a&quot;);
+</code></pre>
+<ul>
+<li>同上：child branch 變 3ⁿ，加 parent → 3ⁿ + 1，最後 fork ×2 → <strong>&quot;a&quot; 數 = 2(3ⁿ + 1)</strong> <span class="ok">✅</span>（n=1 → 8；n=2 → 20）</li>
+</ul>
+<p><strong>F19 Q2.6</strong>（loop 入面 parent 同 child 都 printf）：</p>
+<pre class="code" data-lang="c"><code>for (i = 0; i &lt; n; ++i) { if (fork()) printf(&quot;Fork!\n&quot;); else printf(&quot;Fork!\n&quot;); }
+</code></pre>
+<ul>
+<li>第 i 次 iteration（由 1 數）有 2^i 個 process 各印一行 → <strong>2 + 4 + … + 2ⁿ = 2ⁿ⁺¹ − 2</strong> <span class="ok">✅</span></li>
+</ul>
+<h3 id="s9-6"><a class="anchor" href="#s9-6">#</a>9.6 Possible output orderings（輸出次序題）⭐</h3>
+<p><strong>方法</strong>：</p>
+<ol>
+<li>畫 process tree，寫低每個 process 印咩、依咩次序（<strong>同一 process 內次序固定</strong>）。</li>
+<li>加 <strong>wait()</strong> 約束：parent <code>wait()</code> 之後嘅 print 一定喺 child <strong>全部</strong> print 之後。</li>
+<li>Fork 之前印嘅一定最先（假設 flushed）。</li>
+<li>列出所有符合約束嘅 <strong>interleavings</strong>（topological orders）。</li>
+</ol>
+<p><strong>F20 Q3.1</strong>：</p>
+<pre class="code" data-lang="c"><code>if (fork() == 0) {            // child C
+    if (fork() &gt; 0) { printf(&quot;1&quot;); wait(NULL); printf(&quot;2&quot;); }  // C
+    else printf(&quot;3&quot;);         // grandchild G
+} else printf(&quot;4&quot;);           // parent P
+</code></pre>
+<ul>
+<li>約束：C 印 &quot;1&quot; 然後等 G（印 &quot;3&quot;）→ 再印 &quot;2&quot;。即 <strong>&quot;2&quot; 喺 &quot;1&quot; 同 &quot;3&quot; 之後</strong>；&quot;4&quot; 隨意。</li>
+<li>&quot;2&quot; 最後：1、3、4 任意排 = 3! = 6 種：<strong>1342, 1432, 3142, 4132, 3412, 4312</strong></li>
+<li>&quot;4&quot; 喺 &quot;2&quot; 之後：<strong>1324, 3124</strong></li>
+<li><strong>Total = 8</strong>（unbuffered）。若 buffered（&quot;1&quot; 同 &quot;2&quot; 同一 buffer 一齊 flush）→ 只剩 <strong>4312, 3412, 3124</strong>（3 種）。</li>
+</ul>
+<p><strong>Sp21 Q1.3</strong>：<code>printf(&quot;A\n&quot;); if (fork()==0) printf(&quot;B\n&quot;); else { printf(&quot;C\n&quot;); ___A___ } printf(&quot;D\n&quot;);</code></p>
+<ul>
+<li>(a) A 空白：<strong>ABDCD, ABCDD, ACBDD, ACDBD</strong>（4 種；A 一定最先；child 印 B,D；parent 印 C,D）</li>
+<li>(b) A = <code>wait(NULL)</code>：parent 嘅 D 一定最後 → <strong>ABDCD, ABCDD, ACBDD</strong></li>
+<li>(c) A = <code>printf(&quot;E\n&quot;)</code>：parent 印 C,E,D；child 印 B,D → 7 種：<strong>ABDCED, ABCDED, ABCEDD, ACBDED, ACBEDD, ACEBDD, ACEDBD</strong></li>
+</ul>
+<p><strong>HW1 Q3.1</strong>（x 值）：</p>
+<pre class="code" data-lang="c"><code>int x = 1; pid_t c1 = fork();
+if (c1 == 0) { x += 2; printf(&quot;C1: %d\n&quot;, x); return 0; }   // 3
+x *= 2; pid_t c2 = fork();
+if (c2 == 0) { x += 3; printf(&quot;C2: %d\n&quot;, x); return 0; }   // 2+3 = 5
+wait(NULL); wait(NULL); printf(&quot;P: %d\n&quot;, x);                // 2
+</code></pre>
+<ul>
+<li><strong>C1: 3, C2: 5, P: 2</strong> — 因為 <strong>each process has its own copy of x</strong>（fork 時複製）。</li>
+<li>Possible outputs：<code>C1:3 → C2:5 → P:2</code> 或 <code>C2:5 → C1:3 → P:2</code>（P 一定最後，因為 wait 兩次）。</li>
+<li>若將第一個 <code>wait(NULL)</code> 移到 <code>x *= 2</code> 前：parent 先等 C1 完，先 fork C2 → <strong>保證 C1: 3, C2: 5, P: 2</strong>；<strong>數值不變</strong>（wait 唔改 x）。</li>
+</ul>
+<p><strong>HW1 Q3.2</strong>（exec）：</p>
+<pre class="code" data-lang="c"><code>printf(&quot;A\n&quot;); pid_t p = fork();
+if (p == 0) { pid_t q = fork();
+    if (q == 0) { execlp(&quot;./worker&quot;,&quot;worker&quot;,(char*)NULL); printf(&quot;X\n&quot;); return 1; }
+    wait(NULL); printf(&quot;C\n&quot;); return 0; }
+printf(&quot;P\n&quot;); wait(NULL); printf(&quot;D\n&quot;);
+</code></pre>
+<ul>
+<li><strong>3 processes</strong>：parent → child → grandchild（<strong>grandchild exec worker</strong>，印 W）。</li>
+<li><strong>X 唔會印</strong>：execlp 成功 → address space 被取代，<strong>never returns</strong>。</li>
+<li>約束：A 最先；W &lt; C &lt; D；P &lt; D。→ <strong>A P W C D、A W P C D、A W C P D</strong>（3 種）。</li>
+</ul>
+<h3 id="s9-7"><a class="anchor" href="#s9-7">#</a>9.7 fork + exec 成功/失敗情況（S26 Q3.2）⭐</h3>
+<pre class="code" data-lang="c"><code>int ret = fork();
+if (ret == 0) { printf(&quot;Hello1\n&quot;); exec(&quot;some_executable&quot;); printf(&quot;Hello2\n&quot;); }
+else if (ret &gt; 0) { wait(NULL); printf(&quot;Hello3\n&quot;); }
+else { printf(&quot;Hello4\n&quot;); }
+</code></pre>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Case</th>
+  <th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>fork 成功、exec 成功</strong></td>
+  <td><code>Hello1</code>, <code>Hello3</code>（Hello2 唔印：image replaced）</td>
+</tr>
+<tr>
+  <td><strong>fork 成功、exec 失敗</strong></td>
+  <td><code>Hello1</code>, <code>Hello2</code>, <code>Hello3</code>（exec 返回 −1，繼續）</td>
+</tr>
+<tr>
+  <td><strong>fork 失敗</strong></td>
+  <td><code>Hello4</code>（only parent, ret &lt; 0）</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>因為有 <code>wait(NULL)</code>，Hello3 一定喺 child 嘅輸出之後。</li>
+</ul>
+<h3 id="s9-8"><a class="anchor" href="#s9-8">#</a>9.8 Buffering 陷阱</h3>
+<ul>
+<li><code>printf</code> 冇 <code>\n</code> 或者 output 去 file/pipe → <strong>stdout buffer 未 flush 就 fork → buffer 被複製 → 重複印</strong>。</li>
+<li>考試通常講明「stdout is flushed after each printf」或「printf not buffered」。如果冇講，可以寫一句 assumption。</li>
+</ul>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. Interprocess Communication (IPC) ⭐⭐ <span class="sref">[3.51–3.64]</span></h2>
+<h3 id="s10-1"><a class="anchor" href="#s10-1">#</a>10.1 Independent vs Cooperating</h3>
+<ul>
+<li><strong>Cooperating processes can affect or be affected by other processes</strong>（e.g. share data）。</li>
+<li><strong>Reasons for cooperation</strong>：<strong>information sharing</strong>（copy &amp; paste）、<strong>computation speedup</strong>（parallel subtasks）、<strong>modularity</strong>（+ convenience）。</li>
+<li>需要 <strong>IPC mechanism</strong> 交換 data。<strong>兩大模型</strong>：<ol>
+<li><strong>Shared memory</strong> — a region of memory is shared；processes read/write the shared region（<strong>implicit</strong> communication；快，但要自己 synchronize）</li>
+<li><strong>Message passing</strong> — <strong>explicit</strong> messages exchanged（<strong>useful in distributed environment</strong>；Mach OS 主要用；唔需要 share address space）</li>
+</ol>
+</li>
+</ul>
+<h3 id="s10-2"><a class="anchor" href="#s10-2">#</a>10.2 Producer–Consumer Problem（Bounded Buffer, Shared Memory）<span class="sref">[3.53–3.56]</span></h3>
+<ul>
+<li><strong>Unbounded buffer</strong>：no practical limit；<strong>bounded buffer</strong>：fixed size。</li>
+</ul>
+<pre class="code" data-lang="c"><code>#define BUFFER_SIZE 10
+item buffer[BUFFER_SIZE]; int in = 0, out = 0;
+/* Producer */
+while (true) {
+    while (((in + 1) % BUFFER_SIZE) == out) ;   /* buffer full → do nothing */
+    buffer[in] = next_produced;
+    in = (in + 1) % BUFFER_SIZE;
+}
+/* Consumer */
+while (true) {
+    while (in == out) ;                          /* buffer empty → do nothing */
+    next_consumed = buffer[out];
+    out = (out + 1) % BUFFER_SIZE;
+}
+</code></pre>
+<ul>
+<li>⭐ <strong>This solution only allows at most <code>BUFFER_SIZE − 1</code> items in the buffer at the same time</strong>（因為 <code>in == out</code> 表示 empty，要留一格分辨 full）。</li>
+</ul>
+<h3 id="s10-3"><a class="anchor" href="#s10-3">#</a>10.3 Message Passing <span class="sref">[3.57–3.64]</span></h3>
+<ul>
+<li><strong>Mechanism for processes to communicate and synchronize without sharing the address space.</strong></li>
+<li>兩個 operations：<strong><code>send(message)</code></strong>、<strong><code>receive(message)</code></strong>；message size <strong>fixed or variable</strong>。</li>
+<li>P、Q 要通訊：<strong>establish a communication link</strong> → exchange via send/receive。</li>
+<li>Implementation 選擇：<strong>direct or indirect</strong>；<strong>synchronous or asynchronous</strong>；<strong>automatic or explicit buffering</strong>。</li>
+</ul>
+<p><strong>Direct communication</strong> <span class="sref">[3.59]</span>：</p>
+<ul>
+<li><strong>Processes must name each other explicitly</strong>：<code>send(P, message)</code>、<code>receive(Q, message)</code>。</li>
+<li>Link <strong>established automatically</strong>；<strong>associated with exactly one pair</strong>；<strong>between each pair exactly one link</strong>。</li>
+<li><strong>Disadvantage：limited modularity</strong> — 改一個 process 嘅 identifier 要檢查所有其他 processes。</li>
+</ul>
+<p><strong>Indirect communication</strong> <span class="sref">[3.60–3.61]</span>：</p>
+<ul>
+<li><strong>Messages sent to and received from mailboxes (ports)</strong>；每個 mailbox 有 unique id；<strong>share a mailbox 先可以通訊</strong>。</li>
+<li><strong>A link may be associated with more than two processes</strong>；<strong>each pair may have several links</strong>（each = one mailbox）。</li>
+<li>Operations：create mailbox、send/receive through mailbox、destroy mailbox；<code>send(A, msg)</code>、<code>receive(A, msg)</code>。</li>
+<li><strong>Mailbox sharing problem</strong>（P1 send，P2 P3 都 receive，邊個收？）解決：<ol>
+<li><strong>Allow a link to be associated with at most two processes</strong></li>
+<li><strong>Allow only one process at a time to execute <code>receive()</code></strong></li>
+<li><strong>Allow the system to select the receiver arbitrarily; sender is notified who the receiver was</strong></li>
+</ol>
+</li>
+</ul>
+<p><strong>Synchronization (blocking vs non-blocking)</strong> <span class="sref">[3.62–3.63]</span> ⭐：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th></th>
+  <th>Blocking (<strong>synchronous</strong>)</th>
+  <th>Non-blocking (<strong>asynchronous</strong>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Send</strong></td>
+  <td>sender <strong>blocked until the message is received</strong> (by receiver or mailbox)</td>
+  <td>sender sends and <strong>resumes</strong></td>
+</tr>
+<tr>
+  <td><strong>Receive</strong></td>
+  <td>receiver <strong>blocks until a message is available</strong></td>
+  <td>receiver gets <strong>a valid message or null</strong></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Both send and receive blocking → rendezvous</strong>；producer–consumer 變得 trivial（<code>send(next_produced)</code> / <code>receive(next_consumed)</code>）。</li>
+</ul>
+<p><strong>Buffering（message queue）</strong> <span class="sref">[3.64]</span> ⭐：</p>
+<ol>
+<li><strong>Zero capacity</strong> — no messages queued；<strong>sender must wait for receiver (rendezvous)</strong></li>
+<li><strong>Bounded capacity</strong> — finite length <em>n</em>；<strong>sender must wait if the link is full</strong></li>
+<li><strong>Unbounded capacity</strong> — infinite；<strong>sender never waits</strong></li>
+</ol>
+<hr />
+<h2 id="s11"><a class="anchor" href="#s11">#</a>11. Pipes ⭐⭐⭐ <span class="sref">[3.65–3.69]</span></h2>
+<h3 id="s11-1"><a class="anchor" href="#s11-1">#</a>11.1 設計問題（4 個）</h3>
+<ol>
+<li><strong>Unidirectional or bidirectional?</strong></li>
+<li>If bidirectional：<strong>half-duplex</strong>（一次一個方向）or <strong>full-duplex</strong>（同時雙向）？</li>
+<li><strong>Must there be a relationship (parent–child)?</strong></li>
+<li><strong>Can pipes be used over a network, or only on the same machine?</strong></li>
+</ol>
+<h3 id="s11-2"><a class="anchor" href="#s11-2">#</a>11.2 Ordinary Pipes vs Named Pipes（必背表）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Ordinary pipe</strong></th>
+  <th><strong>Named pipe</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>方向</td>
+  <td><strong>Unidirectional</strong>（one-way）</td>
+  <td><strong>Bidirectional</strong>（UNIX FIFO：<strong>half-duplex</strong>；Windows：<strong>full-duplex</strong>）</td>
+</tr>
+<tr>
+  <td>關係</td>
+  <td><strong>Requires parent–child relationship</strong></td>
+  <td><strong>No parent–child relationship required</strong></td>
+</tr>
+<tr>
+  <td>存取</td>
+  <td><strong>Cannot be accessed from outside the process that creates it</strong></td>
+  <td><strong>Several processes can use it</strong>（multiple writers）</td>
+</tr>
+<tr>
+  <td>生命週期</td>
+  <td><strong>Ceases to exist after processes finish communicating and terminate</strong></td>
+  <td><strong>Continues to exist after processes finish, until explicitly deleted</strong></td>
+</tr>
+<tr>
+  <td>機器</td>
+  <td>Same machine</td>
+  <td>UNIX：same machine；<strong>Windows：same or different machines</strong></td>
+</tr>
+<tr>
+  <td>UNIX API</td>
+  <td><code>pipe(int fd[2])</code>：<strong>fd[0] = read end，fd[1] = write end</strong></td>
+  <td><strong><code>mkfifo()</code></strong>；<strong>appear as typical files in the file system</strong>（FIFOs）</td>
+</tr>
+<tr>
+  <td>Windows</td>
+  <td><strong>anonymous pipes</strong>（<code>ReadFile()</code>/<code>WriteFile()</code>）</td>
+  <td><code>CreateNamedPipe()</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>UNIX treats a pipe as a special type of file → standard <code>read()</code> and <code>write()</code>；child inherits the pipe from the parent.</strong></li>
+<li><strong>Parent calls <code>pipe()</code> first, then <code>fork()</code></strong> → child inherits both ends。</li>
+<li><strong>If the parent writes and the child reads, the parent must close the read end, and the child must close the write end.</strong> ⭐</li>
+<li><code>ls | grep x</code>：shell 用 pipe 將 ls 嘅 output 接到 grep 嘅 input（tools 唔使特別設計都可以組合）。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>MC 陷阱</strong>：S26 MC12 ✗「<strong>ordinary pipes can be accessed by arbitrary processes</strong>」；Sp21 MC5 ✗「<strong>named pipes cease to exist after the communicating processes have finished</strong>」；HW1 MC10 同樣 ✗。F20 MC9：「multiple processes, no parent-child relationship, independent from network」→ <strong>named pipes</strong>（socket/RPC 需要 network）。</p>
+</blockquote>
+<h3 id="s11-3"><a class="anchor" href="#s11-3">#</a>11.3 Pipe example（Parent → Child）<span class="sref">[3.68]</span></h3>
+<pre class="code" data-lang="c"><code>int pfds[2]; char buf[30];
+pipe(pfds);                       /* 1. create pipe BEFORE fork */
+pid_t pid = fork();               /* 2. child inherits pfds[0], pfds[1] */
+if (pid != 0) {                   /* parent = writer */
+    close(pfds[0]);               /* close unused READ end */
+    write(pfds[1], &quot;test&quot;, 5);
+    wait(NULL);
+} else {                          /* child = reader */
+    close(pfds[1]);               /* close unused WRITE end */
+    read(pfds[0], buf, 5);
+    printf(&quot;CHILD: read \&quot;%s\&quot;\n&quot;, buf);
+}
+</code></pre>
+<blockquote class="callout answer">
+<p>📝 <strong>HW1 Q2.5 Model answer</strong>：<em>(1) The parent calls <code>pipe(fd)</code> <strong>before</strong> <code>fork()</code> so that both processes share the same pipe (fd[0] read end, fd[1] write end). (2) Call <code>fork()</code>; the child inherits both file descriptors. (3) Parent (writer) closes fd[0] and writes data with <code>write(fd[1], ...)</code>, then closes fd[1]. (4) Child (reader) closes fd[1] and reads with <code>read(fd[0], ...)</code>, then closes fd[0]. Data flows parent → child (one-way).</em>
+<strong>HW1 Q3.3(c)</strong>：如果 parent 同 child <strong>各自喺 fork() 之後 call pipe()</strong> → 會建立<strong>兩條獨立 pipe</strong>，佢哋<strong>唔共享</strong> file descriptors → <strong>cannot communicate</strong>。
+<strong>HW1 Q3.3(b)</strong>：<code>Child: 12</code> 然後 <code>Parent: done</code> — 因為 child 嘅 <code>read()</code> <strong>blocks until data is written</strong>，而 parent <code>wait(NULL)</code> 等 child 結束先印。</p>
+</blockquote>
+<h3 id="s11-4"><a class="anchor" href="#s11-4">#</a>11.4 dup / dup2 &amp; I/O redirection（Lab 3 / PA1）⭐⭐</h3>
+<ul>
+<li><strong>File descriptor table</strong>：0 = stdin，1 = stdout，2 = stderr。</li>
+<li><strong><code>dup(oldfd)</code></strong> — 複製 oldfd 到 <strong>lowest-numbered unused fd</strong>，返回新 fd。</li>
+<li><strong><code>dup2(oldfd, newfd)</code></strong> — 令 newfd 指向 oldfd 嘅 file（如 newfd 已開會先 close）。</li>
+<li><strong>Input redirection 經典 pattern</strong>：<code>close(0); dup(fin);</code> ⟹ fd 0 變成 file → <code>scanf</code> 由 file 讀。等價 <code>dup2(fin, 0);</code></li>
+<li><strong>Output redirection</strong>：<code>close(1); dup(fout);</code> 或 <code>dup2(fout, 1);</code></li>
+<li><strong>Pipe 接 stdout → stdin</strong>（<code>ls | wc</code>）：writer child：<code>dup2(fd[1], 1); close(fd[0]); close(fd[1]); execlp(&quot;ls&quot;,...)</code>；reader child：<code>dup2(fd[0], 0); close(fd[1]); close(fd[0]); execlp(&quot;wc&quot;,...)</code>；<strong>parent 要 close 兩端</strong>（否則 reader 永遠收唔到 EOF）。</li>
+</ul>
+<p><strong>S26 Q3.3（填空）</strong>：child 處理 1.txt、parent 處理 2.txt，數 even numbers，child 經 pipe 傳結果：</p>
+<pre class="code" data-lang="c"><code>int fin = open(file_name[i], O_RDONLY);
+close(0);                          // Blank 1
+dup(fin);                          // Blank 2  → stdin now = file
+scanf(&quot;%d&quot;, &amp;length);
+for (j = 0; j &lt; length; j++) {
+    scanf(&quot;%d&quot;, &amp;number);
+    if (number % 2 == 0) cnt++;    // Blank 3
+}
+if (pid == 0) { close(fd[0]); write(fd[1], &amp;cnt, sizeof(int)); exit(0); }  // 4.1 fd[1], 4.2 &amp;cnt
+waitpid(pid, &amp;status, 0); close(fd[1]);
+read(fd[0], &amp;child_cnt, sizeof(int));                                    // 5.1 fd[0], 5.2 &amp;child_cnt
+</code></pre>
+<hr />
+<h2 id="s12"><a class="anchor" href="#s12">#</a>12. Client–Server Communication：Sockets &amp; RPC ⭐ <span class="sref">[3.70–3.72]</span></h2>
+<ul>
+<li><strong>A socket is defined as an endpoint for communication.</strong> A pair of processes over a network uses <strong>a pair of sockets</strong>。</li>
+<li><strong>A socket is identified by an IP address and a port number.</strong></li>
+<li><strong>Server</strong> always running，<strong>listens to a well-known port</strong>；接受 request → 建立 socket connection。</li>
+<li><strong>Well-known ports（&lt; 1024）</strong>：<strong>SSH 22、FTP 21、HTTP 80</strong>。</li>
+<li><strong>Only clients can initiate communication.</strong> Client 揀一個 <strong>port number &gt; 1024</strong>（未用緊）。</li>
+<li>IP：IPv4 32-bit（128.32.244.172）、IPv6 128-bit。</li>
+<li>⭐ <strong>The 4-tuple (source IP address, source port number, destination IP address, destination port number) uniquely determines a pair of communication.</strong>（F19 Q2.2 答案）</li>
+<li><strong>RPC (Remote Procedure Call)</strong> — <strong>procedure-call mechanism between systems with network connections</strong>；<strong>message-based</strong>；常用於 <strong>distributed file systems</strong>（RPC daemons + clients）。</li>
+</ul>
+<hr />
+<h2 id="s13"><a class="anchor" href="#s13">#</a>13. 常見陷阱 &amp; MC 速查</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Program = active, process = passive</td>
+  <td><span class="no">❌</span>（program passive；process active）</td>
+</tr>
+<tr>
+  <td>Stack holds function params, return addresses, local variables</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Heap holds global variables</td>
+  <td><span class="no">❌</span>（data section；heap = dynamic allocation）</td>
+</tr>
+<tr>
+  <td>Ready → Waiting transition exists</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Long-term scheduler controls degree of multiprogramming</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Short-term scheduler invoked infrequently</td>
+  <td><span class="no">❌</span>（very frequently, ms）</td>
+</tr>
+<tr>
+  <td>Medium-term scheduler does swapping</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Context switch = user→kernel mode switch</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Context-switch time is useful work</td>
+  <td><span class="no">❌</span>（pure overhead）</td>
+</tr>
+<tr>
+  <td>fork() returns 0 to parent</td>
+  <td><span class="no">❌</span>（0 to child；child PID to parent）</td>
+</tr>
+<tr>
+  <td>fork() fails → returns −1 to parent, no child</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>After fork, child shares parent's variables</td>
+  <td><span class="no">❌</span>（copy；COW 只係 implementation 優化）</td>
+</tr>
+<tr>
+  <td>Parent automatically waits for child after fork</td>
+  <td><span class="no">❌</span>（需要 wait()）</td>
+</tr>
+<tr>
+  <td>exec() returns on success</td>
+  <td><span class="no">❌</span>（只有 failure 返回 −1）</td>
+</tr>
+<tr>
+  <td>Zombie still runs user code</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Zombie keeps PID &amp; process-table entry</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Orphans are adopted by init/systemd</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Ordinary pipe: unidirectional, parent-child</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Named pipe ceases after processes end</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Named pipe (UNIX FIFO) full-duplex</td>
+  <td><span class="no">❌</span>（half-duplex；Windows named pipe 先 full-duplex）</td>
+</tr>
+<tr>
+  <td>Blocking send/receive = synchronous</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Zero-capacity buffer: sender never waits</td>
+  <td><span class="no">❌</span>（unbounded 先 never waits）</td>
+</tr>
+<tr>
+  <td>Bounded-buffer shared-memory solution holds BUFFER_SIZE items</td>
+  <td><span class="no">❌</span>（BUFFER_SIZE − 1）</td>
+</tr>
+<tr>
+  <td>Mode bit 1 = kernel</td>
+  <td><span class="no">❌</span>（1 = user，0 = kernel）</td>
+</tr>
+<tr>
+  <td>Privileged instruction in user mode → trap to OS</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>DMA interrupts after every byte</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Trap = software-generated interrupt</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Interrupts all have same priority</td>
+  <td><span class="no">❌</span></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s14"><a class="anchor" href="#s14">#</a>14. Past-paper 題目（Ch3）</h2>
+<ul>
+<li><strong>S26</strong>：MC1 interrupts（C）、MC2 DMA（B）、MC10 fork（C：7, X=6, Y=1）、MC11 context switch（B）、MC12 ordinary pipes false（B）、MC13 zombie（B）、MC14 leave running（A）、Q3.1 fork tree（7 / 3 / 2ⁿ⁺¹−1）、Q3.2 fork+exec cases、Q3.3 pipe/dup 填空</li>
+<li><strong>F19</strong>：Q2.1 state transitions、Q2.2 socket 4-tuple、Q2.4 fork+exec、Q2.6（2ⁿ⁺¹−2）、Q2.7（23）</li>
+<li><strong>F20</strong>：MC3 interrupt、MC7 fork、MC8 address space（all of above）、MC9 named pipes、MC10 medium-term、Q3.1（8 outputs）、Q3.2（2(3ⁿ+1)）</li>
+<li><strong>Sp21</strong>：MC2 interrupt、MC degree of multiprogramming、MC own address space etc.（all）、MC stack、MC short-term、MC fork incorrect（B）、MC pipes not true（C）、MC leave CPU（all）、MC7（5）、MC8（27）、Q1.1（5）、Q1.2（488）、Q1.3 outputs</li>
+<li><strong>HW1</strong>：MC1 DMA、MC2 interrupts、MC7 privileged、MC9 fork、MC10 pipes、Q2.3 states、Q2.5 pipe steps、Q3.1–3.3</li>
+</ul>
+<hr />
+<h2 id="s15"><a class="anchor" href="#s15">#</a>15. 自我測驗</h2>
+<ol>
+<li><code>for (i=0;i&lt;4;i++) fork();</code> 有幾多個 processes？（16）</li>
+<li><code>fork(); fork() &amp;&amp; fork(); fork();</code> 有幾多？（2 × 3 × 2 = <strong>12</strong>：第一個 fork → 2；<code>fork() &amp;&amp; fork()</code> 每個變 3；最後 ×2）</li>
+<li>Zombie 同 orphan 分別？</li>
+<li>點解 bounded buffer 只可以放 BUFFER_SIZE − 1 個 item？</li>
+<li>Named pipe 喺 UNIX 叫咩？點建立？（FIFO；mkfifo()）</li>
+<li>寫出三種 mode transfer。（system call, interrupt, trap/exception）</li>
+</ol>
+
+<nav class="pager"><a href="ch2.html"><small>← 上一頁</small>Ch2 OS Structures</a><a class="next" href="ch4.html"><small>下一頁 →</small>Ch4 Threads</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s0">0. Computer-System Operation：I/O、Interrupt、DMA、Dual Mode [3.21–3.31]</a>
+<a class="l3" href="#s0-1">0.1 I/O 基本運作 [3.21]</a>
+<a class="l3" href="#s0-2">0.2 Interrupts ⭐⭐ [3.22–3.24]</a>
+<a class="l3" href="#s0-3">0.3 DMA (Direct Memory Access) ⭐⭐ [3.25–3.26]</a>
+<a class="l3" href="#s0-4">0.4 Dual-mode Operation ⭐⭐ [3.27–3.31]</a>
+<a class="l3" href="#s0-5">0.5 Three Types of Mode Transfer（user → kernel）⭐ [3.31]</a>
+<a class="l2" href="#s1">1. Process Concept（進程概念）[3.4–3.8]</a>
+<a class="l3" href="#s1-1">1.1 Four Fundamental OS Concepts [3.4]</a>
+<a class="l3" href="#s1-2">1.2 Process 嘅組成部分 [3.5] ⭐</a>
+<a class="l3" href="#s1-3">1.3 Loading a program into memory [3.7]</a>
+<a class="l3" href="#s1-4">1.4 Memory Layout of a C Program [3.8]</a>
+<a class="l2" href="#s2">2. Process State（進程狀態）⭐⭐ [3.9]</a>
+<a class="l2" href="#s3">3. Process Control Block (PCB) ⭐ [3.10, 3.13]</a>
+<a class="l2" href="#s4">4. Threads（簡介，詳見 Ch4）[3.11–3.12]</a>
+<a class="l2" href="#s5">5. Process Scheduling（進程排程）⭐ [3.14–3.18]</a>
+<a class="l3" href="#s5-1">5.1 基本</a>
+<a class="l3" href="#s5-2">5.2 Scheduling Queues [3.15–3.16]</a>
+<a class="l3" href="#s5-3">5.3 Schedulers ⭐⭐ [3.17–3.18]</a>
+<a class="l2" href="#s6">6. Context Switch（上下文切換）⭐⭐ [3.19–3.20]</a>
+<a class="l2" href="#s7">7. Process Creation（建立進程）⭐⭐⭐ [3.32–3.46]</a>
+<a class="l3" href="#s7-1">7.1 概念</a>
+<a class="l3" href="#s7-2">7.2 fork() ⭐⭐⭐ [3.35–3.39]</a>
+<a class="l3" href="#s7-3">7.3 Copy-on-Write (COW) &amp; clone() [3.46]</a>
+<a class="l3" href="#s7-4">7.4 exec / wait / exit / signal [3.41–3.43]</a>
+<a class="l2" href="#s8">8. Process Termination（終止）⭐⭐ [3.47–3.50]</a>
+<a class="l3" href="#s8-1">8.1 Zombie ⭐⭐</a>
+<a class="l3" href="#s8-2">8.2 Orphan ⭐</a>
+<a class="l2" href="#s9">9. fork() 解題大法 ⭐⭐⭐（考試必用）</a>
+<a class="l3" href="#s9-1">9.1 基本規則</a>
+<a class="l3" href="#s9-2">9.2 常見 pattern 公式（全部已用真 C 程式驗證 ✅）</a>
+<a class="l3" href="#s9-3">9.3 有 break / return 嘅 loop（追蹤「仲 active」嘅 process）</a>
+<a class="l3" href="#s9-4">9.4 Short-circuit 題</a>
+<a class="l3" href="#s9-5">9.5 Nested / combined</a>
+<a class="l3" href="#s9-6">9.6 Possible output orderings（輸出次序題）⭐</a>
+<a class="l3" href="#s9-7">9.7 fork + exec 成功/失敗情況（S26 Q3.2）⭐</a>
+<a class="l3" href="#s9-8">9.8 Buffering 陷阱</a>
+<a class="l2" href="#s10">10. Interprocess Communication (IPC) ⭐⭐ [3.51–3.64]</a>
+<a class="l3" href="#s10-1">10.1 Independent vs Cooperating</a>
+<a class="l3" href="#s10-2">10.2 Producer–Consumer Problem（Bounded Buffer, Shared Memory）[3.53–3.56]</a>
+<a class="l3" href="#s10-3">10.3 Message Passing [3.57–3.64]</a>
+<a class="l2" href="#s11">11. Pipes ⭐⭐⭐ [3.65–3.69]</a>
+<a class="l3" href="#s11-1">11.1 設計問題（4 個）</a>
+<a class="l3" href="#s11-2">11.2 Ordinary Pipes vs Named Pipes（必背表）</a>
+<a class="l3" href="#s11-3">11.3 Pipe example（Parent → Child）[3.68]</a>
+<a class="l3" href="#s11-4">11.4 dup / dup2 &amp; I/O redirection（Lab 3 / PA1）⭐⭐</a>
+<a class="l2" href="#s12">12. Client–Server Communication：Sockets &amp; RPC ⭐ [3.70–3.72]</a>
+<a class="l2" href="#s13">13. 常見陷阱 &amp; MC 速查</a>
+<a class="l2" href="#s14">14. Past-paper 題目（Ch3）</a>
+<a class="l2" href="#s15">15. 自我測驗</a></aside>
+</div>
+
+</body>
+</html>

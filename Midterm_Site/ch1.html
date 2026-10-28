@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch1 Introduction · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch1">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1" class="active"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-1-introduction">Chapter 1 — Introduction（引言）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：Ch1 主要出 <strong>MC（2–4 題）</strong> 同 <strong>short question（定義題）</strong>。最常考：<strong>caching / locality / average access time</strong>、<strong>von Neumann</strong>、<strong>storage hierarchy</strong>、<strong>SMP / multicore / NUMA</strong>、<strong>multiprogramming vs timesharing</strong>、<strong>virtualization / cloud</strong>。
+⚠️ 留意：今個 term（Fall 2026）嘅 slides 將 <strong>interrupt / DMA / dual-mode</strong> 放咗喺 <strong>Ch3 slides 3.21–3.31</strong>（舊 paper 寫 &quot;1.40&quot; 係舊版 slide number）。呢部分喺 <strong>Ch3 notes §0</strong>，但 MC 一樣會考。</p>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. What is an Operating System?（OS 係乜？）<span class="sref">[1.20–1.24]</span></h2>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 Computer system 四個組成部分 <span class="sref">[1.20]</span></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Component</th>
+  <th>解釋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Users</strong></td>
+  <td>人、機器、其他電腦 / devices</td>
+</tr>
+<tr>
+  <td><strong>Application programs</strong></td>
+  <td>定義點樣用 system resources 去解決問題（editors, compilers, web browsers, database, games）</td>
+</tr>
+<tr>
+  <td><strong>Operating system</strong></td>
+  <td><strong>controls and coordinates use of computing resources among various applications and users</strong></td>
+</tr>
+<tr>
+  <td><strong>Hardware</strong></td>
+  <td>basic computing resources：<strong>CPU, memory, I/O devices</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 OS 嘅定義 <span class="sref">[1.21, 1.23]</span></h3>
+<ul>
+<li><strong>OS is a system software that acts as an intermediary between users (or application software) and computer hardware.</strong>（OS 係用戶/應用程式同硬件之間嘅中介）</li>
+<li>OS <strong>hides the complicated details of the hardware</strong> 並提供 <strong>simple and easy-to-use interface</strong>（例如你處理 photos、web pages、files，而唔係 bytes 同 blocks）→ 呢個叫 <strong>abstraction</strong>。</li>
+<li><strong>There is no universally accepted definition of OS.</strong> &quot;Everything a vendor ships when you order an operating system&quot; 只係一個 approximation。</li>
+<li>兩個角色（必背）：<ul>
+<li><strong>OS is a resource allocator</strong> — manages all resources (hardware and software); <strong>decides between conflicting requests for efficient and fair resource use</strong>.</li>
+<li><strong>OS is a control program</strong> — <strong>controls execution of programs to prevent errors and improper use of the computer</strong>.</li>
+</ul>
+</li>
+<li>一句總結：<strong>&quot;OS manages and controls hardware and helps to facilitate programs to run on computers.&quot;</strong></li>
+</ul>
+<h3 id="s1-3"><a class="anchor" href="#s1-3">#</a>1.3 OS 嘅兩大目標（Chapter summary）</h3>
+<ol>
+<li><strong>User convenience</strong> — provides an environment for users to execute programs in a <strong>convenient, safe, protected and efficient</strong> manner.</li>
+<li><strong>Resource allocation</strong> — allocates resources (hardware: CPU, memory; software: signals, locks) <strong>in a fair and efficient manner</strong>.</li>
+</ol>
+<blockquote class="callout answer">
+<p>📝 <strong>HW1 MC3 例子</strong>：「幾個 job 喺 shared computer 等運行，OS 決定邊個 job 用 CPU、memory 點分配」→ <strong>OS acts as a resource allocator</strong>。</p>
+</blockquote>
+<h3 id="s1-4"><a class="anchor" href="#s1-4">#</a>1.4 唔同環境嘅 OS <span class="sref">[1.22]</span></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>環境</th>
+  <th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Shared computers</strong>（mainframe / minicomputer）</td>
+  <td>要令所有 user 滿意 → <strong>performance vs. fairness</strong></td>
+</tr>
+<tr>
+  <td><strong>Individual systems</strong>（workstations）</td>
+  <td>dedicated resources，重 <strong>performance</strong> 多過 fairness</td>
+</tr>
+<tr>
+  <td><strong>Mobile devices</strong></td>
+  <td><strong>resource constrained</strong>；touch screen、voice（Siri）；optimized for <strong>usability and battery life</strong></td>
+</tr>
+<tr>
+  <td><strong>Embedded systems</strong></td>
+  <td>好少或無 UI；OS <strong>pre-installed in ROM</strong>（冷氣機、汽車、太空船）</td>
+</tr>
+<tr>
+  <td><strong>Real-time systems</strong></td>
+  <td><strong>strict time constraints</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s1-5"><a class="anchor" href="#s1-5">#</a>1.5 常見名詞 <span class="sref">[1.24]</span></h3>
+<ul>
+<li><strong>Kernel</strong> — <strong>&quot;the one program running at all times on the computer&quot;</strong>（核心功能）。</li>
+<li><strong>Middleware</strong> — a set of software frameworks providing <strong>additional services to application developers</strong>（databases, multimedia, graphics）；mobile OS（iOS, Android）好常見。</li>
+<li><strong>System programs</strong> — ships with the OS but <strong>not part of the kernel</strong>（例如 compilers）。</li>
+<li><strong>Application programs</strong> — 同 OS 無關嘅程式（App Store 啲 app）。</li>
+<li><strong>OS = always-running kernel + middleware frameworks + system programs.</strong></li>
+</ul>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. Computer System Organization（電腦系統組織）<span class="sref">[1.25–1.27]</span></h2>
+<ul>
+<li><strong>One or more CPU cores</strong> 同 <strong>device controllers</strong> 經 <strong>common bus</strong> 連接，<strong>share memory</strong>。<span class="sref">[1.25]</span></li>
+<li><strong>CPUs and devices execute concurrently</strong>，<strong>compete for memory cycles through the shared bus</strong>。</li>
+<li>每個 <strong>device controller</strong> 管一類 device，有自己嘅 <strong>local buffer</strong>；OS 用 <strong>device driver</strong> 同 controller 溝通（device driver = kernel module that controls a device）。</li>
+<li><span class="sref">[1.27]</span> 圖：processor + cache ↔ bridge/memory controller ↔ memory；<strong>PCI bus</strong> 連 graphics controller、SCSI controller、IDE disk controller、expansion bus interface（keyboard, parallel/serial port）。</li>
+</ul>
+<h3 id="s2-1"><a class="anchor" href="#s2-1">#</a>2.1 von Neumann Architecture <span class="sref">[1.26]</span> ⭐（MC 常客）</h3>
+<ul>
+<li><strong>Stored-program architecture</strong>：<strong>instructions and data are stored in the same memory</strong>（同一個 memory space，用 address 存取）。</li>
+<li><strong>CPU</strong> contains an <strong>ALU (arithmetic logic unit)</strong> and <strong>processor registers</strong> — <strong>PC (Program Counter)</strong>, <strong>AC (Accumulator)</strong>, <strong>MAR (Memory Address Register)</strong>, <strong>MDR (Memory Data Register)</strong>。</li>
+<li><strong>Control unit</strong> — <strong>IR (Instruction Register)</strong> and <strong>PC</strong>。</li>
+<li><strong>Memory</strong> stores data and instructions（along with caches）；<strong>external mass storage</strong> = secondary storage；<strong>input and output mechanisms</strong>。</li>
+<li><strong>Instruction execution steps（instruction–execution cycle）</strong>：<ol>
+<li><strong>Fetch instruction</strong>（from memory/cache → 放入 IR）</li>
+<li><strong>Decode instruction</strong></li>
+<li><strong>Fetch data</strong>（operands → data registers）</li>
+<li><strong>Execute instruction</strong></li>
+<li><strong>Write back</strong>（if any，結果寫返 memory/cache）</li>
+</ol>
+</li>
+<li><strong>Programs and data must be brought into memory before execution.</strong></li>
+<li><strong>MMU (memory management unit) sees only a stream of memory addresses</strong> — 佢唔知 address 點產生、亦唔知係 instruction 定 data。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ <strong>陷阱</strong>：</p>
+<ul>
+<li>&quot;Instructions and data are stored in <strong>separate</strong> physical memories&quot; ✗（嗰個係 Harvard architecture）。</li>
+<li>&quot;PC stored in external mass storage&quot; ✗；&quot;CPU has no ALU&quot; ✗。</li>
+<li>Sp21 MC：「processing unit contains a/an ___ and processor registers」→ <strong>ALU</strong>（唔係 &quot;all of the mentioned&quot;，因為 IR/PC 屬 control unit）。</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Storage（儲存）<span class="sref">[1.28–1.35]</span></h2>
+<h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 單位 <span class="sref">[1.28]</span></h3>
+<ul>
+<li><strong>bit</strong>（0/1）；<strong>byte = 8 bits</strong>（大部分電腦最細嘅 convenient chunk，冇 move 1 bit 嘅 instruction，但有 move 1 byte）。</li>
+<li><strong>word</strong> = 一個 architecture 嘅 <strong>native unit of data</strong>（64-bit registers → 64-bit (8-byte) word）。</li>
+<li><strong>KB = 1,024 bytes；MB = 1,024² bytes；GB = 1,024³；TB = 1,024⁴；PB = 1,024⁵</strong>。</li>
+<li>廠商通常 round off（MB ≈ 1 million bytes）；<strong>networking measured in bits</strong>（Mb/s, Gb/s）。</li>
+</ul>
+<h3 id="s3-2"><a class="anchor" href="#s3-2">#</a>3.2 Storage Hierarchy <span class="sref">[1.29]</span> ⭐</h3>
+<p>按 <strong>speed, cost per unit, capacity (size), volatility</strong> 分層：</p>
+<pre class="code" data-lang=""><code>           registers        ┐
+           cache            │ primary storage   (volatile)
+           main memory      ┘
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+           nonvolatile memory (NVM) ┐ secondary storage (nonvolatile)
+           hard-disk drives (HDD)   ┘
+           optical disk     ┐ tertiary storage
+           magnetic tapes   ┘
+  上面：smaller, faster, more expensive per byte
+  下面：larger, slower, cheaper per byte
+</code></pre>
+<ul>
+<li>越近 CPU → <strong>越快、越細、每 byte 越貴</strong>；越落 → <strong>cost per byte 減、access time 增、capacity 增</strong>。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch1_p29.png" alt="Storage hierarchy" loading="lazy"><figcaption>Storage hierarchy <span class="sref">[1.29]</span></figcaption></figure>
+<h3 id="s3-3"><a class="anchor" href="#s3-3">#</a>3.3 Main Memory <span class="sref">[1.30]</span></h3>
+<ul>
+<li><strong>Main memory is the only large storage media that the CPU can access directly.</strong>（CPU 係 <strong>indirectly</strong> 存取 secondary storage）</li>
+<li><strong>Volatile</strong>；通常係 <strong>DRAM (Dynamic Random-Access Memory)</strong>。</li>
+<li><strong>load / store</strong> instructions to specific addresses；<strong>byte addressable — each address refers to one byte</strong>。⭐（S26 MC3 答案）</li>
+<li>開機第一個程式 <strong>bootstrap program</strong> 存喺 <strong>EEPROM</strong>（firmware）。</li>
+</ul>
+<h3 id="s3-4"><a class="anchor" href="#s3-4">#</a>3.4 Secondary Storage <span class="sref">[1.31]</span></h3>
+<ul>
+<li><strong>Extension of main memory providing large non-volatile storage capacity</strong>。</li>
+<li>最常見：<strong>HDDs</strong> 同 <strong>NVM devices</strong>（例如 SSD）。</li>
+<li><strong>Mechanical</strong>（HDD, optical disk, magnetic tape）vs <strong>Electrical</strong>（flash, SSD, FRAM, NRAM → 統稱 <strong>NVM</strong>）。</li>
+<li><strong>Mechanical: larger and less expensive per byte. Electrical: more costly, smaller, more reliable, and faster.</strong></li>
+</ul>
+<h3 id="s3-5"><a class="anchor" href="#s3-5">#</a>3.5 Characteristics of storage <span class="sref">[1.34]</span>（睇表記「Managed by」）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Level</th>
+  <th>1 registers</th>
+  <th>2 cache</th>
+  <th>3 main memory</th>
+  <th>4 SSD</th>
+  <th>5 magnetic disk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Typical size</td>
+  <td>&lt; 1 KB</td>
+  <td>&lt; 16 MB</td>
+  <td>&lt; 64 GB</td>
+  <td>&lt; 1 TB</td>
+  <td>&lt; 10 TB</td>
+</tr>
+<tr>
+  <td>Technology</td>
+  <td>custom memory, multiple ports CMOS</td>
+  <td>on/off-chip CMOS SRAM</td>
+  <td>CMOS SRAM（slide 原文）</td>
+  <td>flash memory</td>
+  <td>magnetic disk</td>
+</tr>
+<tr>
+  <td>Access time (ns)</td>
+  <td>0.25–0.5</td>
+  <td>0.5–25</td>
+  <td>80–250</td>
+  <td>25,000–50,000</td>
+  <td>5,000,000</td>
+</tr>
+<tr>
+  <td>Bandwidth (MB/s)</td>
+  <td>20,000–100,000</td>
+  <td>5,000–10,000</td>
+  <td>1,000–5,000</td>
+  <td>500</td>
+  <td>20–150</td>
+</tr>
+<tr>
+  <td><strong>Managed by</strong></td>
+  <td><strong>compiler</strong></td>
+  <td><strong>hardware</strong></td>
+  <td><strong>operating system</strong></td>
+  <td><strong>OS</strong></td>
+  <td><strong>OS</strong></td>
+</tr>
+<tr>
+  <td>Backed by</td>
+  <td>cache</td>
+  <td>main memory</td>
+  <td>disk</td>
+  <td>disk</td>
+  <td>disk or tape</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Movement between levels of storage hierarchy can be explicit or implicit.</strong>（例如 cache ↔ memory 由 hardware 隱式處理；memory ↔ disk 由 OS 顯式處理）</li>
+</ul>
+<h3 id="s3-6"><a class="anchor" href="#s3-6">#</a>3.6 Range of Timescales <span class="sref">[1.35]</span>（Jeff Dean &quot;Numbers Everyone Should Know&quot;）</h3>
+<p>L1 cache 0.5 ns；branch mispredict 5 ns；L2 cache 7 ns；mutex lock/unlock 25 ns；<strong>main memory reference 100 ns</strong>；compress 1KB 3 µs；send 2KB over 1 Gbps 20 µs；read 1MB from memory 250 µs；round trip in datacenter 500 µs；<strong>disk seek 10 ms</strong>；read 1MB from disk 20 ms；packet CA→Netherlands→CA 150 ms。</p>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. Caching ⭐⭐（必考 short question）<span class="sref">[1.32–1.33]</span></h2>
+<h3 id="s4-1"><a class="anchor" href="#s4-1">#</a>4.1 Fundamental idea</h3>
+<blockquote class="callout answer">
+<p>📝 <strong>Model answer</strong>：<em>The fundamental idea of caching is to temporarily copy a subset of information from a slower but larger storage to a faster but smaller storage, so that frequently used data can be accessed more quickly.</em>（make frequently used case faster, less frequent case less dominant）</p>
+</blockquote>
+<ul>
+<li>Caching <strong>performed at many levels</strong>：memory、address translation、file blocks、file names、file directories、network routes…</li>
+<li>存取時先 check cache：<ul>
+<li><strong>Hit</strong> — information is in the cache → used directly (fast)</li>
+<li><strong>Miss</strong> — not in cache → <strong>data copied from slower storage to cache</strong> and used there</li>
+</ul>
+</li>
+<li><strong>Cache is usually much smaller than the storage being cached.</strong></li>
+<li><strong>Cache management</strong>：<strong>cache size</strong> 同 <strong>replacement policy</strong>。</li>
+<li><strong>Major criterion: cache hit ratio</strong>（percentage of content found in cache）。</li>
+</ul>
+<h3 id="s4-2"><a class="anchor" href="#s4-2">#</a>4.2 Average access time（公式必背）</h3>
+<ul>
+<li>Miss Ratio = 1 − Hit Ratio。</li>
+<li><strong>HW1 例</strong>：hit ratio 90%、hit time 2 ns、miss time 50 ns → 0.9×2 + 0.1×50 = 1.8 + 5 = <strong>6.8 ns</strong>。</li>
+<li>如果題目畀 <strong>miss penalty</strong>（額外時間）而唔係 miss time：Miss Time = Hit Time + Miss Penalty → AMAT = Hit Time + Miss Ratio × Miss Penalty（兩條公式結果一樣）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>S26 Q2.2 Model answer（high hit ratio 夠唔夠？）</strong>：<em>No. Cache performance is not judged only by cache hit ratio. Although hit ratio is a major criterion, the overall performance should be evaluated using the average access time, which depends on both the hit time and the miss time (miss penalty). A cache with a high hit ratio but a long hit time or a huge miss penalty can still perform poorly.</em></p>
+</blockquote>
+<blockquote class="callout formula">
+<p>🧮 <strong>Average Access Time = (Hit Ratio × Hit Time) + (Miss Ratio × Miss Time)</strong></p>
+</blockquote>
+<h3 id="s4-3"><a class="anchor" href="#s4-3">#</a>4.3 Locality — why caching works ⭐</h3>
+<ul>
+<li><strong>Temporal locality (locality in time)</strong> — <strong>recently accessed items are likely to be accessed again</strong> in the near future.<ul>
+<li>例：loop counter <code>i</code>、loop 入面重複執行嘅 instructions、成日 call 嘅 function。</li>
+</ul>
+</li>
+<li><strong>Spatial locality (locality in space)</strong> — <strong>items near (contiguous to) the recently accessed items are likely to be accessed shortly</strong>（data 同 program 都係）。<ul>
+<li>例：順序讀 array <code>a[0], a[1], a[2]…</code>；順序執行 instructions。</li>
+</ul>
+</li>
+<li><strong>Without access locality（e.g. all items accessed with equal probability）, cache would never work!</strong></li>
+<li>F20 MC1：<strong>&quot;Locality is essential to ___&quot; → Cache</strong>。</li>
+</ul>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. Processor Systems（處理器系統）<span class="sref">[1.36–1.41]</span></h2>
+<h3 id="s5-1"><a class="anchor" href="#s5-1">#</a>5.1 Single-Processor Systems <span class="sref">[1.36]</span></h3>
+<ul>
+<li>一個 CPU，<strong>single processing core</strong>；core 執行 instructions，有 registers 存 data。</li>
+<li>仲有 <strong>special-purpose processors</strong>（device-specific：disk controller、GPU）→ 跑 <strong>limited instruction set</strong>，<strong>do not execute instructions from user processes</strong>。</li>
+</ul>
+<h3 id="s5-2"><a class="anchor" href="#s5-2">#</a>5.2 Multiprocessor Systems <span class="sref">[1.37]</span> ⭐</h3>
+<ul>
+<li>而家由 mobile 到 server 都係 multiprocessor 主導。</li>
+<li><strong>Speed-up ratio with N processors is less than N</strong> — 因為 <strong>overhead, e.g., contention for shared resources (bus or memory)</strong>。</li>
+<li><strong>三大優點（必背）</strong>：<ol>
+<li><strong>Increased throughput</strong> — more computing capability</li>
+<li><strong>Economy of scale</strong> — share other devices（I/O devices, power supplies, housings, peripherals）→ 平過多部單 CPU 機</li>
+<li><strong>Increased reliability</strong> — <strong>graceful degradation or fault tolerance</strong></li>
+</ol>
+</li>
+<li>缺點（summary）：hardware design 同 software（<strong>parallel programming</strong>）都複雜好多。</li>
+<li><strong>兩類</strong>：<ul>
+<li><strong>Asymmetric multiprocessing (AMP)</strong> — <strong>master–slave</strong>：<strong>master</strong> assigns specific tasks to slaves and <strong>handles I/O</strong>。（Ch5：master 可以變 <strong>bottleneck</strong>）</li>
+<li><strong>Symmetric multiprocessing (SMP)</strong> — <strong>each processor performs all tasks, including OS functions and user processes</strong>；I/O 可以由任何 processor 處理。</li>
+</ul>
+</li>
+</ul>
+<h3 id="s5-3"><a class="anchor" href="#s5-3">#</a>5.3 SMP <span class="sref">[1.38]</span></h3>
+<ul>
+<li><strong>Each CPU has its own set of registers and a private (local) cache; all processors share physical memory through the system bus.</strong></li>
+</ul>
+<h3 id="s5-4"><a class="anchor" href="#s5-4">#</a>5.4 Multicore <span class="sref">[1.39]</span> ⭐</h3>
+<ul>
+<li><strong>Multiple computing cores reside on a single physical chip.</strong></li>
+<li>優點：<strong>faster on-chip communication than between-chip communication</strong>；<strong>uses significantly less power</strong>（mobile/laptop 重要）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q2.5</strong>：<em>Multicore SMP systems are faster and consume less power than systems in which each CPU has its own physical chip (on-chip communication is faster).</em></p>
+</blockquote>
+<h3 id="s5-5"><a class="anchor" href="#s5-5">#</a>5.5 NUMA (Non-Uniform Memory Access) <span class="sref">[1.40]</span> ⭐</h3>
+<ul>
+<li>問題：加更多 CPU 未必 scale，因為 <strong>contention for the system bus → bottleneck</strong>。</li>
+<li>解決：<strong>each CPU (or group of CPUs) has its own local memory accessed via a small, fast local bus</strong>；CPUs connected by a <strong>shared system interconnect</strong>；<strong>all CPUs share one physical memory address space</strong>。</li>
+<li><strong>Drawback: increased latency when a CPU must access remote memory across the system interconnect</strong> → 影響 <strong>scheduling and memory management</strong>（Ch5 processor affinity）。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ HW1 MC4：「In NUMA, every CPU accesses every part of memory with exactly the same latency」→ <strong>False</strong>（Non-<strong>uniform</strong> 就係唔同 latency）。</p>
+</blockquote>
+<h3 id="s5-6"><a class="anchor" href="#s5-6">#</a>5.6 名詞定義 <span class="sref">[1.41]</span>（MC 易混）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Term</th>
+  <th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>CPU</strong></td>
+  <td>The hardware that executes instructions</td>
+</tr>
+<tr>
+  <td><strong>Processor</strong></td>
+  <td>A physical chip that contains one or more CPUs</td>
+</tr>
+<tr>
+  <td><strong>Core</strong></td>
+  <td>The basic computation unit of the CPU（executes instructions + registers）</td>
+</tr>
+<tr>
+  <td><strong>Multicore</strong></td>
+  <td>Multiple computing cores on a single physical processor chip</td>
+</tr>
+<tr>
+  <td><strong>Multiprocessor</strong></td>
+  <td>Including multiple processors</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. Multiprogramming &amp; Timesharing ⭐ <span class="sref">[1.42]</span></h2>
+<ul>
+<li>所有 modern OS 都有兩個特徵：<ol>
+<li><strong>Multiprogramming (batch system)</strong> — needed for <strong>efficiency</strong>。<ul>
+<li>以前一次 load 一個 program；<strong>single program cannot keep CPU or I/O devices busy at all times</strong>。</li>
+<li><strong>Multiprogramming organizes jobs so that the CPU always has one to execute.</strong>（一個 job 等 I/O → CPU 轉做另一個 job）</li>
+<li>Mainframe：jobs submitted remotely and queued → <strong>job scheduling</strong> 揀邊啲 load 入 memory。</li>
+</ul>
+</li>
+<li><strong>Timesharing (multitasking)</strong> — <strong>logical extension of multiprogramming in which the CPU switches jobs so frequently that users can interact with each job while it is running → interactive computing</strong>。<ul>
+<li><strong>Response time should be under a certain threshold</strong>（通常 &lt; 1 秒）。</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>相關概念：<ul>
+<li>A program in execution → <strong>process</strong></li>
+<li>Several processes ready at the same time → <strong>CPU scheduling</strong></li>
+<li>Processes don't fit in memory → <strong>swapping</strong> moves them in and out</li>
+<li><strong>Virtual memory</strong> allows execution of processes <strong>not completely in memory</strong></li>
+</ul>
+</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>HW1 Q2.2 Model answer</strong>：<em>Multiprogramming keeps several jobs in memory at the same time. When the running job has to wait (e.g., for I/O), the OS switches the CPU to another job, so the CPU always has something to execute and CPU utilization increases. Time sharing (multitasking) extends multiprogramming by switching the CPU among jobs so frequently (using CPU scheduling and timer interrupts) that each user gets a fast response time and can interact with the program while it is running — this supports interactive computing.</em></p>
+</blockquote>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. Virtualization ⭐ <span class="sref">[1.43–1.46]</span></h2>
+<ul>
+<li><strong>Virtualization abstracts the hardware of a single computer into multiple different execution environments</strong>，令每個 user/program 以為自己有部 <strong>&quot;private computer&quot;</strong>。</li>
+<li>創造 <strong>virtual machine (VM)</strong>，OS 同 applications 可以喺上面跑。</li>
+<li><strong>It allows an operating system to run as an application within another operating system.</strong> ⭐（F20 MC2 答案：<strong>Virtualization</strong>，唔係 Emulation）</li>
+<li><strong>Components</strong> <span class="sref">[1.44]</span>：<ul>
+<li><strong>Host</strong> — underlying hardware system</li>
+<li><strong>Virtual machine manager (VMM) or hypervisor</strong> — <strong>creates and manages virtual machines</strong> by providing an interface <strong>identical to the host</strong></li>
+<li><strong>Guest OS</strong> — process provided with a <strong>virtual copy of the host</strong>（通常係一個 OS）</li>
+</ul>
+</li>
+<li><strong>Motivations</strong> <span class="sref">[1.43]</span>：<ul>
+<li><strong>Server consolidation</strong> — 將多個 OS 合併到較少 hardware 上</li>
+<li>Desktop 上跑一個 OS（Linux/macOS）但仍用到另一個平台（Windows）嘅 native apps</li>
+<li><strong>Developers can run many OS types/versions on one machine</strong> → easier testing and debugging</li>
+</ul>
+</li>
+<li><span class="sref">[1.45]</span> 圖：(a) processes → kernel → hardware；(b) 每個 VM 有自己 kernel，VM1/VM2/VM3 → <strong>VMM</strong> → hardware。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch1_p45.png" alt="Virtualization system models" loading="lazy"><figcaption>Virtualization system models <span class="sref">[1.45]</span></figcaption></figure>
+<ul>
+<li><strong>History</strong> <span class="sref">[1.46]</span>：IBM mainframes (1972)；VMware 喺 Intel x86 跑多個 Windows guest；<strong>programs in a VM show only minor performance decreases</strong>（多咗幾層 software）；<strong>VMM is in complete control of system resources</strong>；1990s 後期 Intel CPU 夠快；Xen、VMware。</li>
+<li><strong>Emulation vs Virtualization</strong>（課本背景）：<strong>Emulation</strong> = 模擬 <strong>different</strong> CPU architecture（source CPU ≠ target CPU，慢）；<strong>Virtualization</strong> = guest OS <strong>natively compiled for the CPU</strong>。</li>
+</ul>
+<blockquote class="callout warn">
+<p>⚠️ HW1 MC8：「An application always runs <strong>faster</strong> inside a VM」→ <strong>False</strong>（只會 minor performance decrease）。</p>
+</blockquote>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. Cloud Computing <span class="sref">[1.47–1.48]</span></h2>
+<ul>
+<li><strong>Delivers computing, storage, and apps as a service over a network.</strong></li>
+<li><strong>Logical extension of virtualization</strong>（用 virtualization 作基礎）；例：Amazon EC2（pay based on usage）。</li>
+<li><strong>Types</strong>：<ul>
+<li><strong>Public cloud</strong> — available via Internet to anyone willing to pay</li>
+<li><strong>Private cloud</strong> — run by a company for its own use</li>
+<li><strong>Hybrid cloud</strong> — both public and private components</li>
+</ul>
+</li>
+<li><strong>Service models</strong>（MC 易考 match）：<ul>
+<li><strong>SaaS (Software as a Service)</strong> — applications via Internet（e.g. word processor）</li>
+<li><strong>PaaS (Platform as a Service)</strong> — <strong>software stack</strong> ready for application use（e.g. <strong>database server</strong>）</li>
+<li><strong>IaaS (Infrastructure as a Service)</strong> — <strong>servers or storage</strong> over Internet（e.g. storage for backup）</li>
+<li><strong>MaaS</strong> — Machine learning as a Service</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. I/O Subsystem（Chapter 1 summary 提及）</h2>
+<ul>
+<li>I/O 硬件三元素：<strong>buses, device controllers, devices</strong>。</li>
+<li>搬 data（device ↔ main memory）：<strong>CPU in programmed I/O</strong> 或者 <strong>offloaded to a DMA controller</strong>。</li>
+<li><strong>Device driver</strong> = kernel module that controls a device。</li>
+<li><strong>Kernel I/O subsystem services</strong>：<strong>I/O scheduling, buffering, caching, spooling, device reservation, error handling</strong>。</li>
+<li>（Interrupt、DMA、dual-mode 詳細見 <strong>Ch3 notes §0</strong>（slides 3.21–3.31））</li>
+</ul>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. 常見陷阱 &amp; MC 速查（Traps）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+  <th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Main memory is byte addressable</td>
+  <td><span class="ok">✅</span></td>
+  <td>each address refers to one byte <span class="sref">[1.30]</span></td>
+</tr>
+<tr>
+  <td>Main memory is nonvolatile</td>
+  <td><span class="no">❌</span></td>
+  <td>DRAM 係 <strong>volatile</strong></td>
+</tr>
+<tr>
+  <td>Registers are slower than main memory</td>
+  <td><span class="no">❌</span></td>
+  <td>registers 最快</td>
+</tr>
+<tr>
+  <td>HDD is smaller than volatile memory</td>
+  <td><span class="no">❌</span></td>
+  <td>HDD 大好多</td>
+</tr>
+<tr>
+  <td>CPU can directly access secondary storage</td>
+  <td><span class="no">❌</span></td>
+  <td>只可 directly access main memory</td>
+</tr>
+<tr>
+  <td>Instructions and data stored in same memory (von Neumann)</td>
+  <td><span class="ok">✅</span></td>
+  <td>stored-program</td>
+</tr>
+<tr>
+  <td>Speed-up with N processors = N</td>
+  <td><span class="no">❌</span></td>
+  <td><strong>&lt; N</strong> due to overhead/contention</td>
+</tr>
+<tr>
+  <td>Multicore uses less power than multiple single-core chips</td>
+  <td><span class="ok">✅</span></td>
+  <td><span class="sref">[1.39]</span></td>
+</tr>
+<tr>
+  <td>NUMA: same latency for all memory</td>
+  <td><span class="no">❌</span></td>
+  <td>remote memory slower</td>
+</tr>
+<tr>
+  <td>SMP: each processor has private cache, shares memory</td>
+  <td><span class="ok">✅</span></td>
+  <td><span class="sref">[1.38]</span></td>
+</tr>
+<tr>
+  <td>AMP: master handles I/O</td>
+  <td><span class="ok">✅</span></td>
+  <td><span class="sref">[1.37]</span></td>
+</tr>
+<tr>
+  <td>Timesharing is an extension of multiprogramming</td>
+  <td><span class="ok">✅</span></td>
+  <td><span class="sref">[1.42]</span></td>
+</tr>
+<tr>
+  <td>VM always faster than native</td>
+  <td><span class="no">❌</span></td>
+  <td>minor slowdown</td>
+</tr>
+<tr>
+  <td>Virtualization lets an OS run as an app within another OS</td>
+  <td><span class="ok">✅</span></td>
+  <td><span class="sref">[1.43]</span></td>
+</tr>
+<tr>
+  <td>Cache works even with uniform random access</td>
+  <td><span class="no">❌</span></td>
+  <td>needs locality</td>
+</tr>
+<tr>
+  <td>High hit ratio alone guarantees performance</td>
+  <td><span class="no">❌</span></td>
+  <td>also hit time &amp; miss time</td>
+</tr>
+<tr>
+  <td>Cache is managed by OS</td>
+  <td><span class="no">❌</span></td>
+  <td><strong>hardware</strong>（<span class="sref">[1.34]</span>）；registers by <strong>compiler</strong></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s11"><a class="anchor" href="#s11">#</a>11. Past-paper 題目（Ch1 相關）</h2>
+<ol>
+<li><strong>S26 MC3</strong>：storage hierarchy 正確嘅係？→ <strong>D. Main memory is byte addressable</strong>。</li>
+<li><strong>S26 MC4</strong>：von Neumann 核心特徵？→ <strong>B. Instructions and data stored in the same memory space, accessed by address</strong>。</li>
+<li><strong>S26 Q2.2</strong>：caching 基本概念 + 高 hit ratio 夠唔夠？→ 見 §4。</li>
+<li><strong>F19 Q1.2</strong>：temporal vs spatial locality？→ 見 §4.3。</li>
+<li><strong>F20 MC1</strong>：Locality is essential to → <strong>Cache</strong>。</li>
+<li><strong>F20 MC2</strong>：___ allows a guest OS to run as an application on a native OS → <strong>Virtualization</strong>。</li>
+<li><strong>Sp21 MC1</strong>：von Neumann processing unit contains a/an ___ and processor registers → <strong>ALU</strong>。</li>
+<li><strong>HW1 MC3</strong> resource allocator；<strong>MC4</strong> NUMA same latency → false；<strong>MC8</strong> VM always faster → false；<strong>Q2.1</strong> AMAT = 6.8 ns；<strong>Q2.2</strong> multiprogramming vs timesharing。</li>
+</ol>
+<hr />
+<h2 id="s12"><a class="anchor" href="#s12">#</a>12. 自我測驗（Self-test）</h2>
+<ol>
+<li>寫出 average access time 公式；hit ratio 95%、hit time 1 ns、miss time 100 ns？（答：0.95 + 5 = <strong>5.95 ns</strong>）</li>
+<li>點解 N 個 processors speedup &lt; N？（contention for shared resources e.g. bus/memory, overhead）</li>
+<li>Multiprocessor 三個優點？（throughput, economy of scale, reliability/graceful degradation）</li>
+<li>NUMA 嘅 drawback？（remote memory access latency）</li>
+<li>VMM 又叫咩？做咩？（hypervisor; creates and manages VMs, interface identical to host）</li>
+<li>Cache 由邊個 manage？Main memory 呢？（hardware；OS）</li>
+</ol>
+
+<nav class="pager"><a href="ch0.html"><small>← 上一頁</small>考試攻略 Exam Strategy</a><a class="next" href="ch2.html"><small>下一頁 →</small>Ch2 OS Structures</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. What is an Operating System?（OS 係乜？）[1.20–1.24]</a>
+<a class="l3" href="#s1-1">1.1 Computer system 四個組成部分 [1.20]</a>
+<a class="l3" href="#s1-2">1.2 OS 嘅定義 [1.21, 1.23]</a>
+<a class="l3" href="#s1-3">1.3 OS 嘅兩大目標（Chapter summary）</a>
+<a class="l3" href="#s1-4">1.4 唔同環境嘅 OS [1.22]</a>
+<a class="l3" href="#s1-5">1.5 常見名詞 [1.24]</a>
+<a class="l2" href="#s2">2. Computer System Organization（電腦系統組織）[1.25–1.27]</a>
+<a class="l3" href="#s2-1">2.1 von Neumann Architecture [1.26] ⭐（MC 常客）</a>
+<a class="l2" href="#s3">3. Storage（儲存）[1.28–1.35]</a>
+<a class="l3" href="#s3-1">3.1 單位 [1.28]</a>
+<a class="l3" href="#s3-2">3.2 Storage Hierarchy [1.29] ⭐</a>
+<a class="l3" href="#s3-3">3.3 Main Memory [1.30]</a>
+<a class="l3" href="#s3-4">3.4 Secondary Storage [1.31]</a>
+<a class="l3" href="#s3-5">3.5 Characteristics of storage [1.34]（睇表記「Managed by」）</a>
+<a class="l3" href="#s3-6">3.6 Range of Timescales [1.35]（Jeff Dean &quot;Numbers Everyone Should Know&quot;）</a>
+<a class="l2" href="#s4">4. Caching ⭐⭐（必考 short question）[1.32–1.33]</a>
+<a class="l3" href="#s4-1">4.1 Fundamental idea</a>
+<a class="l3" href="#s4-2">4.2 Average access time（公式必背）</a>
+<a class="l3" href="#s4-3">4.3 Locality — why caching works ⭐</a>
+<a class="l2" href="#s5">5. Processor Systems（處理器系統）[1.36–1.41]</a>
+<a class="l3" href="#s5-1">5.1 Single-Processor Systems [1.36]</a>
+<a class="l3" href="#s5-2">5.2 Multiprocessor Systems [1.37] ⭐</a>
+<a class="l3" href="#s5-3">5.3 SMP [1.38]</a>
+<a class="l3" href="#s5-4">5.4 Multicore [1.39] ⭐</a>
+<a class="l3" href="#s5-5">5.5 NUMA (Non-Uniform Memory Access) [1.40] ⭐</a>
+<a class="l3" href="#s5-6">5.6 名詞定義 [1.41]（MC 易混）</a>
+<a class="l2" href="#s6">6. Multiprogramming &amp; Timesharing ⭐ [1.42]</a>
+<a class="l2" href="#s7">7. Virtualization ⭐ [1.43–1.46]</a>
+<a class="l2" href="#s8">8. Cloud Computing [1.47–1.48]</a>
+<a class="l2" href="#s9">9. I/O Subsystem（Chapter 1 summary 提及）</a>
+<a class="l2" href="#s10">10. 常見陷阱 &amp; MC 速查（Traps）</a>
+<a class="l2" href="#s11">11. Past-paper 題目（Ch1 相關）</a>
+<a class="l2" href="#s12">12. 自我測驗（Self-test）</a></aside>
+</div>
+
+</body>
+</html>

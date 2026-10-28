@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch5 CPU Scheduling · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/site.css?v=1793172171">
+
+<script src="assets/site.js?v=1793172171"></script>
+<script src="assets/search-index.js?v=1793172171"></script>
+</head>
+<body data-page="ch5">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5" class="active"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Notes</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="chapter-5-cpu-scheduling-cpu">Chapter 5 — CPU Scheduling（CPU 排程）</h1>
+<blockquote class="callout info">
+<p>📌 <strong>考試範圍提示</strong>：<strong>Ch5 係分數最重嘅一章</strong>（S26：27/100；F19：40/100；F20：27+；Sp21：26）。必考：</p>
+<ol>
+<li><strong>Gantt chart + average waiting / turnaround / response time</strong>：FCFS、SJF、SRTF、RR、Priority（± RR）、<strong>MLFQ</strong>（每年都有！）、自創 policy（LUF、dynamic priority）</li>
+<li><strong>RM / EDF</strong> real-time Gantt + missed deadlines</li>
+<li>MC / short：preemptive vs non-preemptive、convoy effect、starvation &amp; aging、MLFQ 優點、RR vs FCFS、exponential averaging、Little's formula、PCS vs SCS、processor affinity、load balancing、hard vs soft real-time
+⚠️ <strong>Response time 本科定義 = 第一次運行「完結」時間 − arrival time</strong>（slide 5.12），唔係課本「第一次開始」！</li>
+</ol>
+</blockquote>
+<hr />
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. Basic Concepts（基本概念）<span class="sref">[5.4–5.7]</span></h2>
+<h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 CPU–I/O Burst Cycle</h3>
+<ul>
+<li><strong>Objective of multiprogramming：have a process running at all times → maximize CPU utilization.</strong></li>
+<li><strong>Process execution consists of cycles of CPU execution and I/O wait — CPU burst and I/O burst.</strong></li>
+<li><span class="sref">[5.5]</span> <strong>Histogram of CPU-burst times：many short CPU bursts, few long ones (long-tail distribution)</strong>。<strong>I/O-bound → many short CPU bursts；CPU-bound → a few long CPU bursts.</strong> 呢個分佈對設計 scheduling algorithm 好重要。</li>
+<li>CPU idle 時，OS 由 ready queue 揀一個 process（除非 ready queue empty）→ 由 <strong>CPU scheduler（process scheduler / short-term scheduler）</strong> 揀。</li>
+</ul>
+<h3 id="s1-2"><a class="anchor" href="#s1-2">#</a>1.2 When does scheduling happen? ⭐⭐ <span class="sref">[5.6]</span></h3>
+<p>CPU scheduling 可能喺四種情況發生：</p>
+<ol>
+<li><strong>Running → waiting</strong>（e.g. I/O request, <code>wait()</code>）</li>
+<li><strong>Process terminates</strong></li>
+<li><strong>Running → ready</strong>（e.g. <strong>interrupt / timer</strong>）</li>
+<li><strong>Waiting → ready</strong>（I/O completion）或者 <strong>new → ready</strong>（新 process 到達，priority 更高）</li>
+</ol>
+<ul>
+<li><strong>Scheduling under 1 and 2 is non-preemptive (cooperative)</strong> — process <strong>gives up the CPU voluntarily</strong>。</li>
+<li><strong>Scheduling under 3 and 4 is preemptive.</strong></li>
+<li>Preemptive 要考慮：<strong>access to shared data (race condition, Ch6)</strong>、<strong>preemption while in kernel mode</strong>、<strong>interrupts during crucial OS activities</strong>。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 Sp21 MC：CPU scheduling decisions may take place in → <strong>all of the above</strong>（running→waiting、terminates、running→ready）。
+📝 HW2 MC5：preemptive 例子 → <strong>time quantum expires, running process moved back to the ready queue</strong>（A terminate、B I/O、D wait() 都係自願 → non-preemptive）。</p>
+</blockquote>
+<h3 id="s1-3"><a class="anchor" href="#s1-3">#</a>1.3 Dispatcher <span class="sref">[5.7]</span></h3>
+<ul>
+<li><strong>Dispatcher module gives control of the CPU to the process selected by the CPU scheduler</strong>：<ol>
+<li><strong>switching context</strong> from one process to another</li>
+<li><strong>switching to user mode</strong></li>
+<li><strong>jumping to the proper location in the user program</strong> to restart it</li>
+</ol>
+</li>
+<li><strong>Dispatch latency — time for the dispatcher to stop one process and start another（overhead）。</strong> 應該越快越好。</li>
+<li><code>vmstat</code>（Linux）可睇 context switches 數目（每秒幾百次）。</li>
+</ul>
+<hr />
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. Scheduling Metrics（排程指標）⭐⭐⭐ <span class="sref">[5.8, 5.12]</span></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Metric</th>
+  <th>定義</th>
+  <th>目標</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>CPU utilization</strong></td>
+  <td><strong>fraction of the time that the CPU is busy</strong></td>
+  <td>max</td>
+</tr>
+<tr>
+  <td><strong>Throughput</strong></td>
+  <td><strong>number of processes completed per unit time</strong>（favors short processes）</td>
+  <td>max</td>
+</tr>
+<tr>
+  <td><strong>Turnaround time (TAT)</strong></td>
+  <td><strong>time to execute a particular process = completion time − arrival time</strong></td>
+  <td>min</td>
+</tr>
+<tr>
+  <td><strong>Waiting time (WT)</strong></td>
+  <td><strong>total time spent waiting in the ready queue = TAT − CPU burst</strong></td>
+  <td>min</td>
+</tr>
+<tr>
+  <td><strong>Response time (RT)</strong></td>
+  <td><strong>time from submission until the first response is produced</strong></td>
+  <td>min</td>
+</tr>
+<tr>
+  <td><strong>Fairness</strong></td>
+  <td>adequate allocation for different jobs/processes</td>
+  <td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s2-1"><a class="anchor" href="#s2-1">#</a>2.1 公式（本科 convention，必背）⭐</h3>
+<ul>
+<li><strong>Response time 嘅「first run」完結</strong> = 第一次上 CPU 嘅嗰段（RR / MLFQ 就係 <strong>end of first quantum</strong>，或者 burst 細過 quantum 就係完成時間）<span class="sref">[5.12]</span>。<ul>
+<li>Slide 5.13 例：RR q=4，P1(24), P2(3), P3(3) 全部 t=0 到 → <strong>RT：P1 = 4, P2 = 7, P3 = 10，avg = 7</strong>。</li>
+<li>S26 MLFQ 官方：P1 response = 4 − 0 = 4（P1 跑 0–4）。</li>
+<li><strong>非 preemptive (FCFS/SJF) 嘅 RT = TAT</strong>（第一次 run 就跑完）。</li>
+</ul>
+</li>
+<li>Waiting time 另一個計法（<strong>gap method</strong>）：將 Gantt chart 上 process 唔喺 CPU 嘅時間（由 arrival 起）加埋。兩個方法結果一樣：<ul>
+<li>S26 P2：gap = (4−2)+(21−8)+(40−29)+(57−45)+(64−58) = 44 <span class="ok">✔</span>；formula = 71 − 2 − 25 = 44 <span class="ok">✔</span>。</li>
+</ul>
+</li>
+<li>S26 MC19 <span class="ok">✅</span>「<strong>Response time is the amount of time from when a request is submitted until the first response is produced</strong>」。✗ WT = arrival 到完成（嗰個係 TAT）；✗ TAT = 等 ready queue 時間（嗰個係 WT）；✗ throughput = CPU busy fraction（嗰個係 utilization）。</li>
+</ul>
+<blockquote class="callout formula">
+<p>🧮 <strong>Turnaround = Completion − Arrival</strong></p>
+<p>🧮 <strong>Waiting = Turnaround − CPU burst</strong></p>
+<p>🧮 <strong>Response = (completion of the FIRST run) − Arrival</strong></p>
+</blockquote>
+<hr />
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. FCFS — First-Come, First-Served ⭐ <span class="sref">[5.9–5.10]</span></h2>
+<ul>
+<li>按 <strong>arrival order</strong> 排；<strong>non-preemptive</strong>（跑完 current CPU burst 先放）。</li>
+<li>例：P1 = 24, P2 = 3, P3 = 3（全部 t=0）<ul>
+<li>次序 P1, P2, P3：<code>0 P1 24 P2 27 P3 30</code> → <strong>WT = 0, 24, 27 → avg 17；TAT avg = (24+27+30)/3 = 27</strong></li>
+<li>次序 P2, P3, P1：<code>0 P2 3 P3 6 P1 30</code> → <strong>WT = 6, 0, 3 → avg 3；TAT avg = 13</strong></li>
+</ul>
+</li>
+<li>⭐ <strong>Convoy effect — short processes stuck behind a long process</strong>，令 average waiting time 好長，完全取決於 arrival order。One CPU-bound + many I/O-bound → <strong>low I/O device utilization</strong>。（例：銀行排隊存張支票，前面有人開戶）</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 HW2 MC6：convoy effect → <strong>several short processes wait behind a long process that arrived first</strong>。
+📝 <strong>F19 Q3.2</strong>：FCFS 問題 = <strong>convoy effect</strong>（short process stuck behind a long process）。</p>
+</blockquote>
+<hr />
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. RR — Round Robin ⭐⭐⭐ <span class="sref">[5.11–5.16]</span></h2>
+<ul>
+<li><strong>FCFS + preemption</strong>：每個 process 得 <strong>time quantum q</strong>（通常 <strong>10–100 ms</strong>）；用完 → <strong>preempted and added to the end (tail) of the ready queue</strong>。</li>
+<li><strong>n processes → each gets 1/n of CPU time in chunks of at most q；no process waits more than (n − 1)q time units</strong> ⭐（ignoring context switch）。</li>
+<li><strong>Timer interrupts every quantum</strong>；如果 burst（或 remaining）&lt; q，process 自己完成就放 CPU。</li>
+<li>例 <span class="sref">[5.13]</span>：q = 4，P1 24, P2 3, P3 3 → <code>0 P1 4 P2 7 P3 10 P1 14 P1 18 P1 22 P1 26 P1 30</code><ul>
+<li><strong>WT：P1 = 6, P2 = 4, P3 = 7 → avg 5.67；TAT avg = (30+7+10)/3 = 15.67；RT = 4, 7, 10 → avg 7</strong></li>
+</ul>
+</li>
+<li><strong>RR：average waiting time can be long, but more &quot;fair&quot;；better for short jobs than FCFS；better average response time → good for interactive jobs.</strong></li>
+</ul>
+<h3 id="s4-1"><a class="anchor" href="#s4-1">#</a>4.1 Time quantum 大細 <span class="sref">[5.14, 5.16]</span> ⭐</h3>
+<ul>
+<li><strong>q large → RR degenerates to FCFS.</strong>（Sp21 MC 答案：<strong>FCFS</strong>）</li>
+<li><strong>q small → many context switches; q must be large w.r.t. context-switch time (&lt; 10 µs), otherwise overhead too high.</strong>（q 極細 = <strong>processor sharing</strong>：好似 n 個 processor 每個 1/n 速度）</li>
+<li><strong>Average turnaround time does not necessarily improve as q increases.</strong></li>
+<li><strong>TAT improves if most processes finish their CPU burst within a single quantum.</strong></li>
+<li><strong>Rule of thumb：80% of CPU bursts should be shorter than q.</strong></li>
+</ul>
+<h3 id="s4-2"><a class="anchor" href="#s4-2">#</a>4.2 FCFS vs RR ⭐（F19 Q3.2 考過）<span class="sref">[5.15]</span></h3>
+<ul>
+<li><strong>Is RR always better than FCFS? No!</strong> 例：<strong>10 jobs start at the same time, each needs 100 s, q = 1 s → average turnaround time much worse under RR</strong>（全部差唔多 1000 s 先完；FCFS 平均 550 s），<strong>but average response time much better</strong>。</li>
+</ul>
+<ul>
+<li>一般而言 <strong>no clear winner between FCFS and RR</strong> in TAT/WT — 取決於 burst times、arrival pattern、quantum size。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q3.2 Model answer</strong>：<em>RR performs worse than FCFS in turnaround time when all processes have the same (equal) CPU burst times that are longer than the time quantum — the jobs are interleaved and all finish near the end, whereas FCFS finishes them one by one.</em></p>
+</blockquote>
+<h3 id="s4-3"><a class="anchor" href="#s4-3">#</a>4.3 RR 做 Gantt chart 規則（考試用）</h3>
+<ol>
+<li>用 <strong>queue</strong>（寫低每個時刻 queue 內容！）。</li>
+<li><strong>新到達 process 加入 queue tail</strong>；<strong>quantum 用完嘅 process 都去 tail</strong>。</li>
+<li>⚠️ <strong>同一時刻</strong>「新 process 到達」同「running process quantum 用完」→ convention：<strong>新到達嗰個先入 queue，然後先放被 preempt 嗰個</strong>（寫低 assumption）。</li>
+<li>Process burst 完 → 即刻揀下一個（唔使等 quantum 完）。</li>
+<li>Queue 空而 running process quantum 用完 → 佢繼續跑（再得一個 quantum）。</li>
+</ol>
+<hr />
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. SJF / SRTF — Shortest Job First ⭐⭐⭐ <span class="sref">[5.17–5.24]</span></h2>
+<h3 id="s5-1"><a class="anchor" href="#s5-1">#</a>5.1 SJF（non-preemptive）</h3>
+<ul>
+<li><strong>Associate each process with the length of its next CPU burst; schedule the shortest.</strong>（更準確叫 <strong>shortest-next-CPU-burst</strong>）</li>
+<li>⭐ <strong>SJF is optimal — gives the minimum average waiting time for a given set of processes.</strong></li>
+<li><strong>Difficulty：knowing the length of the next CPU request.</strong>（所以 practical 難 implement；F20 MC15 答案 <strong>SJF difficult to implement</strong>）</li>
+<li><strong>Sketch proof</strong>：<strong>moving a short process before a long one decreases the waiting time of the short process more than it increases the waiting time of the long process → average waiting time decreases.</strong></li>
+<li>例 <span class="sref">[5.18]</span>：P1 = 6, P2 = 8, P3 = 7, P4 = 3。Slide 個 chart <strong>當全部 t = 0 到</strong>：<code>0 P4 3 P1 9 P3 16 P2 24</code> → <strong>avg WT = (3 + 16 + 9 + 0)/4 = 7</strong>（slide 答案）。<ul>
+<li>⚠️ 如果真係跟表入面 arrival（0, 2, 4, 5）：t=0 只有 P1 → <code>0 P1 6 P4 9 P3 16 P2 24</code> → WT = 0, 14, 5, 1 → avg 5。考試<strong>一定要睇清楚有冇 arrival time</strong>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="s5-2"><a class="anchor" href="#s5-2">#</a>5.2 SRTF — Shortest-Remaining-Time-First（preemptive SJF）⭐</h3>
+<ul>
+<li><strong>New arrival with burst shorter than the remaining time of the running process → preempts it.</strong></li>
+<li>Scheduling 喺 <strong>every arrival (condition 4)</strong> 都要 invoke。</li>
+<li>例 <span class="sref">[5.23]</span>：P1(0,8), P2(1,4), P3(2,9), P4(3,5) → <code>0 P1 1 P2 5 P4 10 P1 17 P3 26</code><ul>
+<li><strong>avg WT = [(10−1) + (1−1) + (17−2) + (5−3)]/4 = 26/4 = 6.5</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="s5-3"><a class="anchor" href="#s5-3">#</a>5.3 比較 <span class="sref">[5.24]</span> ⭐</h3>
+<ul>
+<li><strong>SJF/SRTF are the best for minimizing average waiting time (and average turnaround time).</strong></li>
+<li><strong>Provably optimal：SJF among non-preemptive, SRTF among preemptive. SRTF is always at least as good as SJF.</strong></li>
+<li><strong>SJF/SRTF = FCFS if all processes have the same CPU burst.</strong></li>
+<li><strong>Can lead to starvation of long processes if shorter processes keep arriving；fairness cannot be enforced.</strong></li>
+<li>F20 MC14：best (min) average waiting time → <strong>SJF</strong>（<strong>SRTF</strong> 亦接受）。</li>
+</ul>
+<h3 id="s5-4"><a class="anchor" href="#s5-4">#</a>5.4 Exponential Averaging（預測下一個 CPU burst）⭐⭐ <span class="sref">[5.19–5.22]</span></h3>
+<blockquote class="callout formula">
+<p>🧮 <strong>τ(n+1) = α · t(n) + (1 − α) · τ(n)</strong>，0 ≤ α ≤ 1</p>
+</blockquote>
+<ul>
+<li><strong>tₙ = actual length of the n-th CPU burst；τₙ₊₁ = predicted value for the next burst</strong>；通常 <strong>α = ½</strong>。</li>
+<li><strong>α = 0 → τₙ₊₁ = τₙ（recent history does not count）；α = 1 → τₙ₊₁ = tₙ（only the last burst counts）。</strong></li>
+<li>展開：<strong>τₙ₊₁ = α tₙ + (1−α) α tₙ₋₁ + … + (1−α)ʲ α tₙ₋ⱼ + … + (1−α)ⁿ⁺¹ τ₀</strong> → <strong>all past values count but recent ones weigh more；past effect diminishes exponentially</strong>（α=0.5，10 rounds 後 (1/2)¹⁰ = 1/1024 可忽略）。</li>
+<li>預測取決於 <strong>(1) all previous actual bursts with different weights, (2) the initial estimate τ₀</strong>。</li>
+<li>Slide 5.20 例（α = ½, τ₀ = 10）：</li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>i</th>
+  <th>0</th>
+  <th>1</th>
+  <th>2</th>
+  <th>3</th>
+  <th>4</th>
+  <th>5</th>
+  <th>6</th>
+  <th>7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>CPU burst tᵢ</td>
+  <td>6</td>
+  <td>4</td>
+  <td>6</td>
+  <td>4</td>
+  <td>13</td>
+  <td>13</td>
+  <td>13</td>
+  <td>…</td>
+</tr>
+<tr>
+  <td>guess τᵢ</td>
+  <td>10</td>
+  <td>8</td>
+  <td>6</td>
+  <td>6</td>
+  <td>5</td>
+  <td>9</td>
+  <td>11</td>
+  <td>12</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>HW2 MC9</strong>：τ = 10, t = 6, α = 0.25 → 0.25×6 + 0.75×10 = 1.5 + 7.5 = <strong>9 ms</strong>。</li>
+</ul>
+<hr />
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. Priority Scheduling ⭐⭐ <span class="sref">[5.25–5.27]</span></h2>
+<ul>
+<li><strong>Each process has a priority number；CPU allocated to the highest priority（本科：smallest integer = highest priority，除非題目另講）。</strong></li>
+<li><strong>Preemptive</strong>（higher-priority arrival preempts）或 <strong>non-preemptive</strong>。</li>
+<li><strong>Equal priority → FCFS order</strong>（或者 RR）。</li>
+<li><strong>SJF is a special case of priority scheduling where priority = inverse of predicted next CPU burst.</strong></li>
+<li>⭐ <strong>Problem：Starvation (indefinite blocking) — low-priority processes may never execute.</strong></li>
+<li>⭐ <strong>Solution：Aging — gradually increase the priority of a process as it waits</strong>（需要每個 process 喺 ready queue 有 timer）。</li>
+<li>Sp21 MC：main problem of priority scheduling → <strong>some processes may never execute (starvation)</strong>；HW2 MC7：aging → <strong>address starvation by gradually increasing the priority of a waiting process</strong>。</li>
+<li>例 <span class="sref">[5.26]</span>（all t=0；P1 10/3, P2 1/1, P3 2/4, P4 1/5, P5 5/2）→ <code>0 P2 1 P5 6 P1 16 P3 18 P4 19</code>，<strong>avg WT = (6+0+16+18+1)/5 = 8.2</strong></li>
+<li><strong>Priority + RR</strong> <span class="sref">[5.27]</span>：<strong>run the highest priority；same priority → round-robin</strong>。例 q = 2（burst/priority：P1 4/3, P2 5/2, P3 8/2, P4 7/1, P5 3/3，全部 t=0）→ <code>0 P4 7 P2 9 P3 11 P2 13 P3 15 P2 16 P3 20 P1 22 P5 24 P1 26 P5 27</code><ul>
+<li>P4（priority 1）先跑完；P2、P3（priority 2）RR；P2 喺 16 完咗之後 P3 獨自跑到 20；最後 P1、P5（priority 3）RR。</li>
+</ul>
+</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch5_p27.png" alt="Priority scheduling with round-robin, q = 2" loading="lazy"><figcaption>Priority scheduling with round-robin, q = 2 <span class="sref">[5.27]</span></figcaption></figure>
+<hr />
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. Multilevel Queue（多級佇列）⭐ <span class="sref">[5.28–5.29]</span></h2>
+<ul>
+<li><strong>Priority scheduling combined with RR</strong>；<strong>priority assigned statically；a process remains in the same queue for its whole runtime.</strong></li>
+<li><strong>Partition processes into queues based on process type</strong>（例：real-time → system → interactive → batch）。</li>
+<li><strong>Each queue can have its own scheduling algorithm.</strong></li>
+<li><strong>Scheduling among queues</strong>：(1) <strong>fixed-priority preemptive scheduling</strong>（高 queue 空先輪到低 queue → 可能 starvation）或 (2) <strong>time-slice</strong>（each queue gets a certain % of CPU time，e.g. 60%, 20%, 10%, 10%）。</li>
+<li>Sp21 MC：Multilevel queue（固定）有 starvation（free from starvation 嘅只有 <strong>FCFS 同 RR</strong>）。</li>
+</ul>
+<hr />
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. MLFQ — Multilevel Feedback Queue ⭐⭐⭐（每年必考 Gantt）<span class="sref">[5.30–5.35]</span></h2>
+<ul>
+<li><strong>A process can move between queues；aging can be implemented this way → flexibility.</strong></li>
+<li><strong>MLFQ 由以下 parameters 定義</strong>：<ol>
+<li><strong>number of queues</strong></li>
+<li><strong>scheduling algorithm for each queue</strong></li>
+<li><strong>method to upgrade a process</strong>（to higher queue）</li>
+<li><strong>method to demote a process</strong>（to lower queue）</li>
+<li><strong>method to determine which queue a process enters when it needs service</strong></li>
+</ol>
+</li>
+</ul>
+<h3 id="s8-1"><a class="anchor" href="#s8-1">#</a>8.1 Slide example 規則（考試照用）<span class="sref">[5.31]</span> ⭐</h3>
+<ul>
+<li>Q0 – RR（slide 5.31: q = 8；例子 5.32–5.34 用 <strong>q = 4</strong>）；Q1 – RR（q = 16 / <strong>8</strong>）；Q2 – <strong>FCFS</strong></li>
+<li><strong>A new job always enters Q0 (RR, FCFS order)；it also preempts jobs from Q1 or Q2 currently running.</strong></li>
+<li><strong>Gets q₀ in Q0；if not finished → moved to Q1.</strong> <strong>In Q1 gets q₁ additional；if still not complete → preempted and moved to Q2.</strong></li>
+<li>⭐ <strong>If a job from Q1 or Q2 is preempted by a new job from Q0, it joins the HEAD of Q1 or Q2, with the remaining quantum (Q1) or remaining CPU burst (Q2).</strong>（<strong>唔會</strong>攞一個全新 quantum；<strong>唔會</strong>因為被 preempt 而 demote）</li>
+<li><strong>Q1 job 只會喺 Q0 空先跑；Q2 job 只會喺 Q0 和 Q1 都空先跑。</strong></li>
+<li><strong>Q1 job 永遠唔會 preempt Q2 job</strong>（因為冇 process 直接 arrive 去 Q1）— summary 重點。</li>
+<li><strong>A job in Q0 is never preempted</strong>（Q0 內部只有 RR）。</li>
+<li><strong>Burst ≤ q₀ + q₁（e.g. 4 + 8 = 12）嘅 job 永遠唔會落 Q2。</strong></li>
+<li><strong>This approximates SRTF：CPU-bound jobs drop like a rock；short-running I/O-bound jobs stay near the top.</strong></li>
+</ul>
+<h3 id="s8-2"><a class="anchor" href="#s8-2">#</a>8.2 Lecture example <span class="sref">[5.32–5.34]</span>（Q0 q=4, Q1 q=8, Q2 FCFS）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Process</th>
+  <th>Arrival</th>
+  <th>Burst</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>P1</td>
+  <td>0</td>
+  <td>10</td>
+</tr>
+<tr>
+  <td>P2</td>
+  <td>2</td>
+  <td>15</td>
+</tr>
+<tr>
+  <td>P3</td>
+  <td>5</td>
+  <td>2</td>
+</tr>
+<tr>
+  <td>P4</td>
+  <td>12</td>
+  <td>14</td>
+</tr>
+<tr>
+  <td>P5</td>
+  <td>18</td>
+  <td>6</td>
+</tr>
+</tbody>
+</table></div>
+<pre class="code" data-lang=""><code>0 P1 4 P2 8 P3 10 P1 12 P4 16 P1 18 P5 22 P1 24 P2 32 P4 40 P5 42 P2 45 P4 47
+ Q0   Q0   Q0   Q1   Q0   Q1   Q0   Q1   Q1   Q1   Q1   Q2   Q2
+</code></pre>
+<ul>
+<li>t=4 P1 用完 Q0 quantum → Q1；t=8 P2 → Q1；t=10 P3 完；P1 喺 Q1 跑；t=12 P4 到 → preempt P1（P1 返 Q1 head，剩 6 quantum）；t=16 P4 → Q1 tail；P1 繼續（剩 quantum 6）；t=18 P5 到 → preempt P1；t=22 P5 → Q1；P1 跑到 24 完成（Q1 總共用 2+2+2 = 6 ≤ 8）；P2 24–32 用完 Q1 quantum → Q2；P4 32–40 → Q2；P5 40–42 完成；P2 42–45 完；P4 45–47 完。</li>
+<li><strong>WT：P1 = 14, P2 = 28, P3 = 3, P4 = 21, P5 = 18 → avg = 84/5 = 16.8</strong> <span class="ok">✅</span></li>
+</ul>
+<h3 id="s8-3"><a class="anchor" href="#s8-3">#</a>8.3 MLFQ advantages ⭐⭐（F19 Q3.3、F20 Q2.5 必背）<span class="sref">[5.35]</span></h3>
+<ul>
+<li>Used in <strong>BSD Unix, Solaris, Windows NT and later</strong>。</li>
+</ul>
+<ol>
+<li><strong>It does not need prior knowledge of the next CPU burst time</strong>（SJF/SRTF 需要）</li>
+<li><strong>It handles interactive jobs well — better response time than RR</strong>（short jobs 喺 top queue 完成）</li>
+<li><strong>It produces similar performance to SJF/SRTF</strong></li>
+<li><strong>It is &quot;fair&quot; — makes progress on CPU-bound jobs</strong></li>
+</ol>
+<ul>
+<li><strong>Starvation</strong> 可以用 <strong>reshuffling jobs periodically</strong>（e.g. 一段時間後將所有 jobs 搬返 top queue）解決。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F20 Q2.5 Model answer</strong>：<em>(1) MLFQ resembles the performance of SJF/SRTF without requiring prior knowledge of the next CPU burst time; (2) like RR, it gives good response time to interactive (short, I/O-bound) jobs since they finish in the top queues; (3) it is fair — all processes, long or short, make progress (and starvation can be avoided by periodically moving jobs up / aging).</em>
+📝 <strong>F19 Q3.3</strong>：<em>MLFQ approximates SJF because short (interactive, I/O-bound) jobs finish within the top high-priority queue(s), while long CPU-bound jobs are demoted to lower queues — so short jobs get served first like SJF. Its major advantage over SJF is that it does not require knowing the CPU burst times in advance.</em>
+⚠️ S26 MC20 <span class="ok">✅</span>「<strong>Each queue can use a different scheduling algorithm</strong>」；✗ processes never move；✗ requires burst times known；✗ non-preemptive。Sp21 MC <span class="ok">✅</span>「<strong>handles interactive jobs well by delivering similar performance as SJF</strong>」；✗ needs prior knowledge；✗ classification permanent；✗ won't suffer starvation。</p>
+</blockquote>
+<h3 id="s8-4"><a class="anchor" href="#s8-4">#</a>8.4 MLFQ 做題 checklist ✍️</h3>
+<ol>
+<li>每個時間點寫低：<strong>Q0、Q1、Q2 內容（同次序）</strong>、running process、佢喺邊個 queue、<strong>剩餘 quantum</strong>、<strong>剩餘 burst</strong>。</li>
+<li>事件：<strong>arrival</strong>（入 Q0 tail；如果 running 係 Q1/Q2 → preempt，被 preempt 嘅返 <strong>head</strong> of own queue，保留剩餘 quantum）；<strong>quantum 用完</strong>（未完成 → 降一級，入 tail）；<strong>完成</strong>。</li>
+<li>Gantt 上標 <strong>process@Queue</strong>（HW2 要求 label queue）。</li>
+<li><strong>同一 process 由 Q0 用完 quantum 立即喺 Q1 繼續跑</strong>（因為 Q0 空）→ Gantt 可合併，但計 response time 要用 Q0 quantum 完結時間（S26 P5：49 − 45 = 4）。</li>
+<li><strong>題目規則永遠優先</strong>（S26 第 8 條、F20 aging timer、HW2 「retains unused quantum」）。</li>
+</ol>
+<hr />
+<h2 id="s9"><a class="anchor" href="#s9">#</a>9. Thread Scheduling ⭐⭐ <span class="sref">[5.36–5.37]</span></h2>
+<ul>
+<li><strong>On modern OSes, kernel-level threads are scheduled (by the OS); user-level threads are managed by the thread library.</strong></li>
+<li><strong>LWP (lightweight process)</strong> — intermediate data structure；<strong>appears as a virtual processor on which user threads are scheduled to run；each LWP attached to a kernel thread</strong>。</li>
+<li>⭐ <strong>Process-Contention Scope (PCS)</strong> — <strong>under many-to-one and many-to-many models, the thread library schedules user-level threads onto an LWP</strong>；<strong>competition among threads belonging to the same process</strong>；typically <strong>by priority set by programmers</strong>（thread library 通常唔會調整 priority）；PCS typically <strong>preempts the running thread in favour of a higher-priority user thread</strong>。</li>
+<li>⭐ <strong>System-Contention Scope (SCS)</strong> — <strong>the kernel schedules kernel threads onto an available CPU</strong>；<strong>competition among all threads in the system</strong> → 就係 CPU scheduling。</li>
+<li><strong>One-to-one systems (Windows, Linux, Solaris) schedule threads using only SCS.</strong></li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 HW2 MC8：thread library 揀 user thread run on LWP → <strong>PCS, because the competing threads belong to the same process</strong>。
+📝 <strong>F19 Q3.1</strong>：<em>The OS schedules kernel-level threads. Mapping user threads onto kernel threads/LWPs (PCS) is done by the thread library, based on priorities set by the programmer, among the user threads of the same process; CPU scheduling (SCS) decides which kernel thread runs on a CPU among all kernel threads in the system.</em></p>
+</blockquote>
+<hr />
+<h2 id="s10"><a class="anchor" href="#s10">#</a>10. Multiple-Processor Scheduling ⭐⭐ <span class="sref">[5.38–5.46]</span></h2>
+<h3 id="s10-1"><a class="anchor" href="#s10-1">#</a>10.1 AMP vs SMP <span class="sref">[5.38–5.39]</span></h3>
+<ul>
+<li>Multiprocessor 而家包括 <strong>multicore CPUs, multithreaded cores, NUMA systems, heterogeneous multiprocessing</strong>。</li>
+<li><strong>Asymmetric multiprocessing (AMP)</strong> — <strong>only one processor (the master server) accesses kernel data structures</strong>（唔使 data sharing）；<strong>all scheduling decisions, I/O processing, system activities handled by the master</strong>；other processors execute only user code；⭐ <strong>the master server can become a potential bottleneck</strong>。</li>
+<li><strong>Symmetric multiprocessing (SMP)</strong> — <strong>each processor is self-scheduling</strong>，with <strong>one common ready queue</strong> or <strong>a private ready queue per processor</strong>；每個 processor 嘅 scheduler examine ready queue 揀 thread。<ul>
+<li>Common queue：<strong>must ensure two processors don't choose the same thread（race condition）</strong> 同 processes 唔會 lost。</li>
+<li><strong>All modern OSes support SMP</strong>（Windows, Linux, macOS, Android, iOS）。</li>
+</ul>
+</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F20 Q2.4 Model answer（common vs per-processor ready queue）</strong>：<em>A single common ready queue achieves <strong>load balancing</strong> easily — no processor is idle while the queue is non-empty — but it is hard to keep <strong>processor affinity</strong> (a thread may run on a different CPU each time, losing its cache contents) and the shared queue needs locking (possible race condition/contention). Per-processor private ready queues naturally provide processor affinity (and no contention on a shared queue), but need extra mechanisms such as <strong>push/pull migration</strong> to balance the load.</em></p>
+</blockquote>
+<h3 id="s10-2"><a class="anchor" href="#s10-2">#</a>10.2 Multicore &amp; Multithreaded cores (CMT) ⭐ <span class="sref">[5.40–5.44]</span></h3>
+<ul>
+<li><strong>Multiple cores on the same chip — faster and consume less power, but complicate scheduling.</strong></li>
+<li>⭐ <strong>Memory stall：when a processor accesses memory, it spends a significant amount of time waiting for data to become available（modern processors much faster than memory, esp. on cache miss）。</strong>（處理器可能 50% 時間喺等 memory）</li>
+<li><strong>Chip multithreading (CMT)</strong>（<strong>Intel = hyperthreading</strong>）：<strong>multiple hardware threads per core；each hardware thread has its own architectural state (PC, register set) and appears as a logical CPU</strong>。</li>
+<li><strong>If one thread stalls waiting for memory, the core switches to another hardware thread.</strong></li>
+<li><strong>Dual-threaded dual-core → 4 logical processors；quad-core × 2 threads → 8 logical processors；UltraSPARC T3：16 cores × 8 threads = 128 logical processors。</strong></li>
+<li><strong>Two levels of scheduling</strong>：<ol>
+<li><strong>OS decides which software (kernel) thread runs on each logical CPU（= CPU scheduling）</strong></li>
+<li><strong>Each core decides which hardware thread runs on the physical core（e.g. RR on UltraSPARC T3）</strong></li>
+</ol>
+</li>
+<li>三層 mapping <span class="sref">[5.44]</span>：user thread → LWP/kernel thread（<strong>PCS</strong>, thread library）；kernel (software) thread → logical CPU / hardware thread（<strong>CPU scheduling</strong>, OS）；hardware thread → core（<strong>core 自己，typically RR</strong>）。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>F19 Q2.5</strong>：multicore 優點 = <strong>faster + less power</strong>；CMT 原因 = <strong>memory stall</strong> — 一個 hardware thread 等 memory 時 core 可以跑另一個 thread（S26 MC22 <span class="ok">✅</span>「another thread may run when one thread stalls waiting for memory」）。</p>
+</blockquote>
+<h3 id="s10-3"><a class="anchor" href="#s10-3">#</a>10.3 Processor Affinity ⭐⭐ <span class="sref">[5.45]</span></h3>
+<ul>
+<li><strong>When a thread has run on a processor, that processor's cache holds its memory accesses → the thread has affinity for that processor.</strong></li>
+<li><strong>High cost of invalidating and repopulating caches → most SMP systems try to avoid migrating processes between processors.</strong></li>
+<li>⭐ <strong>Per-processor ready queues provide processor affinity for free!</strong></li>
+<li><strong>Soft affinity — OS attempts to keep a process on the same processor but doesn't guarantee it（可以 migrate during load balancing）。</strong></li>
+<li><strong>Hard affinity — a process specifies a subset of processors it may run on.</strong>（Linux：soft affinity + <code>sched_setaffinity()</code> for hard affinity）</li>
+<li><strong>NUMA</strong>：CPU 存取近佢嘅 memory 較快 → affinity to both processor and memory。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>HW2 Q2.4</strong>：hard affinity {CPU0, CPU1}，CPU2 idle → <strong>No</strong>，hard affinity must be respected；load balancing 只可以將 T 由 CPU0 搬去 CPU1。</p>
+</blockquote>
+<h3 id="s10-4"><a class="anchor" href="#s10-4">#</a>10.4 Load Balancing ⭐ <span class="sref">[5.46]</span></h3>
+<ul>
+<li><strong>Keep workload evenly distributed</strong>（只喺 per-processor private queues 時需要）。</li>
+<li><strong>Push migration — a specific task periodically checks loads and pushes tasks from overloaded to idle/less-busy CPUs.</strong></li>
+<li><strong>Pull migration — an idle processor pulls a waiting task from a busy processor.</strong></li>
+<li><strong>Not mutually exclusive — often both implemented (Linux CFS).</strong></li>
+<li>⭐ <strong>Load balancing often counteracts the benefits of processor affinity</strong>（natural tension）。</li>
+<li>S26 MC22 ✗「<strong>The motivation of placing multiple cores on the same chip is to simplify the scheduler</strong>」（其實 complicate scheduling）；<span class="ok">✅</span> AMP master bottleneck；<span class="ok">✅</span> memory stall → run another thread；<span class="ok">✅</span> affinity keeps process on same CPU for cache。</li>
+</ul>
+<hr />
+<h2 id="s11"><a class="anchor" href="#s11">#</a>11. Real-Time CPU Scheduling ⭐⭐⭐ <span class="sref">[5.47–5.52]</span></h2>
+<h3 id="s11-1"><a class="anchor" href="#s11-1">#</a>11.1 Hard vs Soft ⭐</h3>
+<ul>
+<li><strong>Real-time scheduling demands performance guarantee — predictability.</strong></li>
+<li><strong>Hard real-time — a task must be serviced by its deadline; service after the deadline is the same as no service.</strong></li>
+<li><strong>Soft real-time — no guarantee when a critical real-time process will be scheduled; only guarantees it will be given preference over noncritical processes.</strong></li>
+<li><strong>Real-time OS scheduler must support a priority-based algorithm with preemption</strong>（但 preemptive priority-based 只保證 <strong>soft</strong> real-time）。</li>
+<li>Sp21 MC <span class="ok">✅</span>「<strong>Soft real-time systems guarantee only that the process will be prioritized over non-critical processes</strong>」；✗ doesn't demand guarantee；✗ hard RT can service after deadline；✗ priority without preemption。</li>
+</ul>
+<h3 id="s11-2"><a class="anchor" href="#s11-2">#</a>11.2 Periodic tasks <span class="sref">[5.48]</span></h3>
+<ul>
+<li>參數：<strong>processing time t, deadline d, period p，0 ≤ t ≤ d ≤ p</strong>；<strong>rate = 1/p</strong>。</li>
+<li><strong>Admission control</strong>：process announces deadline；scheduler <strong>admits only if it can guarantee completion by the deadline</strong>。</li>
+<li><strong>CPU utilization of task i = tᵢ / pᵢ；total U = Σ tᵢ/pᵢ</strong>（U &gt; 1 → 一定有 miss）。</li>
+</ul>
+<h3 id="s11-3"><a class="anchor" href="#s11-3">#</a>11.3 Rate-Monotonic (RM) ⭐⭐ <span class="sref">[5.49–5.50]</span></h3>
+<ul>
+<li><strong>Static priority = inverse of period：shorter period → higher priority</strong>（rationale：<strong>tasks requiring CPU more often get higher priority</strong>）。<strong>Preemptive.</strong></li>
+<li><strong>RM is optimal among static-priority algorithms：if a set can't be scheduled by RM, no other static-priority algorithm can.</strong></li>
+<li><strong>Only handles periodic processes with constant processing time.</strong></li>
+<li>例 <span class="sref">[5.49]</span>：P1 (p=50, t=20), P2 (p=100, t=35)：U = 0.40 + 0.35 = 75% → OK：<code>0 P1 20 P2 50 P1 70 P2 75 idle 100</code></li>
+<li>例 <span class="sref">[5.50]</span>：P1 (50, 25), P2 (80, 35)：U = 0.50 + 0.44 = <strong>94%</strong> → <code>0 P1 25 P2 50 P1 75 P2 85</code> → <strong>P2 misses its deadline (80) by finishing at 85</strong>。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch5_p50.png" alt="RM: P2 misses its deadline at 80" loading="lazy"><figcaption>RM: P2 misses its deadline at 80 <span class="sref">[5.50]</span></figcaption></figure>
+<ul>
+<li>課本 bound（slides 冇，但好用）：<strong>RM guaranteed if U ≤ N(2^{1/N} − 1)</strong>：N=1 → 1；<strong>N=2 → 0.828</strong>；N=3 → 0.780；N=4 → 0.757；N→∞ → ln 2 ≈ 0.693。超過 bound <strong>唔一定</strong> miss（要畫 Gantt 確認）。</li>
+</ul>
+<h3 id="s11-4"><a class="anchor" href="#s11-4">#</a>11.4 EDF — Earliest Deadline First ⭐⭐ <span class="sref">[5.51–5.52]</span></h3>
+<ul>
+<li><strong>Dynamic priorities according to deadline：earlier (absolute) deadline → higher priority.</strong> Preemptive。</li>
+<li>例 <span class="sref">[5.51]</span>（P1 50/25, P2 80/35）：<code>0 P1 25 P2 60 P1 85 P2 100 P1 125 P2 145 idle 150</code> → <strong>no deadline missed</strong>（t=50 時 P2 deadline 80 &lt; P1 新 deadline 100 → P2 繼續）。</li>
+</ul>
+<figure class="fig"><img src="assets/img/ch5_p51.png" alt="EDF: same tasks, no deadline missed" loading="lazy"><figcaption>EDF: same tasks, no deadline missed <span class="sref">[5.51]</span></figcaption></figure>
+<ul>
+<li><strong>EDF does not require processes to be periodic, nor a constant CPU time per burst；only requirement：announce its deadline when it becomes runnable.</strong></li>
+<li>⭐ <strong>EDF is theoretically optimal — can meet all deadlines with CPU utilization up to 100%</strong>（但實際上 context switching + interrupt handling 令佢做唔到 100%）。</li>
+<li>S26 MC21：assigns priorities according to deadlines → <strong>EDF</strong>。</li>
+</ul>
+<blockquote class="callout answer">
+<p>📝 <strong>Sp21 Q2.3(b)</strong>：<em>EDF is better — unlike RM with static priorities, EDF uses dynamic priorities based on deadlines, which can increase the fraction of met deadlines (schedulable up to 100% utilization).</em>
+📝 <strong>HW2 Q2.5</strong>（A: p=50,t=25；B: p=80,t=35；t=50 時 A 新 instance deadline 100，B 剩 10 deadline 80）→ <strong>No</strong>：<strong>RM 揀 A</strong>（shorter period，static）→ B 75–85 <strong>miss 80</strong>；<strong>EDF 揀 B</strong>（deadline 80 &lt; 100）→ B 50–60 ✓，A 60–85 ✓。</p>
+</blockquote>
+<h3 id="s11-5"><a class="anchor" href="#s11-5">#</a>11.5 RM / EDF 做題方法 ✍️</h3>
+<ol>
+<li>列出每個 task 嘅 <strong>release times</strong>（0, p, 2p, …）同 <strong>absolute deadlines</strong>（release + d；冇講 d 就 d = p）。</li>
+<li>每個 time unit（或者每個事件：release / completion）揀：<ul>
+<li><strong>RM</strong>：ready jobs 入面 <strong>period 最短</strong>（固定）嗰個。</li>
+<li><strong>EDF</strong>：ready jobs 入面 <strong>absolute deadline 最早</strong>嗰個。</li>
+</ul>
+</li>
+<li><strong>Ties</strong>：題目有講就跟（S26：<strong>smaller process ID</strong>）；冇講：<strong>keep the running job（唔 preempt）</strong>（F19、Sp21 官方答案都係咁），再唔得就 smaller ID。寫低 assumption。</li>
+<li><strong>Soft real-time：miss 咗 deadline 嘅 job 會繼續跑完</strong>（Sp21 hint；S26 官方亦係咁），但 count 為 missed。</li>
+<li>數 <strong>missed deadlines</strong>：每個 deadline ≤ 時限範圍嘅 job，完成時間 &gt; deadline（或者未完成）→ miss。</li>
+<li>先計 U = Σt/p 做 sanity check。</li>
+</ol>
+<p><strong>S26 Q4.2</strong>（P1 t=1 d=3 p=4；P2 2/4/5；P3 2/6/7；P4 1/5/8；0–16，ties → smaller ID）：</p>
+<ul>
+<li><strong>RM</strong>（priority P1 &gt; P2 &gt; P3 &gt; P4）：<code>0 P1 1 P2 3 P3 4 P1 5 P2 7 P3 8 P1 9 P3 10 P2 12 P1 13 P3 14 P3 15 P2 16</code><ul>
+<li>P3 job (d=6) finishes 8 ✗；P4 never runs → misses d=5 ✗ and d=13 ✗；P3 job2 (d=13) finishes 14 ✗ → <strong>RM misses 4 deadlines</strong>（U = 0.25+0.4+0.286+0.125 = 1.06 &gt; 1）</li>
+</ul>
+</li>
+<li><strong>EDF</strong>：<code>0 P1 1 P2 3 P4 4 P3 6 P1 7 P2 9 P1 10 P3 12 P4 13 P2 15 P1 16</code><ul>
+<li>P2 job3 (d=14) finishes 15 ✗；P1 job4 (d=15) finishes 16 ✗ → <strong>EDF misses 2 deadlines</strong></li>
+</ul>
+</li>
+</ul>
+<p><strong>Sp21 Q2.3</strong>（P1 1/3/3, P2 2/4/4，0–14）：</p>
+<ul>
+<li><strong>EDF</strong>：<code>0 P1 1 P2 3 P1 4 P2 6 P1 7 idle 8 P2 10 P1 11 idle 12 P1 13 P2 14</code>（t=9 tie deadline 12 → keep P2）</li>
+<li><strong>RM</strong>：<code>0 P1 1 P2 3 P1 4 P2 6 P1 7 idle 8 P2 9 P1 10 P2 11 idle 12 P1 13 P2 14</code></li>
+<li>兩者都冇 miss（U = 0.833）。</li>
+</ul>
+<p><strong>F19 Q3.4</strong>（EDF；P1 p=d=10 t=4；P2 16/2；P3 20/8；到 38）：</p>
+<ul>
+<li><code>0 P1 4 P2 6 P3 14 P1 18 P2 20 P1 24 P3 32 P1 36 P2 38</code>（t=10、t=30 deadline tie → keep P3 running）</li>
+</ul>
+<hr />
+<h2 id="s12"><a class="anchor" href="#s12">#</a>12. Algorithm Evaluation <span class="sref">[5.53–5.60]</span></h2>
+<ul>
+<li>先定 <strong>criteria</strong>（e.g. maximize CPU utilization <strong>subject to max response time 300 ms</strong>；maximize throughput such that TAT ∝ execution time）。</li>
+<li><strong>Deterministic modeling</strong> — <strong>takes a particular predetermined workload and defines the performance of each algorithm for that workload</strong>；<strong>simple and fast, gives exact numbers, but requires exact input and answers apply only to those cases</strong>。<ul>
+<li>例 <span class="sref">[5.54–5.55]</span>：5 processes at t=0：P1 10, P2 29, P3 3, P4 7, P5 12 → <strong>FCFS avg WT = 28；non-preemptive SJF = 13；RR (q=10) = 23</strong>。</li>
+</ul>
+</li>
+<li><strong>Queueing models / analysis</strong> — CPU = server with ready queue；用 <strong>distributions</strong>（exponential, described by mean）；可計 utilization、average queue length、wait time；<strong>classes of algorithms and distributions handled are limited；assumptions often unrealistic</strong>。<ul>
+<li>⭐ <strong>Little's Formula：n = λ × W</strong>（<strong>n = average queue length, λ = average arrival rate, W = average waiting time in queue</strong>）；<strong>valid for any scheduling algorithm and arrival distribution</strong>（steady state，arrival rate &lt; service rate）。</li>
+<li>例：λ = 7/s，n = 14 → <strong>W = 2 s</strong>；<strong>HW2 MC10</strong>：λ = 3/s，n = 12 → <strong>W = 4 s</strong>。</li>
+</ul>
+</li>
+<li><strong>Simulations</strong> — programming a model of the system；<strong>more accurate</strong>；data from <strong>random number generators (distributions)</strong> 或 <strong>trace files</strong>（real system 記錄）。</li>
+<li><strong>Implementation</strong> — 真系統測試，最準但 <strong>high cost &amp; high risk</strong>；環境會變；可調 parameters；APIs 改 priority（Java, POSIX, Windows）。</li>
+</ul>
+<hr />
+<h2 id="s13"><a class="anchor" href="#s13">#</a>13. Gantt Chart 萬用流程（考試步驟）✍️⭐⭐⭐</h2>
+<ol>
+<li><strong>抄表</strong>：Process / Arrival / Burst（/ Priority）。</li>
+<li><strong>由 t = 0 開始逐個事件推進</strong>（events：arrival、completion、quantum expiry、check point）。每個事件寫低 <strong>ready queue</strong>（同 MLFQ 各層）。</li>
+<li><strong>揀 process 規則</strong>：</li>
+</ol>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Algorithm</th>
+  <th>揀邊個</th>
+  <th>Preempt?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS</td>
+  <td>earliest arrival</td>
+  <td>No</td>
+</tr>
+<tr>
+  <td>SJF</td>
+  <td>shortest burst among <strong>arrived</strong></td>
+  <td>No</td>
+</tr>
+<tr>
+  <td>SRTF</td>
+  <td>shortest <strong>remaining</strong></td>
+  <td>Yes, on arrival</td>
+</tr>
+<tr>
+  <td>RR</td>
+  <td>head of queue</td>
+  <td>Yes, quantum expiry</td>
+</tr>
+<tr>
+  <td>Priority (NP / P)</td>
+  <td>highest priority</td>
+  <td>P: on higher arrival</td>
+</tr>
+<tr>
+  <td>Priority + RR</td>
+  <td>highest priority；same → RR</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>MLFQ</td>
+  <td>highest non-empty queue</td>
+  <td>Yes（Q0 arrival preempts Q1/Q2）</td>
+</tr>
+<tr>
+  <td>RM</td>
+  <td>shortest period</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>EDF</td>
+  <td>earliest absolute deadline</td>
+  <td>Yes</td>
+</tr>
+</tbody>
+</table></div>
+<ol start="4">
+<li><strong>CPU idle</strong>：冇 process ready 就畫 <strong>idle</strong>（Sp21 FCFS <code>0 P1 2 idle 4 P2…</code>）。</li>
+<li><strong>畫 Gantt</strong>：每段標 <strong>start time / process / end time</strong>；所有 boundary 時間都要寫（partial credit 靠呢個）。</li>
+<li><strong>計 table</strong>：Completion → <strong>TAT = C − A</strong> → <strong>WT = TAT − Burst</strong> → <strong>RT = end of first run − A</strong>。</li>
+<li><strong>Average</strong>：寫出 <strong>(a+b+…)/n = x</strong>（S26：140/6 = 23.33）。</li>
+<li><strong>Sanity check</strong>：總 burst 加 idle = 最後完成時間；每個 WT ≥ 0。</li>
+</ol>
+<h3 id="s13-1"><a class="anchor" href="#s13-1">#</a>13.1 Tie-breaking（寫 assumption！）</h3>
+<ul>
+<li>同時到達、同 burst/priority：<strong>FCFS → lower process ID</strong>。</li>
+<li><strong>SRTF</strong>：新到達 burst = running remaining → 一般 <strong>keep running</strong>（唔 preempt）；F19 官方 preempt 咗，但兩種 avg WT 一樣 2.5。</li>
+<li><strong>RR</strong>：新到達 + quantum expiry 同一時刻 → <strong>新到達先入 queue</strong>。</li>
+<li><strong>EDF</strong>：deadline 相同 → <strong>keep running</strong>，否則 smaller ID（或者跟題目）。</li>
+<li><strong>Dynamic priority（S26 Q4.3）</strong>：題目講「same priority → larger ID first」— <strong>跟題目</strong>！</li>
+</ul>
+<hr />
+<h2 id="s14"><a class="anchor" href="#s14">#</a>14. Past-paper 計算題全集（全部用程式驗證 <span class="ok">✅</span>）</h2>
+<h3 id="s14-1"><a class="anchor" href="#s14-1">#</a>14.1 S26 Q4.1 MLFQ（Q0 RR4, Q1 RR8, Q2 FCFS；preempted → head of own queue）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>P</th>
+  <th>Arr</th>
+  <th>Burst</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>P1</td>
+  <td>0</td>
+  <td>9</td>
+</tr>
+<tr>
+  <td>P2</td>
+  <td>2</td>
+  <td>25</td>
+</tr>
+<tr>
+  <td>P3</td>
+  <td>6</td>
+  <td>7</td>
+</tr>
+<tr>
+  <td>P4</td>
+  <td>14</td>
+  <td>18</td>
+</tr>
+<tr>
+  <td>P5</td>
+  <td>45</td>
+  <td>15</td>
+</tr>
+<tr>
+  <td>P6</td>
+  <td>58</td>
+  <td>6</td>
+</tr>
+</tbody>
+</table></div>
+<pre class="code" data-lang=""><code>0 P1 4 P2 8 P3 12 P1 14 P4 18 P1 21 P2 29 P3 32 P4 40 P2 45 P5 57 P2 58 P6 64 P2 71 P4 77 P5 80
+(Q0)(Q0)(Q0)(Q1)(Q0)(Q1)(Q1)(Q1)(Q1)(Q2)(Q0→Q1 at 49)(Q2)(Q0→Q1 at 62)(Q2)(Q2)(Q2)
+</code></pre>
+<ul>
+<li>WT：P1 12, P2 44, P3 19, P4 45, P5 20, P6 0 → <strong>avg = 140/6 = 23.33</strong></li>
+<li>RT（end of first run − arrival）：P1 4, P2 6, P3 6, P4 4, P5 4 (49−45), P6 4 (62−58) → <strong>avg = 28/6 = 4.67</strong></li>
+</ul>
+<h3 id="s14-2"><a class="anchor" href="#s14-2">#</a>14.2 S26 Q4.3 Dynamic priority（larger = higher；waiting rate α，running rate β；tie → larger ID）</h3>
+<ul>
+<li>P1 (0, 7), P2 (3, 5), P3 (6, 6), P4 (9, 4)</li>
+<li>(a) α = 0, β = 3（running process priority 上升，waiting 不變 → 一旦 run 就霸住）：<strong><code>0 P1 7 P3 13 P4 17 P2 22</code></strong><ul>
+<li>t=7：P2, P3 都係 0 → tie → larger ID → <strong>P3</strong>；t=13：P2 (0), P4 (0) → <strong>P4</strong>。</li>
+</ul>
+</li>
+<li>(b) α = 1, β = 0，只考慮 P1、P2，每 3 個 unit check：<strong><code>0 P1 3 P2 6 P1 9 P2 11 P1 12</code></strong><ul>
+<li>t=3：P1 = 0 (ran 3), P2 = 0 → tie → P2；t=6：P1 = 3, P2 = 0 → P1；t=9：P1 = 3, P2 = 3 → tie → P2；t=11 P2 完 → P1。</li>
+</ul>
+</li>
+<li>(c) α = 1, β = −2，初始 30，每 3 unit check：<strong><code>0 P1 3 P2 6 P3 9 P4 12 P1 15 P2 17 P3 20 P4 21 P1 22</code></strong><ul>
+<li>t=3：P1 = 30−6 = 24, P2 = 30 → P2；t=6：P1 27, P2 24, P3 30 → P3；t=9：P1 30, P2 27, P3 24, P4 30 → tie → P4；t=12：P1 33 → P1；t=15：P1 27, P2 33, P3 30, P4 27 → P2（17 完）；t=17：P1 29, P3 32, P4 29 → P3（20 完）；t=20：P1 32, P4 32 → tie → P4（21 完）；t=21：P1。</li>
+</ul>
+</li>
+</ul>
+<h3 id="s14-3"><a class="anchor" href="#s14-3">#</a>14.3 S26 Q2.3 自訂 policy（fᵢ = 1/(a·cᵢ + b)，揀 fᵢ 最大）</h3>
+<ul>
+<li>(a) <strong>Yes</strong> — I/O-bound processes have small average CPU bursts cᵢ → larger fᵢ → higher priority.</li>
+<li>(b) <strong>Yes</strong> — a CPU-bound process (large cᵢ, low fᵢ) can starve if higher-priority I/O-bound processes keep arriving.</li>
+</ul>
+<h3 id="s14-4"><a class="anchor" href="#s14-4">#</a>14.4 F19 Q3.5 LUF (Least Used First)（揀用 CPU 最少嘅；tie → FCFS；preempt on arrival）</h3>
+<ul>
+<li>P1 (0, 25), P2 (15, 25), P3 (25, 5), P4 (40, 5)</li>
+<li><strong><code>0 P1 15 P2 25 P3 30 P2 40 P4 45 P1 55 P2 60</code></strong></li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>P</th>
+  <th>TAT</th>
+  <th>RT</th>
+  <th>WT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>P1</td>
+  <td>55</td>
+  <td>15</td>
+  <td>30</td>
+</tr>
+<tr>
+  <td>P2</td>
+  <td>45</td>
+  <td>10</td>
+  <td>20</td>
+</tr>
+<tr>
+  <td>P3</td>
+  <td>5</td>
+  <td>5</td>
+  <td>0</td>
+</tr>
+<tr>
+  <td>P4</td>
+  <td>5</td>
+  <td>5</td>
+  <td>0</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>LUF vs SRTF：相似 — short jobs 較易有高 priority；分別 — <strong>LUF 令跑咗好耐嘅 process 易 starve</strong>；SRTF 令 <strong>long burst 嘅 process 一開始就 starve</strong>。</li>
+</ul>
+<h3 id="s14-5"><a class="anchor" href="#s14-5">#</a>14.5 F19 Q3.6（P1 0/8, P2 7/13, P3 9/1, P4 11/5, P5 20/7, P6 27/1）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Alg</th>
+  <th>Gantt</th>
+  <th>WT (P1..P6)</th>
+  <th>Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS</td>
+  <td>0 P1 8 P2 21 P3 22 P4 27 P5 34 P6 35</td>
+  <td>0,1,12,11,7,7</td>
+  <td><strong>6.33</strong></td>
+</tr>
+<tr>
+  <td>SJF</td>
+  <td>0 P1 8 P2 21 P3 22 P4 27 P6 28 P5 35</td>
+  <td>0,1,12,11,8,0</td>
+  <td><strong>5.33</strong></td>
+</tr>
+<tr>
+  <td>RR q=4</td>
+  <td>0 P1 8 P2 12 P3 13 P4 17 P2 21 P4 22 P5 26 P2 30 P5 33 P6 34 P2 35</td>
+  <td>0,15,3,6,6,6</td>
+  <td><strong>6.0</strong>（corrected）</td>
+</tr>
+<tr>
+  <td>SRTF</td>
+  <td>0 P1 8 P2 9 P3 10 P2 11 P4 16 P2 20 P5 27 P6 28 P2 35（官方，tie 時 preempt）</td>
+  <td>0,15,0,0,0,0</td>
+  <td><strong>2.5</strong></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>SRTF 另一答案（tie 時 keep P2）：<code>… 16 P2 27 P6 28 P5 35</code> → WT 0,7,0,0,8,0 → avg 都係 <strong>2.5</strong>。</li>
+<li>注意 SJF：t=8 只有 P2 到咗 → P2 跑到 21（non-preemptive）。</li>
+</ul>
+<h3 id="s14-6"><a class="anchor" href="#s14-6">#</a>14.6 F20 Q4.1（P1 0/9, P2 3/3, P3 8/2, P4 10/6, P5 16/8, P6 20/5）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Alg</th>
+  <th>Gantt</th>
+  <th>WT</th>
+  <th>Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS</td>
+  <td>0 P1 9 P2 12 P3 14 P4 20 P5 28 P6 33</td>
+  <td>0,6,4,4,4,8</td>
+  <td><strong>4.33</strong></td>
+</tr>
+<tr>
+  <td>SJF</td>
+  <td>0 P1 9 P3 11 P2 14 P4 20 P6 25 P5 33</td>
+  <td>0,8,1,4,9,0</td>
+  <td><strong>3.67</strong></td>
+</tr>
+<tr>
+  <td>SRTF</td>
+  <td>0 P1 3 P2 6 P1 8 P3 10 P1 14 P4 20 P6 25 P5 33</td>
+  <td>5,0,0,4,9,0</td>
+  <td><strong>3.0</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s14-7"><a class="anchor" href="#s14-7">#</a>14.7 F20 Q4.2 Two-level feedback queue with aging（Q0 RR4；Q1 FCFS；Q1 timer 8 ms → 返 Q0；被 preempt 返 Q1 head 並 reset timer）</h3>
+<ul>
+<li>P1 0/9, P2 3/3, P3 8/2, P4 10/9, P5 13/4, P6 18/5</li>
+<li><strong><code>0 P1 4 P2 7 P1 8 P3 10 P4 14 P5 18 P1 22 P6 26 P4 30 P6 31 P4 32</code></strong></li>
+<li>關鍵：t=8 P1（Q1）被 P3 preempt → Q1 head，timer reset 8；t=16 P1 timer 到 8 → 升返 Q0；t=22 P4（14 入 Q1）timer 到 8 → 升 Q0。</li>
+<li>WT = 13, 1, 0, 13, 1, 8 → <strong>avg = 6</strong></li>
+</ul>
+<h3 id="s14-8"><a class="anchor" href="#s14-8">#</a>14.8 F20 Q4.3 Priority + RR（smaller = higher；preemptive；same priority RR q=4）</h3>
+<ul>
+<li>P1 0/9/2, P2 3/3/1, P3 8/5/4, P4 10/2/4, P5 16/8/5, P6 20/5/3</li>
+<li><strong><code>0 P1 3 P2 6 P1 12 P3 16 P4 18 P3 19 P5 20 P6 25 P5 32</code></strong></li>
+<li>WT = 3, 0, 6, 6, 8, 0 → <strong>avg = 23/6 = 3.83</strong></li>
+</ul>
+<h3 id="s14-9"><a class="anchor" href="#s14-9">#</a>14.9 Sp21 Q2.1（P1 0/2, P2 4/12, P3 6/6, P4 9/4, P5 13/5）</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Alg</th>
+  <th>Gantt</th>
+  <th>WT</th>
+  <th>Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS</td>
+  <td>0 P1 2 idle 4 P2 16 P3 22 P4 26 P5 31</td>
+  <td>0,0,10,13,13</td>
+  <td><strong>7.2</strong></td>
+</tr>
+<tr>
+  <td>SJF</td>
+  <td>0 P1 2 idle 4 P2 16 P4 20 P5 25 P3 31</td>
+  <td>0,0,19,7,7</td>
+  <td><strong>6.6</strong></td>
+</tr>
+<tr>
+  <td>RR q=8</td>
+  <td>0 P1 2 idle 4 P2 12 P3 18 P4 22 P2 26 P5 31</td>
+  <td>0,10,6,9,13</td>
+  <td><strong>7.6</strong></td>
+</tr>
+<tr>
+  <td>SRTF</td>
+  <td>0 P1 2 idle 4 P2 6 P3 12 P4 16 P5 21 P2 31</td>
+  <td>0,15,0,3,3</td>
+  <td><strong>4.2</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="s14-10"><a class="anchor" href="#s14-10">#</a>14.10 Sp21 Q2.2 MLFQ（Q0 q=2, Q1 q=4, Q2 FCFS）</h3>
+<ul>
+<li>P1 0/10, P2 10/8, P3 8/30, P4 16/2, P5 22/8, P6 6/22</li>
+<li><strong><code>0 P1 2 P1 6 P6 8 P3 10 P2 12 P6 16 P4 18 P3 22 P5 24 P2 28 P5 32 P1 36 P6 52 P3 76 P2 78 P5 80</code></strong><ul>
+<li>(Q0)(Q1)(Q0)(Q0)(Q0)(Q1)(Q0)(Q1)(Q0)(Q1)(Q1)(Q2)(Q2)(Q2)(Q2)(Q2)</li>
+</ul>
+</li>
+<li>WT：P1 26, P2 60, P3 38, P4 0, P5 50, P6 24 → <strong>avg = 33</strong></li>
+</ul>
+<h3 id="s14-11"><a class="anchor" href="#s14-11">#</a>14.11 HW2（P1 0/7, P2 1/3, P3 4/5, P4 10/2）</h3>
+<ul>
+<li><strong>SRTF</strong>：<code>0 P1 1 P2 4 P3 9 P1 10 P4 12 P1 17</code> → WT 10,0,0,0 → <strong>avg WT 2.5；avg TAT 6.75</strong></li>
+<li><strong>RR q=3</strong>：<code>0 P1 3 P2 6 P1 9 P3 12 P1 13 P4 15 P3 17</code> → WT 6,2,8,3 → <strong>avg WT 4.75；avg TAT 9</strong></li>
+<li><strong>MLFQ（Q0 4, Q1 8, Q2 FCFS；P1 0/20, P2 1/5, P3 11/2）</strong>：<code>0 P1(Q0) 4 P2(Q0) 8 P1(Q1) 11 P3(Q0) 13 P1(Q1) 18 P2(Q1) 19 P1(Q2) 27</code><ul>
+<li>t=11 P1 被 P3 preempt → <strong>Q1 head（喺 P2 前面），剩 5 ms quantum</strong>（唔係新 8 ms）。</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="s15"><a class="anchor" href="#s15">#</a>15. 常見陷阱 &amp; MC 速查</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>敘述</th>
+  <th>真/假</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Scheduling on running→waiting / terminate = non-preemptive</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Timer interrupt (quantum expiry) = preemptive</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>FCFS is preemptive</td>
+  <td><span class="no">❌</span>（<strong>FCFS must be non-preemptive</strong> — Sp21 MC）</td>
+</tr>
+<tr>
+  <td>SJF gives minimum average waiting time</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>SJF easy to implement</td>
+  <td><span class="no">❌</span>（need next burst length）</td>
+</tr>
+<tr>
+  <td>SRTF ≥ SJF in performance</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>RR with very large q → FCFS</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>RR always better TAT than FCFS</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>RR: no process waits more than (n−1)q</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Small q → high context-switch overhead</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Priority scheduling problem = starvation；solution = aging</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Multilevel queue: processes move between queues</td>
+  <td><span class="no">❌</span>（MLFQ 先可以）</td>
+</tr>
+<tr>
+  <td>MLFQ requires known burst times</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>MLFQ: each queue different algorithm</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Starvation-free: FCFS and RR</td>
+  <td><span class="ok">✅</span>（Sp21 MC 答案 A：1, 4）</td>
+</tr>
+<tr>
+  <td>OS schedules user threads (SCS)</td>
+  <td><span class="no">❌</span>（PCS 由 thread library；SCS 係 kernel threads）</td>
+</tr>
+<tr>
+  <td>One-to-one systems only use SCS</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>AMP: master can be a bottleneck</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Multicore simplifies scheduling</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>Per-processor queues give affinity for free</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Load balancing may counteract affinity</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Hard RT: service after deadline acceptable</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>RM: static priority by period</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>EDF: dynamic priority by deadline</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>EDF requires periodic tasks</td>
+  <td><span class="no">❌</span></td>
+</tr>
+<tr>
+  <td>EDF optimal, up to 100% utilization (theory)</td>
+  <td><span class="ok">✅</span></td>
+</tr>
+<tr>
+  <td>Little's formula n = λW only for FCFS</td>
+  <td><span class="no">❌</span>（any algorithm）</td>
+</tr>
+<tr>
+  <td>Response time (course) = first start − arrival</td>
+  <td><span class="no">❌</span>（<strong>end of first run − arrival</strong>）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="s16"><a class="anchor" href="#s16">#</a>16. 自我測驗</h2>
+<ol>
+<li>P1(0,5), P2(1,3), P3(2,1)：SRTF Gantt？（<code>0 P1 1 P2 2 P3 3 P2 5 P1 9</code>；WT = 4,1,0 → 5/3）</li>
+<li>10 個 jobs 各 100 s 同時到，RR q=1 vs FCFS 平均 TAT？（RR ≈ 995.5 s；FCFS = 550 s）</li>
+<li>α = 0.5，τ₀ = 10，bursts 6, 4 → τ₂？（τ₁ = 8；τ₂ = 6）</li>
+<li>兩個 tasks：A (t=2, p=5)、B (t=4, p=10)：U = 0.8，RM 得唔得？（0.8 ≤ 0.828 → guaranteed）</li>
+<li>PCS vs SCS？</li>
+<li>Push vs pull migration？</li>
+</ol>
+
+<nav class="pager"><a href="ch4.html"><small>← 上一頁</small>Ch4 Threads</a><a class="next" href="ch6.html"><small>下一頁 →</small>Ch6 Synchronization</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s1">1. Basic Concepts（基本概念）[5.4–5.7]</a>
+<a class="l3" href="#s1-1">1.1 CPU–I/O Burst Cycle</a>
+<a class="l3" href="#s1-2">1.2 When does scheduling happen? ⭐⭐ [5.6]</a>
+<a class="l3" href="#s1-3">1.3 Dispatcher [5.7]</a>
+<a class="l2" href="#s2">2. Scheduling Metrics（排程指標）⭐⭐⭐ [5.8, 5.12]</a>
+<a class="l3" href="#s2-1">2.1 公式（本科 convention，必背）⭐</a>
+<a class="l2" href="#s3">3. FCFS — First-Come, First-Served ⭐ [5.9–5.10]</a>
+<a class="l2" href="#s4">4. RR — Round Robin ⭐⭐⭐ [5.11–5.16]</a>
+<a class="l3" href="#s4-1">4.1 Time quantum 大細 [5.14, 5.16] ⭐</a>
+<a class="l3" href="#s4-2">4.2 FCFS vs RR ⭐（F19 Q3.2 考過）[5.15]</a>
+<a class="l3" href="#s4-3">4.3 RR 做 Gantt chart 規則（考試用）</a>
+<a class="l2" href="#s5">5. SJF / SRTF — Shortest Job First ⭐⭐⭐ [5.17–5.24]</a>
+<a class="l3" href="#s5-1">5.1 SJF（non-preemptive）</a>
+<a class="l3" href="#s5-2">5.2 SRTF — Shortest-Remaining-Time-First（preemptive SJF）⭐</a>
+<a class="l3" href="#s5-3">5.3 比較 [5.24] ⭐</a>
+<a class="l3" href="#s5-4">5.4 Exponential Averaging（預測下一個 CPU burst）⭐⭐ [5.19–5.22]</a>
+<a class="l2" href="#s6">6. Priority Scheduling ⭐⭐ [5.25–5.27]</a>
+<a class="l2" href="#s7">7. Multilevel Queue（多級佇列）⭐ [5.28–5.29]</a>
+<a class="l2" href="#s8">8. MLFQ — Multilevel Feedback Queue ⭐⭐⭐（每年必考 Gantt）[5.30–5.35]</a>
+<a class="l3" href="#s8-1">8.1 Slide example 規則（考試照用）[5.31] ⭐</a>
+<a class="l3" href="#s8-2">8.2 Lecture example [5.32–5.34]（Q0 q=4, Q1 q=8, Q2 FCFS）</a>
+<a class="l3" href="#s8-3">8.3 MLFQ advantages ⭐⭐（F19 Q3.3、F20 Q2.5 必背）[5.35]</a>
+<a class="l3" href="#s8-4">8.4 MLFQ 做題 checklist ✍️</a>
+<a class="l2" href="#s9">9. Thread Scheduling ⭐⭐ [5.36–5.37]</a>
+<a class="l2" href="#s10">10. Multiple-Processor Scheduling ⭐⭐ [5.38–5.46]</a>
+<a class="l3" href="#s10-1">10.1 AMP vs SMP [5.38–5.39]</a>
+<a class="l3" href="#s10-2">10.2 Multicore &amp; Multithreaded cores (CMT) ⭐ [5.40–5.44]</a>
+<a class="l3" href="#s10-3">10.3 Processor Affinity ⭐⭐ [5.45]</a>
+<a class="l3" href="#s10-4">10.4 Load Balancing ⭐ [5.46]</a>
+<a class="l2" href="#s11">11. Real-Time CPU Scheduling ⭐⭐⭐ [5.47–5.52]</a>
+<a class="l3" href="#s11-1">11.1 Hard vs Soft ⭐</a>
+<a class="l3" href="#s11-2">11.2 Periodic tasks [5.48]</a>
+<a class="l3" href="#s11-3">11.3 Rate-Monotonic (RM) ⭐⭐ [5.49–5.50]</a>
+<a class="l3" href="#s11-4">11.4 EDF — Earliest Deadline First ⭐⭐ [5.51–5.52]</a>
+<a class="l3" href="#s11-5">11.5 RM / EDF 做題方法 ✍️</a>
+<a class="l2" href="#s12">12. Algorithm Evaluation [5.53–5.60]</a>
+<a class="l2" href="#s13">13. Gantt Chart 萬用流程（考試步驟）✍️⭐⭐⭐</a>
+<a class="l3" href="#s13-1">13.1 Tie-breaking（寫 assumption！）</a>
+<a class="l2" href="#s14">14. Past-paper 計算題全集（全部用程式驗證 ✅）</a>
+<a class="l3" href="#s14-1">14.1 S26 Q4.1 MLFQ（Q0 RR4, Q1 RR8, Q2 FCFS；preempted → head of own queue）</a>
+<a class="l3" href="#s14-2">14.2 S26 Q4.3 Dynamic priority（larger = higher；waiting rate α，running rate β；tie → larger ID）</a>
+<a class="l3" href="#s14-3">14.3 S26 Q2.3 自訂 policy（fᵢ = 1/(a·cᵢ + b)，揀 fᵢ 最大）</a>
+<a class="l3" href="#s14-4">14.4 F19 Q3.5 LUF (Least Used First)（揀用 CPU 最少嘅；tie → FCFS；preempt on arrival）</a>
+<a class="l3" href="#s14-5">14.5 F19 Q3.6（P1 0/8, P2 7/13, P3 9/1, P4 11/5, P5 20/7, P6 27/1）</a>
+<a class="l3" href="#s14-6">14.6 F20 Q4.1（P1 0/9, P2 3/3, P3 8/2, P4 10/6, P5 16/8, P6 20/5）</a>
+<a class="l3" href="#s14-7">14.7 F20 Q4.2 Two-level feedback queue with aging（Q0 RR4；Q1 FCFS；Q1 timer 8 ms → 返 Q0；被 preempt 返 Q1 head 並 reset timer）</a>
+<a class="l3" href="#s14-8">14.8 F20 Q4.3 Priority + RR（smaller = higher；preemptive；same priority RR q=4）</a>
+<a class="l3" href="#s14-9">14.9 Sp21 Q2.1（P1 0/2, P2 4/12, P3 6/6, P4 9/4, P5 13/5）</a>
+<a class="l3" href="#s14-10">14.10 Sp21 Q2.2 MLFQ（Q0 q=2, Q1 q=4, Q2 FCFS）</a>
+<a class="l3" href="#s14-11">14.11 HW2（P1 0/7, P2 1/3, P3 4/5, P4 10/2）</a>
+<a class="l2" href="#s15">15. 常見陷阱 &amp; MC 速查</a>
+<a class="l2" href="#s16">16. 自我測驗</a></aside>
+</div>
+
+</body>
+</html>
