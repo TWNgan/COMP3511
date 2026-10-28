@@ -69,7 +69,7 @@ do {
 ```
 
 ### 2.3 三個 requirements ⭐⭐⭐（F19 Q4.1 原題）[6.11]
-1. **Mutual exclusion** — **if process Pᵢ is executing in its critical section, no other processes can be executing in their critical sections.**
+1. **Mutual exclusion** — **if process $P_i$ is executing in its critical section, no other processes can be executing in their critical sections.**
 2. **Progress** — **if no process is executing in its critical section and some processes wish to enter, the selection of the process that will enter next cannot be postponed indefinitely**（只有唔喺 remainder section 嘅 process 先參與決定）。
 3. **Bounded waiting** — **a bound must exist on the number of times other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted.**（i.e. 等待時間有上限，no starvation）
 - Assumptions：**each process executes at a nonzero speed；no assumption about the relative speed of the processes.**
@@ -155,11 +155,11 @@ do {
 } while (true);
 ```
 **Sketch proof** [6.20]：
-- **Mutual exclusion**：Pᵢ enters CS only if `waiting[i] == false` or `key == false`. `key` becomes false only via `test_and_set()` — **only the first process to execute test_and_set finds key == false**；others wait. `waiting[i]` becomes false only when another process leaves its CS, and **only one waiting[i] is set to false** → mutual exclusion。
+- **Mutual exclusion**：$P_i$ enters CS only if `waiting[i] == false` or `key == false`. `key` becomes false only via `test_and_set()` — **only the first process to execute test_and_set finds key == false**；others wait. `waiting[i]` becomes false only when another process leaves its CS, and **only one waiting[i] is set to false** → mutual exclusion。
 - **Progress**：a process exiting its CS **either sets lock = false or sets waiting[j] = false** — both let a waiting process proceed。
 - **Bounded waiting**：the exiting process **scans waiting[] in cyclic order (i+1, i+2, …, n−1, 0, …, i−1)** and designates the first waiting one → **any waiting process enters within n − 1 turns**。
 
-> ⚠️ **S26 MC25**（which is NOT correct）→ **A.「test_and_set(&lock) releases the lock after the critical section」**（錯：釋放係 `lock = false` 或者 `waiting[j] = false`；test_and_set 只會 set lock 為 true）。✅ waiting[i] 表示 Pᵢ 想入 CS；✅ `waiting[j] = false` 表示 Pᵢ 將 lock 交畀 Pⱼ（lock 冇真正釋放）；✅ 執行 `lock = false` 後 Pᵢ 可以再入 CS。
+> ⚠️ **S26 MC25**（which is NOT correct）→ **A.「test_and_set(&lock) releases the lock after the critical section」**（錯：釋放係 `lock = false` 或者 `waiting[j] = false`；test_and_set 只會 set lock 為 true）。✅ waiting[i] 表示 $P_i$ 想入 CS；✅ `waiting[j] = false` 表示 $P_i$ 將 lock 交畀 $P_j$（lock 冇真正釋放）；✅ 執行 `lock = false` 後 $P_i$ 可以再入 CS。
 
 > 📝 **Sp21 Q3.2（改錯題）**：版本用 `j = i + 1; while (j < n && !waiting[j]) j++; if (j < n) waiting[j] = false;`
 > **Problems**：(1) **只 scan index 大過 i 嘅 process → index 細過 i 嘅 process 可能 unbounded waiting**（violates bounded waiting）；(2) **冇 process 等嘅時候 lock 永遠唔會 release** → 其他人之後永遠入唔到（violates progress / deadlock）。
@@ -338,9 +338,9 @@ worker2: sem_wait(&sem); lock; counter += 3; printf("B %d;", counter); unlock;
 
 ---
 
-## 7. 課本補充（slides 冇，但可能用到）
+## 7. 補充：Peterson（Lab 6）& classic problems（Ch7 預覽）
 
-### 7.1 Peterson's Solution（two processes, software-only）
+### 7.1 Peterson's Solution（two processes, software-only；**Lab 6 有教 + 證明**，見 Labs notes L6.1）
 ```c
 int turn; boolean flag[2];          /* Pi uses j = 1 - i */
 do {

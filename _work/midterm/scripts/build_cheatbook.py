@@ -5,11 +5,13 @@ Outputs:
   C:\\Code\\UST\\COMP3511\\COMP3511_Midterm_CheatBook.pdf   (print this)
   C:\\Code\\UST\\COMP3511\\COMP3511_Midterm_CheatBook.html  (same content, on-screen)
 """
+import glob
 import html
 import io
 import json
 import os
 import re
+import shutil
 import site
 import subprocess
 import sys
@@ -37,6 +39,7 @@ PARTS = [
     ("4", "ch4_threads.md", "Ch4 Threads", "線程與並行", "#5c940d"),
     ("5", "ch5_cpu_scheduling.md", "Ch5 CPU Scheduling", "CPU 排程", "#7048e8"),
     ("6", "ch6_synchronization.md", "Ch6 Synchronization", "同步工具", "#ae3ec9"),
+    ("L", "lab_notes.md", "Labs & PA1/PA2", "Lab 1–6・PA 考點・lab 例題", "#8f5b2e"),
     ("Q", "qb2_long_bank.md", "Past Papers Solved", "歷屆長題全解", "#c2255c"),
     ("M", None, "MC Answer Key", "MC 題庫 + 答案", "#495057"),
     ("A", "api_reference.md", "C / Pthreads API", "Lab / PA API 速查", "#087f5b"),
@@ -44,11 +47,81 @@ PARTS = [
     ("I", None, "Index", "索引", "#343a40"),
 ]
 PART_BY_CODE = dict((p[0], p) for p in PARTS)
+MD_PLUGINS = ["table", "strikethrough", "math", "mistune.plugins.math.math_in_quote",
+              "mistune.plugins.math.math_in_list"]
 
 
 def read(name):
     with io.open(os.path.join(NOTES, name), encoding="utf-8") as f:
         return f.read()
+
+
+# ---------------------------------------------------------------- LaTeX math (KaTeX, pre-rendered at build time)
+KATEX_JS = os.path.join(ROOT, "_work", "midterm", "scripts", "katex_render.js")
+KATEX_CACHE = os.path.join(ROOT, "_work", "midterm", "katex_cache.json")
+KATEX_CSS_ABS = "file:///C:/Code/UST/COMP3511/Midterm_Site/assets/katex/katex.min.css"   # copied by build_site.py
+KATEX_CSS_REL = "Midterm_Site/assets/katex/katex.min.css"
+_KCACHE = {}
+
+
+def _kc():
+    if not _KCACHE:
+        try:
+            _KCACHE.update(json.load(io.open(KATEX_CACHE, encoding="utf-8")))
+        except (OSError, ValueError):
+            pass
+    return _KCACHE
+
+
+def katex_prerender(items):
+    cache = _kc()
+    todo = [(t, d) for t, d in dict.fromkeys(items) if ("D|" if d else "I|") + t not in cache]
+    if not todo:
+        return
+    tin, tout = KATEX_CACHE + ".in.json", KATEX_CACHE + ".out.json"
+    io.open(tin, "w", encoding="utf-8").write(json.dumps([{"tex": t, "display": d} for t, d in todo]))
+    r = subprocess.run(["node", KATEX_JS, tin, tout], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode not in (0, 2):
+        raise RuntimeError("katex failed: " + r.stderr)
+    if r.stderr.strip():
+        print(r.stderr.strip())
+    for (t, d), h in zip(todo, json.loads(io.open(tout, encoding="utf-8").read())):
+        cache[("D|" if d else "I|") + t] = h
+    io.open(KATEX_CACHE, "w", encoding="utf-8").write(json.dumps(cache, ensure_ascii=False))
+
+
+def katex_html(tex, display):
+    key = ("D|" if display else "I|") + tex
+    if key not in _kc():
+        katex_prerender([(tex, display)])
+    return _kc()[key]
+
+
+def print_tex(tex):
+    """Inline fractions / binomials at full size on paper (\\frac -> \\dfrac); the website keeps standard sizes."""
+    return re.sub(r"\\(frac|binom)(?![a-zA-Z])", r"\\d\1", tex)
+
+
+def collect_math(md_texts):
+    found = []
+    r = mistune.HTMLRenderer(escape=False)
+    m = mistune.create_markdown(renderer=r, plugins=MD_PLUGINS)
+    r.register("block_math", lambda _r, t: found.append((t.strip(), True)) or "")
+    r.register("inline_math", lambda _r, t: found.append((print_tex(t.strip()), False)) or "")
+    for s in md_texts:
+        m(preprocess(s))
+    return found
+
+
+def ensure_katex_assets():
+    """KaTeX CSS + fonts live in Midterm_Site/assets/katex/ (shared with the website)."""
+    pkg = os.path.join(ROOT, "_work", "midterm", "katex_pkg", "node_modules", "katex")
+    dst = os.path.join(ROOT, "Midterm_Site", "assets", "katex")
+    os.makedirs(os.path.join(dst, "fonts"), exist_ok=True)
+    shutil.copyfile(os.path.join(pkg, "dist", "katex.min.css"), os.path.join(dst, "katex.min.css"))
+    shutil.copyfile(os.path.join(pkg, "LICENSE"), os.path.join(dst, "LICENSE"))
+    for f in glob.glob(os.path.join(pkg, "dist", "fonts", "*.woff2")):
+        shutil.copyfile(f, os.path.join(dst, "fonts", os.path.basename(f)))
 
 
 # ---------------------------------------------------------------- markdown rendering
@@ -151,7 +224,10 @@ class Renderer(mistune.HTMLRenderer):
 
 
 R = Renderer()
-MD = mistune.create_markdown(renderer=R, plugins=["table", "strikethrough"])
+MD = mistune.create_markdown(renderer=R, plugins=MD_PLUGINS)
+# the math plugin installs its own renderers; replace them with pre-rendered KaTeX HTML
+R.register("block_math", lambda r, t: '<div class="math-display">%s</div>\n' % katex_html(t.strip(), True))
+R.register("inline_math", lambda r, t: katex_html(print_tex(t.strip()), False))
 SREF = re.compile(r"\[(\d\.\d{1,2}(?:\s*[–\-]\s*\d?\.?\d{1,2})?(?:\s*,\s*\d\.\d{1,2}(?:\s*[–\-]\s*\d?\.?\d{1,2})?)*)\]")
 
 
@@ -203,44 +279,40 @@ def amdahl_table():
     rows = []
     for S in Ss:
         row = ["**%.2f** (par %.0f%%)" % (S, (1 - S) * 100)]
-        for N in Ns:
-            row.append("%.2f" % (1 / (S + (1 - S) / N)))
-        row.append("**%.2f**" % (1 / S))
-        rows.append(row)
-    return md_table(["S \\ N"] + [str(n) for n in Ns] + ["∞"], rows)
+        row += ["%.2f" % (1 / (S + (1 - S) / N)) for N in Ns]
+        rows.append(row + ["**%.2f**" % (1 / S)])
+    return md_table([r"$S \backslash N$"] + [str(n) for n in Ns] + [r"$\infty$"], rows)
 
 
 def pow_table():
-    rows = []
-    for n in range(1, 11):
-        rows.append([n, 2 ** n, 3 ** n, 4 ** n, 2 ** (n + 1) - 1, 2 ** n - 1, 2 ** (n + 1) - 2, 2 * (3 ** n + 1)])
-    return md_table(["n", "2ⁿ", "3ⁿ", "4ⁿ", "2ⁿ⁺¹−1", "2ⁿ−1", "2ⁿ⁺¹−2", "2(3ⁿ+1)"], rows)
+    rows = [[n, 2 ** n, 3 ** n, 4 ** n, 6 ** n, 2 ** (n + 1) - 1, 2 ** n - 1, 2 ** (n + 1) - 2, 2 * (3 ** n + 1),
+             (4 ** n - 1) // 3] for n in range(1, 11)]
+    return md_table([r"$n$", r"$2^n$", r"$3^n$", r"$4^n$", r"$6^n$", r"$2^{n+1}-1$", r"$2^n-1$", r"$2^{n+1}-2$",
+                     r"$2(3^n+1)$", r"$(4^n-1)/3$"], rows)
 
 
 def rm_table():
-    rows = [[n, "%.3f" % (n * (2 ** (1.0 / n) - 1))] for n in range(1, 11)]
-    rows.append(["∞", "0.693 (ln 2)"])
+    rows = [[n, "%.3f" % (n * (2 ** (1.0 / n) - 1))] for n in range(1, 11)] + [[r"$\infty$", r"0.693 ($\ln 2$)"]]
     half = (len(rows) + 1) // 2
-    merged = []
-    for i in range(half):
-        a = rows[i]
-        b = rows[i + half] if i + half < len(rows) else ["", ""]
-        merged.append(a + b)
-    return md_table(["N", "bound", "N", "bound"], merged)
+    merged = [rows[i] + (rows[i + half] if i + half < len(rows) else ["", ""]) for i in range(half)]
+    return md_table([r"$N$", "bound", r"$N$", "bound"], merged)
 
 
 def fork_table():
     rows = [
-        ["`fork();`", "×2", "2ⁿ", "n=3 → 8；n=10 → 1024"],
-        ["`fork(); fork();`", "×4", "4ⁿ", "n=3 → 64"],
-        ["`if (fork()) fork();`", "×3", "3ⁿ", "n=3 → 27"],
-        ["`if (fork() == 0) fork();`", "×3", "3ⁿ", "n=3 → 27（Sp21 MC8）"],
-        ["`fork() && fork();`", "×3", "3ⁿ", "parent 做兩次"],
-        ["`fork() || fork();`", "×3", "3ⁿ", "child 做第二次"],
-        ["`if (fork()) fork(); else break;`", "active ×2", "2ⁿ⁺¹ − 1 total", "breaks 2ⁿ − 1（S26 Q3.1）"],
-        ["`if (fork()) printf; else printf;`", "lines 2ⁱ per iter", "2ⁿ⁺¹ − 2 lines", "F19 Q2.6"],
-        ["`if (fork()==0) break;`（fan）", "+1 child", "n + 1", "只 parent 繼續"],
-        ["`if (fork() > 0) break;`（chain）", "+1 child", "n + 1", "只 child 繼續"],
+        ["`fork();`", "×2", r"$2^n$", "n=3 → 8；n=10 → 1024"],
+        ["`fork(); fork();`", "×4", r"$4^n$", "n=3 → 64"],
+        ["`if (fork()) fork();`", "×3", r"$3^n$", "n=3 → 27"],
+        ["`if (fork() == 0) fork();`", "×3", r"$3^n$", "n=3 → 27（Sp21 MC8）"],
+        ["`fork() && fork();`", "×3", r"$3^n$", "parent 做兩次"],
+        ["`fork() || fork();`", "×3", r"$3^n$", "child 做第二次"],
+        ["`if (fork() == fork()) printf`", "×4", r"$4^n$；lines $(4^n-1)/3$", "F22 Q3"],
+        ["`if (fork()) {fork(); fork();} else fork();`", "×6", r"$6^n$", "Lab 3 Ex3"],
+        ["`if (fork()) fork(); else break;`", "active ×2", r"$2^{n+1}-1$ total", r"breaks $2^n-1$（S26 Q3.1）"],
+        ["`if (fork()) printf; else printf;`", r"lines $2^i$ per iter", r"$2^{n+1}-2$ lines", "F19 Q2.6"],
+        ["`pid = fork(); if (!pid) for (j<N) fork();`（M 輪）", r"×$(2^N+1)$", r"$(2^N+1)^M$", "F24 P3.1"],
+        ["`if (fork() == 0) break;`（fan）", "+1 child", r"$n+1$", "只 parent 繼續"],
+        ["`if (fork() > 0) break;`（chain）", "+1 child", r"$n+1$", "只 child 繼續"],
     ]
     return md_table(["每 iteration", "每 process 變", "n 次後", "例"], rows)
 
@@ -248,6 +320,12 @@ def fork_table():
 def inject(md):
     return (md.replace("{{AMDAHL_TABLE}}", amdahl_table()).replace("{{POW_TABLE}}", pow_table())
               .replace("{{RM_TABLE}}", rm_table()).replace("{{FORK_TABLE}}", fork_table()))
+
+
+def source(name):
+    """Markdown source of a part (playbooks get their generated tables)."""
+    md = read(name)
+    return inject(md) if name == "cb_playbooks.md" else md
 
 
 # ---------------------------------------------------------------- banks
@@ -265,7 +343,7 @@ def parse_bank(md):
 
 def mc_key_html():
     groups = []
-    for fname, label in (("qb1_mc_bank.md", "歷屆 MC（S26 / F20 / Sp21 / HW1 / HW2）"),
+    for fname, label in (("qb1_mc_bank.md", "歷屆 MC（S26 / F20 / Sp21 / HW1 / HW2 / Lab 4）"),
                          ("qb3_practice_mc.md", "新練習 MC（針對 Fall 2026 slides）")):
         items = parse_bank(read(fname))
         out = ['<h2 id="M-%s">%s</h2>' % ("past" if fname.startswith("qb1") else "new", label), '<div class="mc-cols">']
@@ -295,7 +373,10 @@ def bank_html():
     items = parse_bank(read("qb2_long_bank.md"))
     out, heads, paper = [], [], None
     names = {"S26": "Spring 2026 Midterm（lecturer 提供）", "F19": "Fall 2019 Midterm", "F20": "Fall 2020 Midterm",
-             "Sp21": "Spring 2021 Midterm", "HW1": "Homework 1（Fall 2026）", "HW2": "Homework 2（Fall 2026）"}
+             "Sp21": "Spring 2021 Midterm", "HW1": "Homework 1（Fall 2026）", "HW2": "Homework 2（Fall 2026）",
+             "F22": "Fall 2022 Midterm（lab slides 引用）", "F24": "Fall 2024 Midterm（lab slides 引用）",
+             "S25": "Spring 2025 Midterm（lab slides 引用）", "S23": "Spring 2023 Midterm（lab slides 引用）",
+             "Lab2": "Lab 2 Exercises", "Lab4": "Lab 4 Exam Example", "Lab6": "Lab 6 Sample Questions（官方答案）"}
     for it in items:
         p = it["id"].split("-")[0]
         if p != paper:
@@ -346,6 +427,11 @@ INDEX_EXTRA = [
     "exit section", "atomic", "spinlock", "busy waiting", "mutex", "semaphore", "binary semaphore",
     "counting semaphore", "deadlock", "Peterson", "readers-writers", "condition variable", "atomic variable",
     "next_available_pid", "counter++", "possible values", "process tree", "short-circuit",
+    # labs / PA
+    "PA1", "PA2", "popen", "pclose", "spooling", "buffering", "cycle stealing", "device driver", "nonmaskable",
+    "Makefile", "gcc", "execl", "execv", "execle", "execvpe", "getppid", "O_CREAT", "O_RDONLY", "O_WRONLY",
+    "STDOUT_FILENO", "fflush", "fopen", "wc -l", "ps aux", "pthread_exit", "pthread_attr", "pthread_mutex_lock",
+    "pthread_mutex_init", "sem_destroy", "read_count", "rw_mutex", "SIGCHLD", "usleep",
 ]
 
 
@@ -391,6 +477,12 @@ figure.fig img { width: 100%; border: 0.5pt solid #ced4da; border-radius: 2pt; }
 figure.fig figcaption { font-size: 7.4pt; color: #495057; margin-top: 1pt; }
 .ok { color: #2b8a3e; font-weight: 700; }
 .no { color: #c92a2a; font-weight: 700; }
+/* LaTeX (KaTeX, pre-rendered) */
+.katex { font-size: 1.1em; }
+.math-display { margin: 2.5pt 0; overflow: hidden; break-inside: avoid; }
+.math-display .katex-display { margin: 0.25em 0; }
+blockquote.co .math-display { margin: 1pt 0; }
+td .katex, th .katex, .mc .katex { font-size: 1.04em; }
 section.part { break-before: page; --pc: #333; }
 /* cover */
 .cover { break-after: page; }
@@ -399,6 +491,7 @@ section.part { break-before: page; --pc: #333; }
 .cover .title .meta { font-size: 10.5pt; line-height: 1.5; }
 .cover .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt 10pt; margin-top: 10pt; }
 .cover .legend div { display: flex; align-items: center; gap: 6pt; font-size: 9.6pt; }
+.cover .legend .lt { flex: 1; }
 .cover .legend .sw { width: 16pt; height: 13pt; border-radius: 2pt; color: #fff; font-weight: 800; display: inline-flex;
                      align-items: center; justify-content: center; font-size: 8.5pt; }
 .box { border: 0.8pt solid #ced4da; border-radius: 5pt; padding: 6pt 8pt; margin-top: 8pt; }
@@ -460,19 +553,16 @@ def build_html(pages=None, index_html=None):
             body, heads = (index_html or '<div class="idx-cols">%s</div>' % "".join(
                 '<div class="e">%s 000, 000</div>' % html.escape(t) for t in INDEX_EXTRA)), []
         else:
-            md = read(src)
-            if code == "P":
-                md = inject(md)
-            md = re.sub(r"^# .*\n", "", md, count=1)  # drop the file's own H1; we print our own part header
+            md = re.sub(r"^# .*\n", "", source(src), count=1)  # drop the file's own H1; we print our own part header
             body, heads = render(md, code)
         h1 = ('<h1 id="%s" style="background:%s"><span class="code">%s</span>%s<span class="sub">%s</span></h1>'
               % (pid, color, code, html.escape(title), html.escape(sub)))
         sections.append('<section class="part part-%s" style="--pc:%s">%s\n%s</section>' % (code, color, h1, body))
-        lv = (2, 3) if code in ("E", "P", "5", "3") else (2,)
+        lv = (2, 3) if code in ("E", "P", "5", "3", "L") else (2,)
         toc_data.append((code, title, sub, color, pid, heads_toc_lines(heads, lv)))
 
     # ---- cover
-    legend = "".join('<div><span class="sw" style="background:%s">%s</span>%s · %s · p.%s</div>'
+    legend = "".join('<div><span class="sw" style="background:%s">%s</span><span class="lt">%s · %s</span>%s</div>'
                      % (c[4], c[0], html.escape(c[2]), html.escape(c[3]), pg("part-" + c[0], pages)) for c in PARTS)
     router = [
         ("Formula card / course conventions / top traps", "E-e1-formula-card"),
@@ -501,6 +591,11 @@ def build_html(pages=None, index_html=None):
         ("Race condition possible values", "6-s6"),
         ("Semaphores, spinlock with TAS / CAS / swap", "6-s3"),
         ("Critical-section requirements", "6-s2"),
+        ("Lab 3 system calls, exec family, dup / dup2", "L-l3-lab-3-linux-process"),
+        ("PA1 simplified shell (what the exam may ask)", "L-l3-8-pa1-simplified-linux"),
+        ("Named pipe / FIFO, popen, Pthreads (Lab 4)", "L-l4-lab-4-named-pipes"),
+        ("Priority + RR with arrivals; PA2 MLFQ spec", "L-l5-lab-5-scheduling-review"),
+        ("Peterson + Lab 6 sync sample questions", "L-l6-lab-6-synchronization-review"),
         ("C / Pthreads API", "part-A"),
         ("MC answer key", "part-M"),
         ("Glossary A–Z / Index", "part-G"),
@@ -517,6 +612,7 @@ def build_html(pages=None, index_html=None):
   <ol><li><b>先睇 E（考場一頁通）</b>：公式卡、本科 conventions、陷阱表 — MC 前掃一次。</li>
   <li><b>計數題用 P（Playbooks）</b>：fork / pipe / scheduling / sync 步驟 + 預計表（Amdahl、powers、RM bound）。</li>
   <li><b>概念題 / short question</b> → 對應章節（1–6）入面 📝 Model answer（英文可直接抄）。</li>
+  <li><b>PA / lab API / coding 題</b> → L（Labs &amp; PA1/PA2）+ A（API 速查）。</li>
   <li><b>見到似曾相識嘅題目</b> → Q（歷屆全解）/ M（MC key）。<b>搵字</b> → 最後嘅 Index（紅色 = 主要頁）。</li>
   <li>右邊（雙數頁左邊）有<b>彩色 tab</b>：同一顏色 = 同一部分。</li></ol></div>
  <div class="box"><h3>Tab legend</h3><div class="legend">%s</div></div>
@@ -537,7 +633,8 @@ def build_html(pages=None, index_html=None):
            'Contents<span class="sub">目錄</span></h1><div class="toc-cols">%s</div></section>' % "".join(toc_parts))
 
     doc = """<!DOCTYPE html><html lang="zh-HK"><head><meta charset="utf-8"><title>COMP3511 Midterm Cheat Book</title>
-<style>%s</style></head><body>%s%s%s</body></html>""" % (CSS, cover, toc, "\n".join(sections))
+<link rel="stylesheet" href="%s">
+<style>%s</style></head><body>%s%s%s</body></html>""" % (KATEX_CSS_ABS, CSS, cover, toc, "\n".join(sections))
     return doc, [t for _q, t in router]
 
 
@@ -702,6 +799,11 @@ def fill_numbers(doc_html, pages):
 
 def main():
     os.makedirs(WORK, exist_ok=True)
+    ensure_katex_assets()
+    sources = [source(p[1]) for p in PARTS if p[1]] + [read("qb1_mc_bank.md"), read("qb3_practice_mc.md")]
+    formulas = collect_math(sources)
+    katex_prerender(formulas)
+    print("formulas:", len(formulas))
     h1_path = os.path.join(WORK, "cheatbook_pass1.html")
     p1_path = os.path.join(WORK, "cheatbook_pass1.pdf")
     doc, router_ids = build_html()
@@ -728,7 +830,8 @@ def main():
         chrome_pdf(h2_path, p2_path)
         pages2 = named_pages(p2_path)
     ranges = decorate(p2_path, OUT_PDF, pages2)
-    io.open(OUT_HTML, "w", encoding="utf-8").write(doc2.replace(IMG_ABS, "Midterm_Site/assets/img/"))
+    io.open(OUT_HTML, "w", encoding="utf-8").write(
+        doc2.replace(IMG_ABS, "Midterm_Site/assets/img/").replace(KATEX_CSS_ABS, KATEX_CSS_REL))
     print("index entries:", n_idx)
     for c in PARTS:
         if c[0] in ranges:

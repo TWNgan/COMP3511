@@ -164,6 +164,11 @@ blockquote.formula { border-color: var(--formula-bd); background: var(--formula-
 blockquote.tip { border-color: var(--accent2); background: var(--warn-bg); }
 
 .sref { font-size: .78em; color: var(--accent2); font-weight: 600; white-space: nowrap; }
+.katex { font-size: 1.08em; }
+.math-display { overflow-x: auto; overflow-y: hidden; margin: 8px 0; padding: 2px 0; }
+.math-display .katex-display { margin: 0.4em 0; }
+blockquote.formula .math-display { margin: 4px 0; }
+.tw td .katex { font-size: 1.02em; }
 figure.fig { margin: 14px auto; max-width: 680px; text-align: center; }
 figure.fig img { width: 100%; border-radius: 10px; border: 1px solid var(--border); background: #fff; }
 figure.fig figcaption { font-size: 13px; color: var(--muted); margin-top: 4px; }

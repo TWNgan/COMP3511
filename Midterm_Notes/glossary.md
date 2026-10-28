@@ -6,7 +6,7 @@
 | Address space | The memory a program executes in, distinct from other programs' (text, data, heap, stack) | 位址空間 | 3.4–3.5 |
 | Admission control | Real-time scheduler admits a task only if it can guarantee its deadline | 准入控制 | 5.48 |
 | Aging | Gradually increasing the priority of a process that waits a long time, to prevent starvation | 老化 | 5.25 |
-| Amdahl's Law | speedup ≤ 1 / (S + (1−S)/N); as N→∞, speedup → 1/S | 阿姆達爾定律 | 4.12 |
+| Amdahl's Law | $\text{speedup} \le \frac{1}{S + (1-S)/N}$; as $N \to \infty$, speedup $\to 1/S$ | 阿姆達爾定律 | 4.12 |
 | API | A set of functions available to programmers (parameters + return values) that invoke system calls on their behalf | 應用程式介面 | 2.15 |
 | Asymmetric multiprocessing (AMP) | Master processor handles scheduling, I/O and kernel data; others run user code only; master may bottleneck | 非對稱多處理 | 1.37, 5.38 |
 | Asynchronous cancellation | Terminates the target thread immediately | 非同步取消 | 4.32 |
@@ -51,7 +51,7 @@
 | dup / dup2 | Duplicate a file descriptor (dup → lowest free fd; dup2 → specified fd) | 複製描述符 | Lab/PA1 |
 | EDF | Earliest-deadline-first: dynamic priority, earlier deadline = higher priority; theoretically optimal | 最早截止期限優先 | 5.51 |
 | Exec() | Replaces the current process image with a new program; returns only on failure | 執行新程式 | 3.41 |
-| Exponential averaging | τ(n+1) = α t(n) + (1−α) τ(n): predicts the next CPU burst | 指數平均 | 5.19 |
+| Exponential averaging | $\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$: predicts the next CPU burst | 指數平均 | 5.19 |
 | FCFS | First-come first-served; non-preemptive; convoy effect | 先到先得 | 5.9 |
 | fork() | Creates a child duplicating the parent's address space; returns 0 to child, child PID to parent, −1 on failure | 分叉 | 3.35–3.37 |
 | Hard affinity | Process specifies the subset of CPUs it may run on | 硬親和性 | 5.45 |
@@ -67,7 +67,7 @@
 | Kernel thread | Thread supported and scheduled by the OS | 核心執行緒 | 4.19 |
 | Layered approach | OS divided into layers (0 = hardware … N = UI); each uses only lower layers | 分層結構 | 2.44 |
 | Linker | Combines relocatable object files and libraries into one executable | 連結器 | 2.31 |
-| Little's formula | n = λ × W (queue length = arrival rate × waiting time) | 利特爾公式 | 5.57 |
+| Little's formula | $n = \lambda \times W$ (queue length = arrival rate × waiting time) | 利特爾公式 | 5.57 |
 | Load balancing | Keep workload evenly distributed across CPUs (push / pull migration) | 負載平衡 | 5.46 |
 | Loadable kernel module (LKM) | Core kernel plus modules linked in at boot or run time; any module can call any other | 可載入核心模組 | 2.49–2.50 |
 | Loader | Loads the executable file into memory for execution | 載入器 | 2.31 |

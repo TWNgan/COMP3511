@@ -204,7 +204,7 @@ Which combination gives a speedup between 1.6 and 1.7?
 
 **Answer: C**
 
-解：speedup = 1/(S + (1−S)/N)。A：1/(0.19+0.27) = 2.17；B：2.84；**C：1/(0.39+0.2033) = 1.69**；D：1.95。
+解：$\text{speedup} = \frac{1}{S + (1-S)/N}$。A：$\frac{1}{0.19 + 0.27} = 2.17$；B：2.84；**C：$\frac{1}{0.39 + 0.2033} = 1.69$**；D：1.95。
 
 ## [S26-MC18] ch4 | Signals
 Which statement about signal handling is **false**?
@@ -546,7 +546,7 @@ Using Amdahl's Law, what is the speedup for an application that is 30% serial on
 
 **Answer: B**
 
-解：1/(0.3 + 0.7/7) = 1/0.4 = **2.5**。
+解：$\frac{1}{0.3 + 0.7/7} = \frac{1}{0.4} =$ **2.5**。
 
 ## [Sp21-MC8] ch3 | Process owns
 In an operating system, each process has its own ____.
@@ -644,7 +644,7 @@ How many processes in total?
 
 **Answer: C**
 
-解：每輪每個 process 變 3 個 → **3³ = 27** ✅
+解：每輪每個 process 變 3 個 → **$3^3 = 27$** ✅
 
 ## [Sp21-MC16] ch4 | TCB
 Which of the following is **not** in the Thread Control Block (TCB)?
@@ -1014,7 +1014,7 @@ In a many-to-many model, a thread library selects a user thread to run on an ava
 解：[5.37]。
 
 ## [HW2-MC9] ch5 | Exponential averaging
-The predicted CPU burst is 10 ms, the actual burst is 6 ms, α = 0.25. What is the next prediction?
+The predicted CPU burst is 10 ms, the actual burst is 6 ms, $\alpha = 0.25$. What is the next prediction?
 - A. 6 ms
 - B. 7 ms
 - C. 9 ms
@@ -1022,7 +1022,7 @@ The predicted CPU burst is 10 ms, the actual burst is 6 ms, α = 0.25. What is t
 
 **Answer: C**
 
-解：0.25 × 6 + 0.75 × 10 = **9**。
+解：$\tau_{n+1} = 0.25 \times 6 + 0.75 \times 10 =$ **9**。
 
 ## [HW2-MC10] ch5 | Little's formula
 3 processes arrive per second on average; average queue length is 12. Average waiting time?
@@ -1033,4 +1033,32 @@ The predicted CPU burst is 10 ms, the actual burst is 6 ms, α = 0.25. What is t
 
 **Answer: B**
 
-解：W = n / λ = 12 / 3 = **4 s** [5.57]。
+解：$W = n/\lambda = 12/3 =$ **4 s** [5.57]。
+
+
+---
+
+## [Lab4-MC] ch4 | Threads share memory, processes do not
+```c
+void *child(void *arg) { int *counter = (int *) arg; (*counter)++; return NULL; }
+int main() {
+    int counter = 0;  pthread_t thread;
+    pthread_create(&thread, NULL, child, (void *)&counter);
+    pthread_join(thread, NULL);
+    printf("%d\n", counter);
+    counter = 0;
+    pid_t pid = fork();
+    if (pid) wait(NULL);
+    else { child((void *)&counter); exit(0); }
+    printf("%d\n", counter);
+}
+```
+What is the output?
+- A. 0 then 0
+- B. 1 then 0
+- C. 0 then 1
+- D. 1 then 1
+
+**Answer: B**
+
+解：thread 同 main 共用 `counter` → 印 1；fork 出嚟嘅 child 改嘅係自己嗰份 copy → parent 印 0。**Threads share memory space, processes have separate memory spaces.**（Lab 4）

@@ -3,12 +3,15 @@
 Run:  python -I build_site.py
 Writes HTML pages + generated data scripts into Midterm_Site/ (never deletes other files there).
 """
+import glob
 import html
 import io
 import json
 import os
 import re
+import shutil
 import site
+import subprocess
 import sys
 
 sys.path.append(site.getusersitepackages())
@@ -24,20 +27,152 @@ SITE = os.path.join(ROOT, "Midterm_Site")
 PAGES = [
     ("index", None, "首頁 Home", "Start", "Home"),
     ("ch0", "ch0_exam_strategy.md", "考試攻略 Exam Strategy", "Start", "Strategy"),
+    ("essentials", "cb_essentials.md", "考場一頁通 Essentials", "Start", "Essentials"),
+    ("playbooks", "cb_playbooks.md", "解題 Playbooks", "Start", "Playbooks"),
     ("ch1", "ch1_introduction.md", "Ch1 Introduction", "Notes", "Ch1"),
     ("ch2", "ch2_os_structures.md", "Ch2 OS Structures", "Notes", "Ch2"),
     ("ch3", "ch3_processes.md", "Ch3 Processes", "Notes", "Ch3"),
     ("ch4", "ch4_threads.md", "Ch4 Threads", "Notes", "Ch4"),
     ("ch5", "ch5_cpu_scheduling.md", "Ch5 CPU Scheduling", "Notes", "Ch5"),
     ("ch6", "ch6_synchronization.md", "Ch6 Synchronization", "Notes", "Ch6"),
+    ("labs", "lab_notes.md", "Labs & PA1/PA2", "Notes", "Labs"),
     ("api", "api_reference.md", "API 速查 (C / Pthreads)", "Reference", "API"),
     ("glossary", "glossary.md", "Glossary A–Z", "Reference", "Glossary"),
     ("bank", None, "歷屆試題 Past Papers", "Practice", "Past papers"),
     ("quiz", None, "MC 練習 Quiz", "Practice", "Quiz"),
     ("tools", None, "工具 Scheduler & Calculators", "Practice", "Tools"),
 ]
-NAV_ICON = {"index": "🏠", "ch0": "🎯", "ch1": "1️⃣", "ch2": "2️⃣", "ch3": "3️⃣", "ch4": "4️⃣", "ch5": "5️⃣",
-            "ch6": "6️⃣", "api": "🧰", "glossary": "🔤", "bank": "📜", "quiz": "✅", "tools": "🛠️"}
+NAV_ICON = {"index": "🏠", "ch0": "🎯", "essentials": "⚡", "playbooks": "🧭", "ch1": "1️⃣", "ch2": "2️⃣",
+            "ch3": "3️⃣", "ch4": "4️⃣", "ch5": "5️⃣", "ch6": "6️⃣", "labs": "🧪", "api": "🧰", "glossary": "🔤",
+            "bank": "📜", "quiz": "✅", "tools": "🛠️"}
+MD_PLUGINS = ["table", "strikethrough", "math", "mistune.plugins.math.math_in_quote",
+              "mistune.plugins.math.math_in_list"]
+
+
+# ---------------------------------------------------------------- LaTeX math (KaTeX, pre-rendered at build time)
+KATEX_PKG = os.path.join(ROOT, "_work", "midterm", "katex_pkg", "node_modules", "katex")
+KATEX_JS = os.path.join(ROOT, "_work", "midterm", "scripts", "katex_render.js")
+KATEX_CACHE = os.path.join(ROOT, "_work", "midterm", "katex_cache.json")
+_KCACHE = {}
+
+
+def _kc():
+    if not _KCACHE:
+        try:
+            _KCACHE.update(json.load(io.open(KATEX_CACHE, encoding="utf-8")))
+        except (OSError, ValueError):
+            pass
+    return _KCACHE
+
+
+def katex_prerender(items):
+    """items: iterable of (tex, display). Render all uncached formulas with one node call."""
+    cache = _kc()
+    todo = [(t, d) for t, d in dict.fromkeys(items) if ("D|" if d else "I|") + t not in cache]
+    if not todo:
+        return
+    tin, tout = KATEX_CACHE + ".in.json", KATEX_CACHE + ".out.json"
+    io.open(tin, "w", encoding="utf-8").write(json.dumps([{"tex": t, "display": d} for t, d in todo]))
+    r = subprocess.run(["node", KATEX_JS, tin, tout], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode not in (0, 2):
+        raise RuntimeError("katex failed: " + r.stderr)
+    if r.stderr.strip():
+        print(r.stderr.strip())
+    for (t, d), h in zip(todo, json.loads(io.open(tout, encoding="utf-8").read())):
+        cache[("D|" if d else "I|") + t] = h
+    io.open(KATEX_CACHE, "w", encoding="utf-8").write(json.dumps(cache, ensure_ascii=False))
+
+
+def katex_html(tex, display):
+    key = ("D|" if display else "I|") + tex
+    if key not in _kc():
+        katex_prerender([(tex, display)])
+    return _kc()[key]
+
+
+def collect_math(md_texts):
+    """Parse sources once just to collect every formula, so they can be rendered in one batch."""
+    found = []
+    r = mistune.HTMLRenderer(escape=False)
+    m = mistune.create_markdown(renderer=r, plugins=MD_PLUGINS)
+    r.register("block_math", lambda _r, t: found.append((t.strip(), True)) or "")
+    r.register("inline_math", lambda _r, t: found.append((t.strip(), False)) or "")
+    for s in md_texts:
+        m(preprocess(s))
+    return found
+
+
+def ensure_katex_assets():
+    """Copy KaTeX CSS + woff2 fonts (+ MIT licence) into Midterm_Site/assets/katex/."""
+    dst = os.path.join(SITE, "assets", "katex")
+    os.makedirs(os.path.join(dst, "fonts"), exist_ok=True)
+    shutil.copyfile(os.path.join(KATEX_PKG, "dist", "katex.min.css"), os.path.join(dst, "katex.min.css"))
+    shutil.copyfile(os.path.join(KATEX_PKG, "LICENSE"), os.path.join(dst, "LICENSE"))
+    for f in glob.glob(os.path.join(KATEX_PKG, "dist", "fonts", "*.woff2")):
+        shutil.copyfile(f, os.path.join(dst, "fonts", os.path.basename(f)))
+
+
+# ---------------------------------------------------------------- generated tables (playbooks)
+def md_table(header, rows):
+    out = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    for r in rows:
+        out.append("| " + " | ".join(str(c) for c in r) + " |")
+    return "\n".join(out)
+
+
+def amdahl_table():
+    Ns = [2, 3, 4, 5, 6, 7, 8, 10, 16, 32]
+    Ss = [0.05, 0.10, 0.15, 0.19, 0.20, 0.25, 0.30, 0.35, 0.39, 0.40, 0.45, 0.50, 0.60, 0.70, 0.80]
+    rows = []
+    for S in Ss:
+        row = ["**%.2f**（par %.0f%%）" % (S, (1 - S) * 100)]
+        row += ["%.2f" % (1 / (S + (1 - S) / N)) for N in Ns]
+        rows.append(row + ["**%.2f**" % (1 / S)])
+    return md_table([r"$S \backslash N$"] + [str(n) for n in Ns] + [r"$\infty$"], rows)
+
+
+def pow_table():
+    rows = [[n, 2 ** n, 3 ** n, 4 ** n, 6 ** n, 2 ** (n + 1) - 1, 2 ** n - 1, 2 ** (n + 1) - 2, 2 * (3 ** n + 1),
+             (4 ** n - 1) // 3] for n in range(1, 11)]
+    return md_table([r"$n$", r"$2^n$", r"$3^n$", r"$4^n$", r"$6^n$", r"$2^{n+1}-1$", r"$2^n-1$", r"$2^{n+1}-2$",
+                     r"$2(3^n+1)$", r"$(4^n-1)/3$"], rows)
+
+
+def rm_table():
+    rows = [[n, "%.3f" % (n * (2 ** (1.0 / n) - 1))] for n in range(1, 11)] + [[r"$\infty$", r"0.693（$\ln 2$）"]]
+    half = (len(rows) + 1) // 2
+    merged = [rows[i] + (rows[i + half] if i + half < len(rows) else ["", ""]) for i in range(half)]
+    return md_table([r"$N$", "bound", r"$N$", "bound"], merged)
+
+
+def fork_table():
+    rows = [
+        ["`fork();`", "×2", r"$2^n$", "n=3 → 8；n=10 → 1024"],
+        ["`fork(); fork();`", "×4", r"$4^n$", "n=3 → 64"],
+        ["`if (fork()) fork();`", "×3", r"$3^n$", "n=3 → 27"],
+        ["`if (fork() == 0) fork();`", "×3", r"$3^n$", "n=3 → 27（Sp21 MC8）"],
+        ["`fork() && fork();`", "×3", r"$3^n$", "parent 做兩次"],
+        ["`fork() || fork();`", "×3", r"$3^n$", "child 做第二次"],
+        ["`if (fork() == fork()) printf`", "×4", r"$4^n$；lines $(4^n-1)/3$", "F22 Q3"],
+        ["`if (fork()) {fork(); fork();} else fork();`", "×6", r"$6^n$", "Lab 3 Ex3"],
+        ["`if (fork()) fork(); else break;`", "active ×2", r"$2^{n+1}-1$ total", r"breaks $2^n-1$（S26 Q3.1）"],
+        ["`if (fork()) printf; else printf;`", r"lines $2^i$ per iter", r"$2^{n+1}-2$ lines", "F19 Q2.6"],
+        ["`pid = fork(); if (!pid) for (j<N) fork();`（M 輪）", r"×$(2^N+1)$", r"$(2^N+1)^M$", "F24 P3.1"],
+        ["`if (fork() == 0) break;`（fan）", "+1 child", r"$n+1$", "只 parent 繼續"],
+        ["`if (fork() > 0) break;`（chain）", "+1 child", r"$n+1$", "只 child 繼續"],
+    ]
+    return md_table(["每 iteration", "每 process 變", "n 次後", "例"], rows)
+
+
+def inject(md):
+    return (md.replace("{{AMDAHL_TABLE}}", amdahl_table()).replace("{{POW_TABLE}}", pow_table())
+              .replace("{{RM_TABLE}}", rm_table()).replace("{{FORK_TABLE}}", fork_table()))
+
+
+def source(name):
+    """Markdown source of a page (playbooks get their generated tables)."""
+    md = read(name)
+    return inject(md) if name == "cb_playbooks.md" else md
 
 
 # ---------------------------------------------------------------- markdown helpers
@@ -163,7 +298,9 @@ class Renderer(mistune.HTMLRenderer):
 
 
 RENDERER = Renderer()
-MD = mistune.create_markdown(renderer=RENDERER, plugins=["table", "strikethrough"])
+MD = mistune.create_markdown(renderer=RENDERER, plugins=MD_PLUGINS)
+RENDERER.register("block_math", lambda r, t: '<div class="math-display">%s</div>\n' % katex_html(t.strip(), True))
+RENDERER.register("inline_math", lambda r, t: katex_html(t.strip(), False))
 
 SREF = re.compile(r"\[(\d\.\d{1,2}(?:\s*[–\-]\s*\d?\.?\d{1,2})?(?:\s*,\s*\d\.\d{1,2}(?:\s*[–\-]\s*\d?\.?\d{1,2})?)*)\]")
 
@@ -250,6 +387,7 @@ def page(slug, title, body, toc=None, extra_head="", extra_js="", mark=True, sho
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
 <link rel="stylesheet" href="assets/site.css">
 {extra_head}
 <script src="assets/site.js"></script>
@@ -438,7 +576,7 @@ def build_notes():
     for slug, src, title, _grp, _short in PAGES:
         if not src:
             continue
-        htm, toc = render_md(read(src))
+        htm, toc = render_md(source(src))
         if slug == "glossary":
             # give each glossary row an id so search can deep-link to it
             def row_id(m):
@@ -457,14 +595,17 @@ def build_notes():
 def build_home():
     cards = [
         ("ch0", "考試攻略 Strategy", "必讀", ["試卷結構預測 + 時間分配", "題型 → 方法 index", "24 小時溫習計劃 + 必帶清單"]),
+        ("essentials", "考場一頁通 Essentials", "考前必睇", ["公式卡（LaTeX）", "本科 conventions", "Top traps 陷阱表"]),
+        ("playbooks", "解題 Playbooks", "計數題", ["fork / pipe / scheduling / sync 步驟", "Amdahl / powers / RM 預計表", "歷屆 fork 答案總表"]),
         ("ch1", "Ch1 Introduction", "MC 2–4 題", ["Caching + AMAT + locality", "von Neumann / storage hierarchy", "SMP / multicore / NUMA / virtualization"]),
         ("ch2", "Ch2 OS Structures", "MC 3–5 + short", ["API vs system call / printf→write", "Linker vs loader", "Monolithic / layered / microkernel / LKM"]),
         ("ch3", "Ch3 Processes", "~24 分", ["fork() 解題大法（公式 + 例題）", "Interrupt / DMA / dual mode", "Pipe / dup / zombie / IPC"]),
         ("ch4", "Ch4 Threads", "MC 3–4", ["Shared vs private", "Amdahl 計算", "Models / signals / cancellation"]),
         ("ch5", "Ch5 CPU Scheduling", "~27 分（最重）", ["Gantt 流程 + response time 定義", "MLFQ 規則 + RM/EDF", "全部歷屆計算題答案"]),
         ("ch6", "Ch6 Synchronization", "8–15 分", ["Race condition 可能值", "Semaphore 次序 / 序列題", "TAS / CAS / swap spinlock"]),
+        ("labs", "Labs & PA1/PA2", "PA 考點", ["Lab 3 system calls / dup / exec family", "PA2 MLFQ 規則 + Lab 4–6 exam examples", "F22 / F24 / S25 / S23 歷屆題"]),
         ("api", "API 速查", "Lab / PA", ["fork / exec / wait / pipe / dup2", "Pthreads mutex / semaphore", "Redirection & pipeline code"]),
-        ("bank", "歷屆試題", "Practice", ["S26 / F20 / F19 / Sp21 / HW", "連標準答案（已驗證）", "按 paper / chapter 篩選"]),
+        ("bank", "歷屆試題", "Practice", ["S26 / F20 / F19 / Sp21 / HW + Lab 例題", "連標準答案（已驗證）", "按 paper / chapter 篩選"]),
         ("quiz", "MC Quiz", "Practice", ["~150 題 MC（歷屆 + 新題）", "即時對答案 + 解釋", "錯題重溫"]),
         ("tools", "工具", "Practice", ["CPU scheduling 模擬器（Gantt + 步驟）", "RM / EDF / MLFQ / dynamic priority", "Amdahl / AMAT / Little 計算機"]),
     ]
@@ -571,6 +712,12 @@ def build_tools():
 
 def main():
     os.makedirs(os.path.join(SITE, "assets"), exist_ok=True)
+    ensure_katex_assets()
+    sources = [source(p[1]) for p in PAGES if p[1]] + [read("qb1_mc_bank.md"), read("qb2_long_bank.md"),
+                                                      read("qb3_practice_mc.md")]
+    formulas = collect_math(sources)
+    katex_prerender(formulas)
+    print("formulas:", len(set(formulas)))
     build_notes()
     nq = build_quiz()
     nb = build_bank()

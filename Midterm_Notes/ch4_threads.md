@@ -91,29 +91,34 @@
 
 ## 4. Amdahl's Law ⭐⭐⭐（計數題必考）[4.12–4.13]
 
-> 🧮 **speedup ≤ 1 / ( S + (1 − S) / N )**
-- **S = serial portion，1 − S = parallel portion，N = number of processing cores**。
-- **As N → ∞, speedup → 1/S.**
+> 🧮 **Amdahl's Law**
+>
+> $$
+> \text{speedup} \le \frac{1}{S + \dfrac{1-S}{N}}, \qquad \lim_{N \to \infty} \text{speedup} = \frac{1}{S}
+> $$
+
+- **S = serial portion，$1 - S$ = parallel portion，N = number of processing cores**。
+- **As $N \to \infty$, speedup → $1/S$.**
 - **Serial portion has a disproportionate effect on performance gained by adding cores.**
 - Amdahl's Law identifies **theoretical speedup in latency at a fixed workload**。
 
 ### 4.1 例子（全部計算過）
 | 題目 | S | N | 計算 | Speedup |
 |---|---|---|---|---|
-| Slide：75% parallel | 0.25 | 2 | 1/(0.25 + 0.75/2) = 1/0.625 | **1.6** |
-| Sp21 MC：30% serial | 0.3 | 7 | 1/(0.3 + 0.7/7) = 1/0.4 | **2.5** |
-| HW2 Q3.1(a)：20% serial | 0.2 | 4 | 1/(0.2 + 0.8/4) = 1/0.4 | **2.5** |
-| HW2 Q3.1(b) | 0.2 | ∞ | 1/S = 1/0.2 | **5** |
-| S26 MC17 A：81% parallel | 0.19 | 3 | 1/(0.19 + 0.27) = 1/0.46 | 2.17 |
-| S26 MC17 B：81% parallel | 0.19 | 5 | 1/(0.19 + 0.162) = 1/0.352 | 2.84 |
-| **S26 MC17 C：61% parallel** | 0.39 | 3 | 1/(0.39 + 0.2033) = 1/0.5933 | **1.69 ✅（1.6–1.7）** |
-| S26 MC17 D：61% parallel | 0.39 | 5 | 1/(0.39 + 0.122) = 1/0.512 | 1.95 |
+| Slide：75% parallel | 0.25 | 2 | $\frac{1}{0.25 + 0.75/2} = \frac{1}{0.625}$ | **1.6** |
+| Sp21 MC：30% serial | 0.3 | 7 | $\frac{1}{0.3 + 0.7/7} = \frac{1}{0.4}$ | **2.5** |
+| HW2 Q3.1(a)：20% serial | 0.2 | 4 | $\frac{1}{0.2 + 0.8/4} = \frac{1}{0.4}$ | **2.5** |
+| HW2 Q3.1(b) | 0.2 | $\infty$ | $\frac{1}{S} = \frac{1}{0.2}$ | **5** |
+| S26 MC17 A：81% parallel | 0.19 | 3 | $\frac{1}{0.19 + 0.81/3} = \frac{1}{0.46}$ | 2.17 |
+| S26 MC17 B：81% parallel | 0.19 | 5 | $\frac{1}{0.19 + 0.81/5} = \frac{1}{0.352}$ | 2.84 |
+| **S26 MC17 C：61% parallel** | 0.39 | 3 | $\frac{1}{0.39 + 0.61/3} = \frac{1}{0.5933}$ | **1.69 ✅（1.6–1.7）** |
+| S26 MC17 D：61% parallel | 0.39 | 5 | $\frac{1}{0.39 + 0.61/5} = \frac{1}{0.512}$ | 1.95 |
 
 ### 4.2 解題 tips
 - 留意題目畀 **parallel %** 定 **serial %**（S = serial！）。
-- 反向題：要 speedup = X with N cores → 解 S：**S = (1/X − 1/N) / (1 − 1/N)**。
-- 例：想 4 cores 有 3× speedup → S = (1/3 − 1/4)/(1 − 1/4) = (1/12)/(3/4) = **1/9 ≈ 11.1% serial**。
-- Speedup 上限永遠 **≤ N** 同 **≤ 1/S**。
+- 反向題：要 speedup = X with N cores → 解 S：$S = \dfrac{1/X - 1/N}{1 - 1/N}$。
+- 例：想 4 cores 有 3× speedup → $S = \dfrac{1/3 - 1/4}{1 - 1/4} = \dfrac{1/12}{3/4} = \dfrac{1}{9}$ ≈ **11.1% serial**。
+- Speedup 上限永遠 **$\le N$** 同 **$\le 1/S$**。
 
 ---
 
@@ -301,7 +306,7 @@ int main() {
 | Concurrency possible on single core | ✅ |
 | Parallelism possible on single core | ❌ |
 | Data parallelism = same operation on different data subsets | ✅ |
-| As N→∞, Amdahl speedup → 1/S | ✅ |
+| As $N \to \infty$, Amdahl speedup → $1/S$ | ✅ |
 | Speedup can exceed N | ❌ |
 | OS schedules user threads directly | ❌（kernel threads） |
 | Many-to-one allows parallelism on multicore | ❌ |
@@ -337,7 +342,7 @@ int main() {
 
 ## 13. 自我測驗
 1. 列出 multithreading 四個 benefits。
-2. 50% serial 嘅 program 用 4 cores speedup？（1/(0.5+0.125) = **1.6**）；無限 cores？（**2**）
+2. 50% serial 嘅 program 用 4 cores speedup？（$\frac{1}{0.5 + 0.5/4} = \frac{1}{0.625}$ = **1.6**）；無限 cores？（$1/S$ = **2**）
 3. Many-to-one model 兩大缺點？
 4. 點解 exec() 緊接 fork() 時只複製 calling thread 就夠？
 5. Deferred vs asynchronous cancellation？邊個 preferred？點解？

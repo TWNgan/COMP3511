@@ -22,12 +22,17 @@
 | `pid1=fork(); pid2=fork(); if(pid1>0) if(pid2==0) fork();` | **5** |
 | `if (fork()==fork() \|\| fork()!=fork()) fork(); printf` | **23** lines |
 | S26 MC10：loop 3：`if(fork()==0){fork(); printf X; return;}` 之後 printf Y | **7 processes, X = 6, Y = 1** |
-| S26 Q3.1：`if(fork()) fork(); else break;` | **2ⁿ⁺¹ − 1** processes, **2ⁿ − 1** breaks（n=2：7, 3） |
-| F20 Q3.2：`if(!fork()){loop n: if(fork()) fork();} fork(); printf a` | **2(3ⁿ + 1)** |
-| Sp21 Q1.2：`if(fork()==0){loop 5: if(fork()==0) fork();} fork();` | **(3⁵ + 1)×2 = 488** |
-| F19 Q2.6：loop n，parent/child 都 printf | **2ⁿ⁺¹ − 2** lines |
-| Slide 3.44：loop 10 `fork(); fork();` | **4¹⁰ = 1,048,576** |
-| Slide 3.45：loop 10 `if (fork()) fork();` | **3¹⁰ = 59,049** |
+| S26 Q3.1：`if(fork()) fork(); else break;` | **$2^{n+1} - 1$** processes, **$2^n - 1$** breaks（n=2：7, 3） |
+| F20 Q3.2：`if(!fork()){loop n: if(fork()) fork();} fork(); printf a` | **$2(3^n + 1)$** |
+| Sp21 Q1.2：`if(fork()==0){loop 5: if(fork()==0) fork();} fork();` | **$(3^5 + 1) \times 2 = 488$** |
+| F19 Q2.6：loop n，parent/child 都 printf | **$2^{n+1} - 2$** lines |
+| Slide 3.44：loop 10 `fork(); fork();` | **$4^{10} = 1{,}048{,}576$** |
+| Slide 3.45：loop 10 `if (fork()) fork();` | **$3^{10} = 59{,}049$** |
+| Lab 3 Ex3：loop n `if(fork()){fork();fork();} else fork();` | 每輪 ×6 → **$6^n$** |
+| **F22 Q3**：loop n `if (fork() == fork()) printf` | processes **$4^n$**；lines **$(4^n-1)/3$**（1, 5, 21） |
+| **F24 P3.1**：loop M `pid=fork(); if(!pid) for(j<N) fork();` | **$(2^N + 1)^M$**（line Y 由 **child** 執行；M=N=1 → 3） |
+| **S25 MC12**：`if (fork() \|\| fork()) { if (fork() && !fork()) fork(); }` | **9** processes |
+| Lab 2：`pid=fork(); if(pid==0){cnt+=10; pid=fork(); if(pid){cnt+=10; pid=fork();}}` 印 pid、cnt | 非 0 pid × **2**；'0' × **3**；'10' × **1** |
 
 **Step 4 — Process tree**：每個 node 寫 PID 名（P0, P1…）同佢喺邊個 iteration 出世；child 繼承 parent 嘅 `i` 值繼續。
 
@@ -56,7 +61,7 @@
 
 ## P3. CPU Scheduling Playbook
 
-**萬用步驟**：(1) 抄表；(2) 由 t=0 起逐個 event（arrival / completion / quantum expiry / check point）；(3) 每個 event 寫 ready queue 內容；(4) 照算法揀；(5) 畫 Gantt（每個 boundary）；(6) C → TAT → WT → RT；(7) 平均連 working；(8) 檢查：最後完成時間 = Σburst + idle。
+**萬用步驟**：(1) 抄表；(2) 由 t=0 起逐個 event（arrival / completion / quantum expiry / check point）；(3) 每個 event 寫 ready queue 內容；(4) 照算法揀；(5) 畫 Gantt（每個 boundary）；(6) C → TAT → WT → RT；(7) 平均連 working；(8) 檢查：最後完成時間 $= \sum \text{burst} + \text{idle}$。
 
 | Algorithm | 揀邊個 | 幾時重新揀 | 注意 |
 |---|---|---|---|
@@ -68,7 +73,7 @@
 | **Priority P** | 最高 priority | 完成 + 高 priority arrival | |
 | **Priority + RR** | 最高 priority；同級 RR | 完成 / quantum / 高 priority arrival | 同級得一個就繼續跑 |
 | **MLFQ** | 最高非空 queue 嘅 head | 完成 / quantum / 高層 arrival | preempted → **head + 剩餘 quantum** |
-| **Dynamic priority** | 計 init + α·waited + β·ran | 每 check interval / 完成 | tie 跟題目 |
+| **Dynamic priority** | 計 $\text{init} + \alpha \cdot \text{waited} + \beta \cdot \text{ran}$ | 每 check interval / 完成 | tie 跟題目 |
 | **LUF**（F19） | 用 CPU 最少 | 完成 + arrival | descheduled → tail |
 | **RM** | period 最短 | 每個 release / 完成 | static |
 | **EDF** | absolute deadline 最早 | 每個 release / 完成 | dynamic；tie → keep running |
@@ -81,7 +86,7 @@ t   | event            | Q0        | Q1 (rem q)   | Q2      | run (queue, q left
 4   | P1 q used        | P2        | P1(8)        |         | P2@Q0 ...
 ```
 
-**RM / EDF 追蹤**：列 release times：task i 喺 0, pᵢ, 2pᵢ… release；deadline = release + dᵢ。逐個 time unit 揀；記低每個 job 完成時間，比較 deadline。
+**RM / EDF 追蹤**：列 release times：task $i$ 喺 $0, p_i, 2p_i, \ldots$ release；deadline $=$ release $+\ d_i$。逐個 time unit 揀；記低每個 job 完成時間，比較 deadline。
 
 ## P4. Synchronization Playbook
 
@@ -108,7 +113,7 @@ t   | event            | Q0        | Q1 (rem q)   | Q2      | run (queue, q left
 
 ## P5. 預先計好嘅表 Pre-computed Tables
 
-**Amdahl speedup = 1/(S + (1−S)/N)**（S = serial fraction；parallel = 1 − S）
+**Amdahl speedup** $= \dfrac{1}{S + (1-S)/N}$（$S$ = serial fraction；parallel $= 1 - S$）
 
 {{AMDAHL_TABLE}}
 
@@ -116,8 +121,8 @@ t   | event            | Q0        | Q1 (rem q)   | Q2      | run (queue, q left
 
 {{POW_TABLE}}
 
-**RM utilization bound N(2^{1/N} − 1)**
+**RM utilization bound** $N\left(2^{1/N} - 1\right)$
 
 {{RM_TABLE}}
 
-**Exponential averaging（α = ½）權重**：tₙ ½、tₙ₋₁ ¼、tₙ₋₂ ⅛、tₙ₋₃ 1/16、… τ₀ (½)ⁿ⁺¹。α = 0.25：tₙ 0.25、tₙ₋₁ 0.1875、tₙ₋₂ 0.1406、… τ 權重 0.75ⁿ⁺¹。
+**Exponential averaging（$\alpha = 1/2$）權重**：$t_n$ ½、$t_{n-1}$ ¼、$t_{n-2}$ ⅛、$t_{n-3}$ 1/16、… $\tau_0$ 權重 $(1/2)^{n+1}$。$\alpha = 0.25$：$t_n$ 0.25、$t_{n-1}$ 0.1875、$t_{n-2}$ 0.1406、… $\tau_0$ 權重 $0.75^{n+1}$。

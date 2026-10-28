@@ -4,22 +4,22 @@
 
 | 主題 | 公式 | 例 |
 |---|---|---|
-| **Average access time** [1.32] | **AMAT = h × T_hit + (1 − h) × T_miss**（若畀 penalty：T_miss = T_hit + penalty） | 0.9×2 + 0.1×50 = **6.8 ns** |
-| **Amdahl's Law** [4.12] | **speedup ≤ 1 / (S + (1 − S)/N)**；N→∞：**1/S**；S = **serial** | S=0.25, N=2 → **1.6** |
-| Amdahl 反解 | **S = (1/X − 1/N) / (1 − 1/N)** | X=3, N=4 → S = 1/9 |
-| **Turnaround** [5.8] | **TAT = completion − arrival** | |
-| **Waiting** [5.8] | **WT = TAT − burst**（= Gantt 上嘅 gaps 總和） | |
-| **Response（本科）** [5.12] | **RT = end of FIRST run − arrival**（RR/MLFQ：第一個 quantum 完；non-preemptive：= TAT） | RR4：P1=4, P2=7, P3=10 |
-| **Exponential averaging** [5.19] | **τ(n+1) = α·t(n) + (1 − α)·τ(n)** | α=.25, t=6, τ=10 → **9** |
-| **Little's formula** [5.57] | **n = λ × W** | λ=3/s, n=12 → **W=4 s** |
-| **RR bound** [5.11] | 冇 process 等多過 **(n − 1)·q** | |
-| **RT utilization** [5.49] | **U = Σ tᵢ / pᵢ**；**U > 1 ⇒ 一定 miss** | 25/50 + 35/80 = 0.94 |
-| **RM bound**（課本） | 保證可排：**U ≤ N(2^{1/N} − 1)**：N=1 1.000、2 0.828、3 0.780、4 0.757、5 0.743、∞ 0.693 | |
-| **EDF** [5.52] | U ≤ 1（D = T 時）理論上可排 | |
-| **fork 數目** | n 個無條件 fork → **2ⁿ**；`if(fork()) fork();` 每輪 ×3 | 見 Playbook P1 |
+| **Average access time** [1.32] | $\text{AMAT} = h\,T_{\text{hit}} + (1-h)\,T_{\text{miss}}$（若畀 penalty：$T_{\text{miss}} = T_{\text{hit}} + \text{penalty}$） | $0.9 \times 2 + 0.1 \times 50 =$ **6.8 ns** |
+| **Amdahl's Law** [4.12] | $\text{speedup} \le \dfrac{1}{S + (1-S)/N}$；$N \to \infty$：$\dfrac{1}{S}$；$S$ = **serial** | $S = 0.25,\ N = 2 \Rightarrow$ **1.6** |
+| Amdahl 反解 | $S = \dfrac{1/X - 1/N}{1 - 1/N}$ | $X = 3,\ N = 4 \Rightarrow S = 1/9$ |
+| **Turnaround** [5.8] | $\text{TAT} = C - A$（completion − arrival） | |
+| **Waiting** [5.8] | $\text{WT} = \text{TAT} - \text{burst}$（= Gantt 上嘅 gaps 總和） | |
+| **Response（本科）** [5.12] | $\text{RT} = (\text{end of FIRST run}) - A$（RR/MLFQ：第一個 quantum 完；non-preemptive：= TAT） | RR4：P1=4, P2=7, P3=10 |
+| **Exponential averaging** [5.19] | $\tau_{n+1} = \alpha\, t_n + (1-\alpha)\,\tau_n$ | $\alpha = .25,\ t_n = 6,\ \tau_n = 10 \Rightarrow$ **9** |
+| **Little's formula** [5.57] | $n = \lambda \times W$ | $\lambda = 3/\text{s},\ n = 12 \Rightarrow W =$ **4 s** |
+| **RR bound** [5.11] | 冇 process 等多過 $(n-1)\,q$ | |
+| **RT utilization** [5.49] | $U = \sum_i \dfrac{t_i}{p_i}$；**$U > 1 \Rightarrow$ 一定 miss** | $25/50 + 35/80 = 0.94$ |
+| **RM bound**（課本） | 保證可排：$U \le N\left(2^{1/N} - 1\right)$：N=1 1.000、2 0.828、3 0.780、4 0.757、5 0.743、$\infty$ 0.693 | |
+| **EDF** [5.52] | $U \le 1$（$D = T$ 時）理論上可排 | |
+| **fork 數目** | n 個無條件 fork → $2^n$；`if(fork()) fork();` 每輪 ×3 → $3^n$ | 見 Playbook P1 |
 | **Bounded buffer (in/out)** [3.54] | 最多 **BUFFER_SIZE − 1** items | |
-| **Semaphore（blocking）** [6.26] | value < 0 ⇒ **\|value\| = 等緊嘅 processes 數** | |
-| **Storage units** [1.28] | KB = 1024 B；MB = 1024²；GB = 1024³；networks 用 **bits** | |
+| **Semaphore（blocking）** [6.26] | $\text{value} < 0 \Rightarrow \lvert \text{value} \rvert$ = 等緊嘅 processes 數 | |
+| **Storage units** [1.28] | KB $= 2^{10}$ B；MB $= 2^{20}$；GB $= 2^{30}$；networks 用 **bits** | |
 
 ## E2. 本科 Conventions（考試照用，唔確定就寫 assumption）
 

@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Glossary A–Z · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/site.css?v=1793172171">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
 
-<script src="assets/site.js?v=1793172171"></script>
-<script src="assets/search-index.js?v=1793172171"></script>
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
 </head>
 <body data-page="glossary">
 <header class="topbar">
@@ -27,6 +28,8 @@
 <div class="nav-group">Start</div>
 <a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
 <a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
 <div class="nav-group">Notes</div>
 <a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
 <a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
@@ -34,6 +37,7 @@
 <a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
 <a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
 <a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
 <div class="nav-group">Reference</div>
 <a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
 <a href="glossary.html" data-page="glossary" class="active"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
@@ -80,7 +84,7 @@
   <td>5.25</td>
 </tr>
 <tr id="g-amdahl-s-law"><td>Amdahl's Law</td>
-  <td>speedup ≤ 1 / (S + (1−S)/N); as N→∞, speedup → 1/S</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">speedup</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3651em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0576em;">S</span><span class="mbin mtight">+</span><span class="mopen mtight">(</span><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord mathnormal mtight" style="margin-right:0.0576em;">S</span><span class="mclose mtight">)</span><span class="mord mtight">/</span><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>; as <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span>, speedup <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span></td>
   <td>阿姆達爾定律</td>
   <td>4.12</td>
 </tr>
@@ -305,7 +309,7 @@
   <td>3.41</td>
 </tr>
 <tr id="g-exponential-averaging"><td>Exponential averaging</td>
-  <td>τ(n+1) = α t(n) + (1−α) τ(n): predicts the next CPU burst</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6389em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>: predicts the next CPU burst</td>
   <td>指數平均</td>
   <td>5.19</td>
 </tr>
@@ -385,7 +389,7 @@
   <td>2.31</td>
 </tr>
 <tr id="g-little-s-formula"><td>Little's formula</td>
-  <td>n = λ × W (queue length = arrival rate × waiting time)</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">W</span></span></span></span> (queue length = arrival rate × waiting time)</td>
   <td>利特爾公式</td>
   <td>5.57</td>
 </tr>

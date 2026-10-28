@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>解題 Playbooks · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
+
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
+</head>
+<body data-page="playbooks">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks" class="active"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Start</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="playbooks">Playbooks（解題流程 + 預先計好嘅表）</h1>
+<h2 id="p1-fork-playbook"><a class="anchor" href="#p1-fork-playbook">#</a>P1. fork() Playbook</h2>
+<p><strong>Step 1 — 規則</strong></p>
+<ul>
+<li>fork() 返回：<strong>child 0 / parent child-PID (&gt;0) / fail −1（只有 parent，冇 child）</strong>。</li>
+<li>Child 由 <strong>fork() 下一個 operation</strong> 開始，複製晒 variables（包括 loop 嘅 <code>i</code>）。</li>
+<li>短路：<code>A &amp;&amp; B</code> → A 係 0（child）唔做 B；<code>A || B</code> → A 非 0（parent）唔做 B。</li>
+<li><code>return</code> / <code>exit</code> / <code>break</code> 會停止該 process 嘅 loop；<code>exec</code> 成功 = 之後 code 唔執行。</li>
+</ul>
+<p><strong>Step 2 — Pattern 表（每個 iteration、所有 process 都繼續 loop）</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>每 iteration</th>
+  <th>每 process 變</th>
+  <th>n 次後</th>
+  <th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>fork();</code></td>
+  <td>×2</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>n=3 → 8；n=10 → 1024</td>
+</tr>
+<tr>
+  <td><code>fork(); fork();</code></td>
+  <td>×4</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>n=3 → 64</td>
+</tr>
+<tr>
+  <td><code>if (fork()) fork();</code></td>
+  <td>×3</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>n=3 → 27</td>
+</tr>
+<tr>
+  <td><code>if (fork() == 0) fork();</code></td>
+  <td>×3</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>n=3 → 27（Sp21 MC8）</td>
+</tr>
+<tr>
+  <td><code>fork() &amp;&amp; fork();</code></td>
+  <td>×3</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>parent 做兩次</td>
+</tr>
+<tr>
+  <td><code>fork() || fork();</code></td>
+  <td>×3</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>child 做第二次</td>
+</tr>
+<tr>
+  <td><code>if (fork() == fork()) printf</code></td>
+  <td>×4</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>；lines <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord">/3</span></span></span></span></td>
+  <td>F22 Q3</td>
+</tr>
+<tr>
+  <td><code>if (fork()) {fork(); fork();} else fork();</code></td>
+  <td>×6</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>Lab 3 Ex3</td>
+</tr>
+<tr>
+  <td><code>if (fork()) fork(); else break;</code></td>
+  <td>active ×2</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> total</td>
+  <td>breaks <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>（S26 Q3.1）</td>
+</tr>
+<tr>
+  <td><code>if (fork()) printf; else printf;</code></td>
+  <td>lines <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8247em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span></span></span></span></span></span></span></span> per iter</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span> lines</td>
+  <td>F19 Q2.6</td>
+</tr>
+<tr>
+  <td><code>pid = fork(); if (!pid) for (j&lt;N) fork();</code>（M 輪）</td>
+  <td>×<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">M</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>F24 P3.1</td>
+</tr>
+<tr>
+  <td><code>if (fork() == 0) break;</code>（fan）</td>
+  <td>+1 child</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></td>
+  <td>只 parent 繼續</td>
+</tr>
+<tr>
+  <td><code>if (fork() &gt; 0) break;</code>（chain）</td>
+  <td>+1 child</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></td>
+  <td>只 child 繼續</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Step 3 — 其他已驗證答案</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Code</th>
+  <th>答案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>if (fork() || fork()) fork();</code></td>
+  <td><strong>5</strong> processes</td>
+</tr>
+<tr>
+  <td><code>if (fork() &amp;&amp; fork()) fork();</code></td>
+  <td><strong>4</strong>（P0: T&amp;&amp;T → fork → 2；C1 false → 1；C2 false → 1）</td>
+</tr>
+<tr>
+  <td><code>fork(); fork() &amp;&amp; fork(); fork();</code></td>
+  <td><strong>12</strong></td>
+</tr>
+<tr>
+  <td><code>pid1=fork(); pid2=fork(); if(pid1&gt;0) if(pid2==0) fork();</code></td>
+  <td><strong>5</strong></td>
+</tr>
+<tr>
+  <td><code>if (fork()==fork() || fork()!=fork()) fork(); printf</code></td>
+  <td><strong>23</strong> lines</td>
+</tr>
+<tr>
+  <td>S26 MC10：loop 3：<code>if(fork()==0){fork(); printf X; return;}</code> 之後 printf Y</td>
+  <td><strong>7 processes, X = 6, Y = 1</strong></td>
+</tr>
+<tr>
+  <td>S26 Q3.1：<code>if(fork()) fork(); else break;</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></strong> processes, <strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></strong> breaks（n=2：7, 3）</td>
+</tr>
+<tr>
+  <td>F20 Q3.2：<code>if(!fork()){loop n: if(fork()) fork();} fork(); printf a</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mopen">(</span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></strong></td>
+</tr>
+<tr>
+  <td>Sp21 Q1.2：<code>if(fork()==0){loop 5: if(fork()==0) fork();} fork();</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">5</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">488</span></span></span></span></strong></td>
+</tr>
+<tr>
+  <td>F19 Q2.6：loop n，parent/child 都 printf</td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></strong> lines</td>
+</tr>
+<tr>
+  <td>Slide 3.44：loop 10 <code>fork(); fork();</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">048</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">576</span></span></span></span></strong></td>
+</tr>
+<tr>
+  <td>Slide 3.45：loop 10 <code>if (fork()) fork();</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">59</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">049</span></span></span></span></strong></td>
+</tr>
+<tr>
+  <td>Lab 3 Ex3：loop n <code>if(fork()){fork();fork();} else fork();</code></td>
+  <td>每輪 ×6 → <strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></strong></td>
+</tr>
+<tr>
+  <td><strong>F22 Q3</strong>：loop n <code>if (fork() == fork()) printf</code></td>
+  <td>processes <strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></strong>；lines <strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord">/3</span></span></span></span></strong>（1, 5, 21）</td>
+</tr>
+<tr>
+  <td><strong>F24 P3.1</strong>：loop M <code>pid=fork(); if(!pid) for(j&lt;N) fork();</code></td>
+  <td><strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">M</span></span></span></span></span></span></span></span></span></span></span></strong>（line Y 由 <strong>child</strong> 執行；M=N=1 → 3）</td>
+</tr>
+<tr>
+  <td><strong>S25 MC12</strong>：<code>if (fork() || fork()) { if (fork() &amp;&amp; !fork()) fork(); }</code></td>
+  <td><strong>9</strong> processes</td>
+</tr>
+<tr>
+  <td>Lab 2：<code>pid=fork(); if(pid==0){cnt+=10; pid=fork(); if(pid){cnt+=10; pid=fork();}}</code> 印 pid、cnt</td>
+  <td>非 0 pid × <strong>2</strong>；'0' × <strong>3</strong>；'10' × <strong>1</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Step 4 — Process tree</strong>：每個 node 寫 PID 名（P0, P1…）同佢喺邊個 iteration 出世；child 繼承 parent 嘅 <code>i</code> 值繼續。</p>
+<p><strong>Step 5 — Output ordering</strong>：</p>
+<ol>
+<li>同一 process 內嘅 print 次序固定。</li>
+<li><code>wait()</code>：parent 之後嘅 print &gt; 所有 child（及其子孫，如 child 等咗佢哋）嘅 print。</li>
+<li>fork 之前印嘅（已 flush）最先。</li>
+<li>列所有符合約束嘅排列（topological orders）；可以用「插空位」數：k 個自由字元插入固定序列。</li>
+</ol>
+<p><strong>Step 6 — exec 情況</strong>：(I) fork ✓ exec ✓：child exec 前嘅 print + parent 嘅 print；(II) fork ✓ exec ✗：再加 exec 後嘅 print；(III) fork ✗：只有 <code>ret &lt; 0</code> branch。</p>
+<h2 id="p2-pipe-dup-exec-playbook"><a class="anchor" href="#p2-pipe-dup-exec-playbook">#</a>P2. Pipe / dup / exec 填空 Playbook</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>要做</th>
+  <th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>建 pipe（<strong>fork 之前</strong>）</td>
+  <td><code>int fd[2]; pipe(fd);</code> → <strong>fd[0] read，fd[1] write</strong></td>
+</tr>
+<tr>
+  <td>Writer</td>
+  <td><code>close(fd[0]); write(fd[1], &amp;x, sizeof(x)); close(fd[1]);</code></td>
+</tr>
+<tr>
+  <td>Reader</td>
+  <td><code>close(fd[1]); read(fd[0], &amp;x, sizeof(x)); close(fd[0]);</code></td>
+</tr>
+<tr>
+  <td>stdin ← file</td>
+  <td><code>int fin = open(name, O_RDONLY); close(0); dup(fin);</code>（或 <code>dup2(fin, 0)</code>）</td>
+</tr>
+<tr>
+  <td>stdout → file</td>
+  <td><code>int fo = open(name, O_WRONLY|O_CREAT|O_TRUNC, 0644); dup2(fo, 1); close(fo);</code></td>
+</tr>
+<tr>
+  <td>stdout → pipe</td>
+  <td><code>dup2(fd[1], 1); close(fd[0]); close(fd[1]); execlp(...)</code></td>
+</tr>
+<tr>
+  <td>stdin ← pipe</td>
+  <td><code>dup2(fd[0], 0); close(fd[0]); close(fd[1]); execlp(...)</code></td>
+</tr>
+<tr>
+  <td>等指定 child</td>
+  <td><code>waitpid(pid, &amp;status, 0);</code></td>
+</tr>
+<tr>
+  <td>exec 一個 program</td>
+  <td><code>execlp(&quot;ls&quot;, &quot;ls&quot;, &quot;-l&quot;, (char *)NULL);</code> / <code>execvp(argv[0], argv);</code>（argv 尾要 NULL）</td>
+</tr>
+<tr>
+  <td>數偶數（S26）</td>
+  <td><code>if (number % 2 == 0) cnt++;</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="p3-cpu-scheduling-playbook"><a class="anchor" href="#p3-cpu-scheduling-playbook">#</a>P3. CPU Scheduling Playbook</h2>
+<p><strong>萬用步驟</strong>：(1) 抄表；(2) 由 t=0 起逐個 event（arrival / completion / quantum expiry / check point）；(3) 每個 event 寫 ready queue 內容；(4) 照算法揀；(5) 畫 Gantt（每個 boundary）；(6) C → TAT → WT → RT；(7) 平均連 working；(8) 檢查：最後完成時間 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord">burst</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">idle</span></span></span></span></span>。</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Algorithm</th>
+  <th>揀邊個</th>
+  <th>幾時重新揀</th>
+  <th>注意</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>FCFS</strong></td>
+  <td>最早到</td>
+  <td>完成時</td>
+  <td>non-preemptive；convoy effect</td>
+</tr>
+<tr>
+  <td><strong>SJF</strong></td>
+  <td><strong>已到達</strong>嘅最短 burst</td>
+  <td>完成時</td>
+  <td>一旦開始跑到完</td>
+</tr>
+<tr>
+  <td><strong>SRTF</strong></td>
+  <td>最短 <strong>remaining</strong></td>
+  <td>完成 + <strong>每個 arrival</strong></td>
+  <td>tie → keep running</td>
+</tr>
+<tr>
+  <td><strong>RR (q)</strong></td>
+  <td>queue head</td>
+  <td>完成 / quantum 用完</td>
+  <td>新 arrival 先入 queue，再放被 preempt 嘅</td>
+</tr>
+<tr>
+  <td><strong>Priority NP</strong></td>
+  <td>最高 priority（細數字）</td>
+  <td>完成時</td>
+  <td>tie → FCFS</td>
+</tr>
+<tr>
+  <td><strong>Priority P</strong></td>
+  <td>最高 priority</td>
+  <td>完成 + 高 priority arrival</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>Priority + RR</strong></td>
+  <td>最高 priority；同級 RR</td>
+  <td>完成 / quantum / 高 priority arrival</td>
+  <td>同級得一個就繼續跑</td>
+</tr>
+<tr>
+  <td><strong>MLFQ</strong></td>
+  <td>最高非空 queue 嘅 head</td>
+  <td>完成 / quantum / 高層 arrival</td>
+  <td>preempted → <strong>head + 剩餘 quantum</strong></td>
+</tr>
+<tr>
+  <td><strong>Dynamic priority</strong></td>
+  <td>計 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7512em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">init</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4445em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">waited</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord text"><span class="mord">ran</span></span></span></span></span></td>
+  <td>每 check interval / 完成</td>
+  <td>tie 跟題目</td>
+</tr>
+<tr>
+  <td><strong>LUF</strong>（F19）</td>
+  <td>用 CPU 最少</td>
+  <td>完成 + arrival</td>
+  <td>descheduled → tail</td>
+</tr>
+<tr>
+  <td><strong>RM</strong></td>
+  <td>period 最短</td>
+  <td>每個 release / 完成</td>
+  <td>static</td>
+</tr>
+<tr>
+  <td><strong>EDF</strong></td>
+  <td>absolute deadline 最早</td>
+  <td>每個 release / 完成</td>
+  <td>dynamic；tie → keep running</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>MLFQ 追蹤表（考試用 rough paper 畫）</strong>：</p>
+<pre class="code" data-lang=""><code>t   | event            | Q0        | Q1 (rem q)   | Q2      | run (queue, q left, burst left)
+0   | P1 arrives       | P1        |              |         | P1@Q0 q=4 b=9
+4   | P1 q used        | P2        | P1(8)        |         | P2@Q0 ...
+</code></pre>
+<p><strong>RM / EDF 追蹤</strong>：列 release times：task <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 喺 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span></span></span></span> release；deadline <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span></span></span></span> release <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord">+</span><span class="mspace"> </span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>。逐個 time unit 揀；記低每個 job 完成時間，比較 deadline。</p>
+<h2 id="p4-synchronization-playbook"><a class="anchor" href="#p4-synchronization-playbook">#</a>P4. Synchronization Playbook</h2>
+<p><strong>Race 可能值（F19 Q4.3 / F20 Q5 type）</strong></p>
+<ol>
+<li>將 T1 拆做 atomic steps：<strong>read for condition → read b → read a → write c</strong>（<code>c = b + a</code> 由左至右讀）。</li>
+<li>T2 嘅 writes（次序固定）可以插入任何 gap。</li>
+<li>分 branch（condition read 前 / 後寫）→ 每個 read 見新值 / 舊值 → 計 c。</li>
+<li>列晒所有 <strong>distinct</strong> 值 + 每個值嘅 interleaving。</li>
+</ol>
+<p><strong>Semaphore 次序</strong>：每條 dependency「X 要喺 Y 前」→ semaphore s = 0：<strong>X 尾 <code>signal(s)</code>、Y 頭 <code>wait(s)</code></strong>；多個前置 → 多個 <code>wait</code>。</p>
+<p><strong>Semaphore 序列可行性</strong>：逐字追蹤每個 semaphore 嘅值同每個 process 做到邊；任何 <code>wait</code> 時值必須 &gt; 0；有 loop 嘅 process 可以重複。</p>
+<p><strong>Spinlock 任何 atomic instruction</strong>：<code>while (instr(...) 返回「攞唔到」) ;</code> + release 寫返 free 值：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>Instruction（return）</th>
+  <th>acquire</th>
+  <th>release</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>test_and_set(&amp;lock)</code>（old）</td>
+  <td><code>while (test_and_set(&amp;lock)) ;</code></td>
+  <td><code>lock = false;</code></td>
+</tr>
+<tr>
+  <td><code>compare_and_swap(&amp;lock,0,1)</code>（old）</td>
+  <td><code>while (compare_and_swap(&amp;lock,0,1) != 0) ;</code></td>
+  <td><code>lock = 0;</code></td>
+</tr>
+<tr>
+  <td><code>swap(locked,1)</code>（old）</td>
+  <td><code>while (swap(locked,1) == 1) ;</code></td>
+  <td><code>locked = 0;</code></td>
+</tr>
+<tr>
+  <td><code>compare_and_reset(&amp;v,0,1)</code>（1 = 成功）</td>
+  <td><code>while (compare_and_reset(&amp;v,0,1) == 0) ;</code></td>
+  <td><code>v = 0;</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Bounded-waiting TAS 檢查點</strong>：(1) <strong>cyclic scan</strong> <code>j=(i+1)%n … j!=i</code>；(2) <strong>冇人等就 <code>lock = false</code></strong>；(3) 有人等就 <strong><code>waiting[j] = false</code></strong>（直接交 lock）；三個性質：ME（只有第一個 TAS 得 key=false / 只放一個 waiting）、progress（exit 一定放 lock 或者叫醒一個）、bounded waiting（≤ n−1 turns）。</p>
+<h2 id="p5-pre-computed-tables"><a class="anchor" href="#p5-pre-computed-tables">#</a>P5. 預先計好嘅表 Pre-computed Tables</h2>
+<p><strong>Amdahl speedup</strong> <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2574em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span> = serial fraction；parallel <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span>）</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord">\</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span></th>
+  <th>2</th>
+  <th>3</th>
+  <th>4</th>
+  <th>5</th>
+  <th>6</th>
+  <th>7</th>
+  <th>8</th>
+  <th>10</th>
+  <th>16</th>
+  <th>32</th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>0.05</strong>（par 95%）</td>
+  <td>1.90</td>
+  <td>2.73</td>
+  <td>3.48</td>
+  <td>4.17</td>
+  <td>4.80</td>
+  <td>5.38</td>
+  <td>5.93</td>
+  <td>6.90</td>
+  <td>9.14</td>
+  <td>12.55</td>
+  <td><strong>20.00</strong></td>
+</tr>
+<tr>
+  <td><strong>0.10</strong>（par 90%）</td>
+  <td>1.82</td>
+  <td>2.50</td>
+  <td>3.08</td>
+  <td>3.57</td>
+  <td>4.00</td>
+  <td>4.38</td>
+  <td>4.71</td>
+  <td>5.26</td>
+  <td>6.40</td>
+  <td>7.80</td>
+  <td><strong>10.00</strong></td>
+</tr>
+<tr>
+  <td><strong>0.15</strong>（par 85%）</td>
+  <td>1.74</td>
+  <td>2.31</td>
+  <td>2.76</td>
+  <td>3.13</td>
+  <td>3.43</td>
+  <td>3.68</td>
+  <td>3.90</td>
+  <td>4.26</td>
+  <td>4.92</td>
+  <td>5.66</td>
+  <td><strong>6.67</strong></td>
+</tr>
+<tr>
+  <td><strong>0.19</strong>（par 81%）</td>
+  <td>1.68</td>
+  <td>2.17</td>
+  <td>2.55</td>
+  <td>2.84</td>
+  <td>3.08</td>
+  <td>3.27</td>
+  <td>3.43</td>
+  <td>3.69</td>
+  <td>4.16</td>
+  <td>4.64</td>
+  <td><strong>5.26</strong></td>
+</tr>
+<tr>
+  <td><strong>0.20</strong>（par 80%）</td>
+  <td>1.67</td>
+  <td>2.14</td>
+  <td>2.50</td>
+  <td>2.78</td>
+  <td>3.00</td>
+  <td>3.18</td>
+  <td>3.33</td>
+  <td>3.57</td>
+  <td>4.00</td>
+  <td>4.44</td>
+  <td><strong>5.00</strong></td>
+</tr>
+<tr>
+  <td><strong>0.25</strong>（par 75%）</td>
+  <td>1.60</td>
+  <td>2.00</td>
+  <td>2.29</td>
+  <td>2.50</td>
+  <td>2.67</td>
+  <td>2.80</td>
+  <td>2.91</td>
+  <td>3.08</td>
+  <td>3.37</td>
+  <td>3.66</td>
+  <td><strong>4.00</strong></td>
+</tr>
+<tr>
+  <td><strong>0.30</strong>（par 70%）</td>
+  <td>1.54</td>
+  <td>1.88</td>
+  <td>2.11</td>
+  <td>2.27</td>
+  <td>2.40</td>
+  <td>2.50</td>
+  <td>2.58</td>
+  <td>2.70</td>
+  <td>2.91</td>
+  <td>3.11</td>
+  <td><strong>3.33</strong></td>
+</tr>
+<tr>
+  <td><strong>0.35</strong>（par 65%）</td>
+  <td>1.48</td>
+  <td>1.76</td>
+  <td>1.95</td>
+  <td>2.08</td>
+  <td>2.18</td>
+  <td>2.26</td>
+  <td>2.32</td>
+  <td>2.41</td>
+  <td>2.56</td>
+  <td>2.70</td>
+  <td><strong>2.86</strong></td>
+</tr>
+<tr>
+  <td><strong>0.39</strong>（par 61%）</td>
+  <td>1.44</td>
+  <td>1.69</td>
+  <td>1.84</td>
+  <td>1.95</td>
+  <td>2.03</td>
+  <td>2.10</td>
+  <td>2.14</td>
+  <td>2.22</td>
+  <td>2.34</td>
+  <td>2.44</td>
+  <td><strong>2.56</strong></td>
+</tr>
+<tr>
+  <td><strong>0.40</strong>（par 60%）</td>
+  <td>1.43</td>
+  <td>1.67</td>
+  <td>1.82</td>
+  <td>1.92</td>
+  <td>2.00</td>
+  <td>2.06</td>
+  <td>2.11</td>
+  <td>2.17</td>
+  <td>2.29</td>
+  <td>2.39</td>
+  <td><strong>2.50</strong></td>
+</tr>
+<tr>
+  <td><strong>0.45</strong>（par 55%）</td>
+  <td>1.38</td>
+  <td>1.58</td>
+  <td>1.70</td>
+  <td>1.79</td>
+  <td>1.85</td>
+  <td>1.89</td>
+  <td>1.93</td>
+  <td>1.98</td>
+  <td>2.06</td>
+  <td>2.14</td>
+  <td><strong>2.22</strong></td>
+</tr>
+<tr>
+  <td><strong>0.50</strong>（par 50%）</td>
+  <td>1.33</td>
+  <td>1.50</td>
+  <td>1.60</td>
+  <td>1.67</td>
+  <td>1.71</td>
+  <td>1.75</td>
+  <td>1.78</td>
+  <td>1.82</td>
+  <td>1.88</td>
+  <td>1.94</td>
+  <td><strong>2.00</strong></td>
+</tr>
+<tr>
+  <td><strong>0.60</strong>（par 40%）</td>
+  <td>1.25</td>
+  <td>1.36</td>
+  <td>1.43</td>
+  <td>1.47</td>
+  <td>1.50</td>
+  <td>1.52</td>
+  <td>1.54</td>
+  <td>1.56</td>
+  <td>1.60</td>
+  <td>1.63</td>
+  <td><strong>1.67</strong></td>
+</tr>
+<tr>
+  <td><strong>0.70</strong>（par 30%）</td>
+  <td>1.18</td>
+  <td>1.25</td>
+  <td>1.29</td>
+  <td>1.32</td>
+  <td>1.33</td>
+  <td>1.35</td>
+  <td>1.36</td>
+  <td>1.37</td>
+  <td>1.39</td>
+  <td>1.41</td>
+  <td><strong>1.43</strong></td>
+</tr>
+<tr>
+  <td><strong>0.80</strong>（par 20%）</td>
+  <td>1.11</td>
+  <td>1.15</td>
+  <td>1.18</td>
+  <td>1.19</td>
+  <td>1.20</td>
+  <td>1.21</td>
+  <td>1.21</td>
+  <td>1.22</td>
+  <td>1.23</td>
+  <td>1.24</td>
+  <td><strong>1.25</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Powers（fork 用）</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mopen">(</span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord">/3</span></span></span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>2</td>
+  <td>3</td>
+  <td>4</td>
+  <td>6</td>
+  <td>3</td>
+  <td>1</td>
+  <td>2</td>
+  <td>8</td>
+  <td>1</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>4</td>
+  <td>9</td>
+  <td>16</td>
+  <td>36</td>
+  <td>7</td>
+  <td>3</td>
+  <td>6</td>
+  <td>20</td>
+  <td>5</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>8</td>
+  <td>27</td>
+  <td>64</td>
+  <td>216</td>
+  <td>15</td>
+  <td>7</td>
+  <td>14</td>
+  <td>56</td>
+  <td>21</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>16</td>
+  <td>81</td>
+  <td>256</td>
+  <td>1296</td>
+  <td>31</td>
+  <td>15</td>
+  <td>30</td>
+  <td>164</td>
+  <td>85</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>32</td>
+  <td>243</td>
+  <td>1024</td>
+  <td>7776</td>
+  <td>63</td>
+  <td>31</td>
+  <td>62</td>
+  <td>488</td>
+  <td>341</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>64</td>
+  <td>729</td>
+  <td>4096</td>
+  <td>46656</td>
+  <td>127</td>
+  <td>63</td>
+  <td>126</td>
+  <td>1460</td>
+  <td>1365</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>128</td>
+  <td>2187</td>
+  <td>16384</td>
+  <td>279936</td>
+  <td>255</td>
+  <td>127</td>
+  <td>254</td>
+  <td>4376</td>
+  <td>5461</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>256</td>
+  <td>6561</td>
+  <td>65536</td>
+  <td>1679616</td>
+  <td>511</td>
+  <td>255</td>
+  <td>510</td>
+  <td>13124</td>
+  <td>21845</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>512</td>
+  <td>19683</td>
+  <td>262144</td>
+  <td>10077696</td>
+  <td>1023</td>
+  <td>511</td>
+  <td>1022</td>
+  <td>39368</td>
+  <td>87381</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>1024</td>
+  <td>59049</td>
+  <td>1048576</td>
+  <td>60466176</td>
+  <td>2047</td>
+  <td>1023</td>
+  <td>2046</td>
+  <td>118100</td>
+  <td>349525</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>RM utilization bound</strong> <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.238em;vertical-align:-0.35em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1/</span><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span></span></span></span></p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span></th>
+  <th>bound</th>
+  <th><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span></th>
+  <th>bound</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>1.000</td>
+  <td>7</td>
+  <td>0.729</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>0.828</td>
+  <td>8</td>
+  <td>0.724</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>0.780</td>
+  <td>9</td>
+  <td>0.721</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>0.757</td>
+  <td>10</td>
+  <td>0.718</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>0.743</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span></td>
+  <td>0.693（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mop">ln</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span></span></span></span>）</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>0.735</td>
+  <td></td>
+  <td></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Exponential averaging（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span></span></span></span>）權重</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> ½、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8234em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span> ¼、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8234em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span> ⅛、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8234em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span> 1/16、… <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 權重 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1/2</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>。<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.25</span></span></span></span>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 0.25、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8234em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span> 0.1875、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8234em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span></span></span></span> 0.1406、… <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 權重 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">0.7</span><span class="mord"><span class="mord">5</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>。</p>
+
+<nav class="pager"><a href="essentials.html"><small>← 上一頁</small>考場一頁通 Essentials</a><a class="next" href="ch1.html"><small>下一頁 →</small>Ch1 Introduction</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#p1-fork-playbook">P1. fork() Playbook</a>
+<a class="l2" href="#p2-pipe-dup-exec-playbook">P2. Pipe / dup / exec 填空 Playbook</a>
+<a class="l2" href="#p3-cpu-scheduling-playbook">P3. CPU Scheduling Playbook</a>
+<a class="l2" href="#p4-synchronization-playbook">P4. Synchronization Playbook</a>
+<a class="l2" href="#p5-pre-computed-tables">P5. 預先計好嘅表 Pre-computed Tables</a></aside>
+</div>
+
+</body>
+</html>

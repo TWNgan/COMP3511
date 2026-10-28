@@ -50,11 +50,16 @@ CPU scheduling 可能喺四種情況發生：
 | **Fairness** | adequate allocation for different jobs/processes | — |
 
 ### 2.1 公式（本科 convention，必背）⭐
-> 🧮 **Turnaround = Completion − Arrival**
+> 🧮 **Metrics（本科 convention）**
 >
-> 🧮 **Waiting = Turnaround − CPU burst**
->
-> 🧮 **Response = (completion of the FIRST run) − Arrival**
+> $$
+> \begin{aligned}
+> \text{Turnaround} &= \text{Completion} - \text{Arrival} \\
+> \text{Waiting} &= \text{Turnaround} - \text{CPU burst} \\
+> \text{Response} &= (\text{end of the FIRST run}) - \text{Arrival}
+> \end{aligned}
+> $$
+
 - **Response time 嘅「first run」完結** = 第一次上 CPU 嘅嗰段（RR / MLFQ 就係 **end of first quantum**，或者 burst 細過 quantum 就係完成時間）[5.12]。
   - Slide 5.13 例：RR q=4，P1(24), P2(3), P3(3) 全部 t=0 到 → **RT：P1 = 4, P2 = 7, P3 = 10，avg = 7**。
   - S26 MLFQ 官方：P1 response = 4 − 0 = 4（P1 跑 0–4）。
@@ -68,7 +73,7 @@ CPU scheduling 可能喺四種情況發生：
 ## 3. FCFS — First-Come, First-Served ⭐ [5.9–5.10]
 - 按 **arrival order** 排；**non-preemptive**（跑完 current CPU burst 先放）。
 - 例：P1 = 24, P2 = 3, P3 = 3（全部 t=0）
-  - 次序 P1, P2, P3：`0 P1 24 P2 27 P3 30` → **WT = 0, 24, 27 → avg 17；TAT avg = (24+27+30)/3 = 27**
+  - 次序 P1, P2, P3：`0 P1 24 P2 27 P3 30` → **WT = 0, 24, 27 → avg 17；TAT avg** $= \frac{24+27+30}{3} = 27$
   - 次序 P2, P3, P1：`0 P2 3 P3 6 P1 30` → **WT = 6, 0, 3 → avg 3；TAT avg = 13**
 - ⭐ **Convoy effect — short processes stuck behind a long process**，令 average waiting time 好長，完全取決於 arrival order。One CPU-bound + many I/O-bound → **low I/O device utilization**。（例：銀行排隊存張支票，前面有人開戶）
 > 📝 HW2 MC6：convoy effect → **several short processes wait behind a long process that arrived first**。
@@ -81,7 +86,7 @@ CPU scheduling 可能喺四種情況發生：
 - **n processes → each gets 1/n of CPU time in chunks of at most q；no process waits more than (n − 1)q time units** ⭐（ignoring context switch）。
 - **Timer interrupts every quantum**；如果 burst（或 remaining）< q，process 自己完成就放 CPU。
 - 例 [5.13]：q = 4，P1 24, P2 3, P3 3 → `0 P1 4 P2 7 P3 10 P1 14 P1 18 P1 22 P1 26 P1 30`
-  - **WT：P1 = 6, P2 = 4, P3 = 7 → avg 5.67；TAT avg = (30+7+10)/3 = 15.67；RT = 4, 7, 10 → avg 7**
+  - **WT：P1 = 6, P2 = 4, P3 = 7 → avg 5.67；TAT avg** $= \frac{30+7+10}{3} = 15.67$**；RT = 4, 7, 10 → avg 7**
 - **RR：average waiting time can be long, but more "fair"；better for short jobs than FCFS；better average response time → good for interactive jobs.**
 
 ### 4.1 Time quantum 大細 [5.14, 5.16] ⭐
@@ -112,14 +117,14 @@ CPU scheduling 可能喺四種情況發生：
 - ⭐ **SJF is optimal — gives the minimum average waiting time for a given set of processes.**
 - **Difficulty：knowing the length of the next CPU request.**（所以 practical 難 implement；F20 MC15 答案 **SJF difficult to implement**）
 - **Sketch proof**：**moving a short process before a long one decreases the waiting time of the short process more than it increases the waiting time of the long process → average waiting time decreases.**
-- 例 [5.18]：P1 = 6, P2 = 8, P3 = 7, P4 = 3。Slide 個 chart **當全部 t = 0 到**：`0 P4 3 P1 9 P3 16 P2 24` → **avg WT = (3 + 16 + 9 + 0)/4 = 7**（slide 答案）。
+- 例 [5.18]：P1 = 6, P2 = 8, P3 = 7, P4 = 3。Slide 個 chart **當全部 t = 0 到**：`0 P4 3 P1 9 P3 16 P2 24` → **avg WT** $= \frac{3 + 16 + 9 + 0}{4} = 7$（slide 答案）。
   - ⚠️ 如果真係跟表入面 arrival（0, 2, 4, 5）：t=0 只有 P1 → `0 P1 6 P4 9 P3 16 P2 24` → WT = 0, 14, 5, 1 → avg 5。考試**一定要睇清楚有冇 arrival time**。
 
 ### 5.2 SRTF — Shortest-Remaining-Time-First（preemptive SJF）⭐
 - **New arrival with burst shorter than the remaining time of the running process → preempts it.**
 - Scheduling 喺 **every arrival (condition 4)** 都要 invoke。
 - 例 [5.23]：P1(0,8), P2(1,4), P3(2,9), P4(3,5) → `0 P1 1 P2 5 P4 10 P1 17 P3 26`
-  - **avg WT = [(10−1) + (1−1) + (17−2) + (5−3)]/4 = 26/4 = 6.5**
+  - **avg WT** $= \frac{(10-1) + (1-1) + (17-2) + (5-3)}{4} = \frac{26}{4} = 6.5$
 
 ### 5.3 比較 [5.24] ⭐
 - **SJF/SRTF are the best for minimizing average waiting time (and average turnaround time).**
@@ -129,18 +134,29 @@ CPU scheduling 可能喺四種情況發生：
 - F20 MC14：best (min) average waiting time → **SJF**（**SRTF** 亦接受）。
 
 ### 5.4 Exponential Averaging（預測下一個 CPU burst）⭐⭐ [5.19–5.22]
-> 🧮 **τ(n+1) = α · t(n) + (1 − α) · τ(n)**，0 ≤ α ≤ 1
-- **tₙ = actual length of the n-th CPU burst；τₙ₊₁ = predicted value for the next burst**；通常 **α = ½**。
-- **α = 0 → τₙ₊₁ = τₙ（recent history does not count）；α = 1 → τₙ₊₁ = tₙ（only the last burst counts）。**
-- 展開：**τₙ₊₁ = α tₙ + (1−α) α tₙ₋₁ + … + (1−α)ʲ α tₙ₋ⱼ + … + (1−α)ⁿ⁺¹ τ₀** → **all past values count but recent ones weigh more；past effect diminishes exponentially**（α=0.5，10 rounds 後 (1/2)¹⁰ = 1/1024 可忽略）。
-- 預測取決於 **(1) all previous actual bursts with different weights, (2) the initial estimate τ₀**。
-- Slide 5.20 例（α = ½, τ₀ = 10）：
+> 🧮 **Exponential averaging**
+>
+> $$
+> \tau_{n+1} = \alpha\, t_n + (1-\alpha)\,\tau_n, \qquad 0 \le \alpha \le 1
+> $$
+
+- **$t_n$ = actual length of the n-th CPU burst；$\tau_{n+1}$ = predicted value for the next burst**；通常 **$\alpha = 1/2$**。
+- **$\alpha = 0 \Rightarrow \tau_{n+1} = \tau_n$（recent history does not count）；$\alpha = 1 \Rightarrow \tau_{n+1} = t_n$（only the last burst counts）。**
+- 展開 → **all past values count but recent ones weigh more；past effect diminishes exponentially**：
+
+$$
+\tau_{n+1} = \alpha t_n + (1-\alpha)\alpha\, t_{n-1} + \cdots + (1-\alpha)^{j}\alpha\, t_{n-j} + \cdots + (1-\alpha)^{n+1}\tau_0
+$$
+
+- 例：$\alpha = 0.5$，10 rounds 後 $(1/2)^{10} = 1/1024$ → 可忽略。
+- 預測取決於 **(1) all previous actual bursts with different weights, (2) the initial estimate $\tau_0$**。
+- Slide 5.20 例（$\alpha = 1/2$, $\tau_0 = 10$）：
 
 | i | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|---|
-| CPU burst tᵢ | 6 | 4 | 6 | 4 | 13 | 13 | 13 | … |
-| guess τᵢ | 10 | 8 | 6 | 6 | 5 | 9 | 11 | 12 |
-- **HW2 MC9**：τ = 10, t = 6, α = 0.25 → 0.25×6 + 0.75×10 = 1.5 + 7.5 = **9 ms**。
+| CPU burst $t_i$ | 6 | 4 | 6 | 4 | 13 | 13 | 13 | … |
+| guess $\tau_i$ | 10 | 8 | 6 | 6 | 5 | 9 | 11 | 12 |
+- **HW2 MC9**：$\tau_n = 10,\ t_n = 6,\ \alpha = 0.25 \Rightarrow \tau_{n+1} = 0.25 \times 6 + 0.75 \times 10 = 1.5 + 7.5 =$ **9 ms**。
 
 ---
 
@@ -152,12 +168,14 @@ CPU scheduling 可能喺四種情況發生：
 - ⭐ **Problem：Starvation (indefinite blocking) — low-priority processes may never execute.**
 - ⭐ **Solution：Aging — gradually increase the priority of a process as it waits**（需要每個 process 喺 ready queue 有 timer）。
 - Sp21 MC：main problem of priority scheduling → **some processes may never execute (starvation)**；HW2 MC7：aging → **address starvation by gradually increasing the priority of a waiting process**。
-- 例 [5.26]（all t=0；P1 10/3, P2 1/1, P3 2/4, P4 1/5, P5 5/2）→ `0 P2 1 P5 6 P1 16 P3 18 P4 19`，**avg WT = (6+0+16+18+1)/5 = 8.2**
+- 例 [5.26]（all t=0；P1 10/3, P2 1/1, P3 2/4, P4 1/5, P5 5/2）→ `0 P2 1 P5 6 P1 16 P3 18 P4 19`，**avg WT** $= \frac{6+0+16+18+1}{5} = 8.2$
 - **Priority + RR** [5.27]：**run the highest priority；same priority → round-robin**。例 q = 2（burst/priority：P1 4/3, P2 5/2, P3 8/2, P4 7/1, P5 3/3，全部 t=0）→ `0 P4 7 P2 9 P3 11 P2 13 P3 15 P2 16 P3 20 P1 22 P5 24 P1 26 P5 27`
   - P4（priority 1）先跑完；P2、P3（priority 2）RR；P2 喺 16 完咗之後 P3 獨自跑到 20；最後 P1、P5（priority 3）RR。
 
 ![Priority scheduling with round-robin, q = 2 [5.27]](img/ch5_p27.png)
 
+> ⚠️ **Priority + RR 有唔同 arrival time（Lab 5：HW / exam 常見）**：**被高 priority 新 process preempt 嘅 process 要保留佢剩餘嘅 quantum**，唔好 reset（lab 話呢個係 common mistake）。規則同 MLFQ 一樣。
+> - **Spring 2023 midterm 官方 Gantt（q = 2）**：`0 P1 1 P2 4 P1 5 P3 7 P1 8 P4 10 P1 11 P3 13 P5 15 P1 16 P3 18 P5 20 P3 22 P5 24` — P1 喺 0–1 被 P2 preempt，4–5 只跑剩低嘅 1 unit 就輪到 P3；8–10 P4 preempt 後 P1 10–11 又用返剩低 1 unit。（由 Gantt 推返嘅 table：P1 (0, 5, pr 2)、P2 (1, 3, pr 1)、P3 (2, 8, pr 2)、P4 (8, 2, pr 1)、P5 (9, 6, pr 2)，模擬器重現完全一致 ✅）
 
 ---
 
@@ -182,12 +200,12 @@ CPU scheduling 可能喺四種情況發生：
 ### 8.1 Slide example 規則（考試照用）[5.31] ⭐
 - Q0 – RR（slide 5.31: q = 8；例子 5.32–5.34 用 **q = 4**）；Q1 – RR（q = 16 / **8**）；Q2 – **FCFS**
 - **A new job always enters Q0 (RR, FCFS order)；it also preempts jobs from Q1 or Q2 currently running.**
-- **Gets q₀ in Q0；if not finished → moved to Q1.** **In Q1 gets q₁ additional；if still not complete → preempted and moved to Q2.**
+- **Gets $q_0$ in Q0；if not finished → moved to Q1.** **In Q1 gets $q_1$ additional；if still not complete → preempted and moved to Q2.**
 - ⭐ **If a job from Q1 or Q2 is preempted by a new job from Q0, it joins the HEAD of Q1 or Q2, with the remaining quantum (Q1) or remaining CPU burst (Q2).**（**唔會**攞一個全新 quantum；**唔會**因為被 preempt 而 demote）
 - **Q1 job 只會喺 Q0 空先跑；Q2 job 只會喺 Q0 和 Q1 都空先跑。**
 - **Q1 job 永遠唔會 preempt Q2 job**（因為冇 process 直接 arrive 去 Q1）— summary 重點。
 - **A job in Q0 is never preempted**（Q0 內部只有 RR）。
-- **Burst ≤ q₀ + q₁（e.g. 4 + 8 = 12）嘅 job 永遠唔會落 Q2。**
+- **Burst $\le q_0 + q_1$（e.g. 4 + 8 = 12）嘅 job 永遠唔會落 Q2。**
 - **This approximates SRTF：CPU-bound jobs drop like a rock；short-running I/O-bound jobs stay near the top.**
 
 ### 8.2 Lecture example [5.32–5.34]（Q0 q=4, Q1 q=8, Q2 FCFS）
@@ -203,7 +221,7 @@ CPU scheduling 可能喺四種情況發生：
  Q0   Q0   Q0   Q1   Q0   Q1   Q0   Q1   Q1   Q1   Q1   Q2   Q2
 ```
 - t=4 P1 用完 Q0 quantum → Q1；t=8 P2 → Q1；t=10 P3 完；P1 喺 Q1 跑；t=12 P4 到 → preempt P1（P1 返 Q1 head，剩 6 quantum）；t=16 P4 → Q1 tail；P1 繼續（剩 quantum 6）；t=18 P5 到 → preempt P1；t=22 P5 → Q1；P1 跑到 24 完成（Q1 總共用 2+2+2 = 6 ≤ 8）；P2 24–32 用完 Q1 quantum → Q2；P4 32–40 → Q2；P5 40–42 完成；P2 42–45 完；P4 45–47 完。
-- **WT：P1 = 14, P2 = 28, P3 = 3, P4 = 21, P5 = 18 → avg = 84/5 = 16.8** ✅
+- **WT：P1 = 14, P2 = 28, P3 = 3, P4 = 21, P5 = 18 → avg** $= \frac{84}{5} = 16.8$ ✅
 
 ### 8.3 MLFQ advantages ⭐⭐（F19 Q3.3、F20 Q2.5 必背）[5.35]
 - Used in **BSD Unix, Solaris, Windows NT and later**。
@@ -287,9 +305,14 @@ CPU scheduling 可能喺四種情況發生：
 - Sp21 MC ✅「**Soft real-time systems guarantee only that the process will be prioritized over non-critical processes**」；✗ doesn't demand guarantee；✗ hard RT can service after deadline；✗ priority without preemption。
 
 ### 11.2 Periodic tasks [5.48]
-- 參數：**processing time t, deadline d, period p，0 ≤ t ≤ d ≤ p**；**rate = 1/p**。
+- 參數：**processing time $t$, deadline $d$, period $p$，$0 \le t \le d \le p$**；**rate = $1/p$**。
 - **Admission control**：process announces deadline；scheduler **admits only if it can guarantee completion by the deadline**。
-- **CPU utilization of task i = tᵢ / pᵢ；total U = Σ tᵢ/pᵢ**（U > 1 → 一定有 miss）。
+- **CPU utilization of task $i$ = $t_i / p_i$**；total（$U > 1$ → 一定有 miss）：
+
+$$
+U = \sum_{i} \frac{t_i}{p_i}
+$$
+
 
 ### 11.3 Rate-Monotonic (RM) ⭐⭐ [5.49–5.50]
 - **Static priority = inverse of period：shorter period → higher priority**（rationale：**tasks requiring CPU more often get higher priority**）。**Preemptive.**
@@ -300,7 +323,7 @@ CPU scheduling 可能喺四種情況發生：
 
 ![RM: P2 misses its deadline at 80 [5.50]](img/ch5_p50.png)
 
-- 課本 bound（slides 冇，但好用）：**RM guaranteed if U ≤ N(2^{1/N} − 1)**：N=1 → 1；**N=2 → 0.828**；N=3 → 0.780；N=4 → 0.757；N→∞ → ln 2 ≈ 0.693。超過 bound **唔一定** miss（要畫 Gantt 確認）。
+- 課本 bound（slides 冇，但好用）：**RM guaranteed if** $U \le N\left(2^{1/N} - 1\right)$：N=1 → 1；**N=2 → 0.828**；N=3 → 0.780；N=4 → 0.757；$N \to \infty \Rightarrow \ln 2 \approx 0.693$。超過 bound **唔一定** miss（要畫 Gantt 確認）。
 
 ### 11.4 EDF — Earliest Deadline First ⭐⭐ [5.51–5.52]
 - **Dynamic priorities according to deadline：earlier (absolute) deadline → higher priority.** Preemptive。
@@ -322,7 +345,7 @@ CPU scheduling 可能喺四種情況發生：
 3. **Ties**：題目有講就跟（S26：**smaller process ID**）；冇講：**keep the running job（唔 preempt）**（F19、Sp21 官方答案都係咁），再唔得就 smaller ID。寫低 assumption。
 4. **Soft real-time：miss 咗 deadline 嘅 job 會繼續跑完**（Sp21 hint；S26 官方亦係咁），但 count 為 missed。
 5. 數 **missed deadlines**：每個 deadline ≤ 時限範圍嘅 job，完成時間 > deadline（或者未完成）→ miss。
-6. 先計 U = Σt/p 做 sanity check。
+6. 先計 $U = \sum_i t_i/p_i$ 做 sanity check。
 
 **S26 Q4.2**（P1 t=1 d=3 p=4；P2 2/4/5；P3 2/6/7；P4 1/5/8；0–16，ties → smaller ID）：
 - **RM**（priority P1 > P2 > P3 > P4）：`0 P1 1 P2 3 P3 4 P1 5 P2 7 P3 8 P1 9 P3 10 P2 12 P1 13 P3 14 P3 15 P2 16`
@@ -345,8 +368,8 @@ CPU scheduling 可能喺四種情況發生：
 - **Deterministic modeling** — **takes a particular predetermined workload and defines the performance of each algorithm for that workload**；**simple and fast, gives exact numbers, but requires exact input and answers apply only to those cases**。
   - 例 [5.54–5.55]：5 processes at t=0：P1 10, P2 29, P3 3, P4 7, P5 12 → **FCFS avg WT = 28；non-preemptive SJF = 13；RR (q=10) = 23**。
 - **Queueing models / analysis** — CPU = server with ready queue；用 **distributions**（exponential, described by mean）；可計 utilization、average queue length、wait time；**classes of algorithms and distributions handled are limited；assumptions often unrealistic**。
-  - ⭐ **Little's Formula：n = λ × W**（**n = average queue length, λ = average arrival rate, W = average waiting time in queue**）；**valid for any scheduling algorithm and arrival distribution**（steady state，arrival rate < service rate）。
-  - 例：λ = 7/s，n = 14 → **W = 2 s**；**HW2 MC10**：λ = 3/s，n = 12 → **W = 4 s**。
+  - ⭐ **Little's Formula：$n = \lambda \times W$**（**$n$ = average queue length, $\lambda$ = average arrival rate, $W$ = average waiting time in queue**）；**valid for any scheduling algorithm and arrival distribution**（steady state，arrival rate < service rate）。
+  - 例：$\lambda = 7/\text{s},\ n = 14 \Rightarrow W = n/\lambda =$ **2 s**；**HW2 MC10**：$\lambda = 3/\text{s},\ n = 12 \Rightarrow W = 12/3 =$ **4 s**。
 - **Simulations** — programming a model of the system；**more accurate**；data from **random number generators (distributions)** 或 **trace files**（real system 記錄）。
 - **Implementation** — 真系統測試，最準但 **high cost & high risk**；環境會變；可調 parameters；APIs 改 priority（Java, POSIX, Windows）。
 
@@ -370,7 +393,7 @@ CPU scheduling 可能喺四種情況發生：
 4. **CPU idle**：冇 process ready 就畫 **idle**（Sp21 FCFS `0 P1 2 idle 4 P2…`）。
 5. **畫 Gantt**：每段標 **start time / process / end time**；所有 boundary 時間都要寫（partial credit 靠呢個）。
 6. **計 table**：Completion → **TAT = C − A** → **WT = TAT − Burst** → **RT = end of first run − A**。
-7. **Average**：寫出 **(a+b+…)/n = x**（S26：140/6 = 23.33）。
+7. **Average**：寫出 $\dfrac{a+b+\cdots}{n} = x$（S26：$\frac{140}{6} = 23.33$）。
 8. **Sanity check**：總 burst 加 idle = 最後完成時間；每個 WT ≥ 0。
 
 ### 13.1 Tie-breaking（寫 assumption！）
@@ -397,21 +420,26 @@ CPU scheduling 可能喺四種情況發生：
 0 P1 4 P2 8 P3 12 P1 14 P4 18 P1 21 P2 29 P3 32 P4 40 P2 45 P5 57 P2 58 P6 64 P2 71 P4 77 P5 80
 (Q0)(Q0)(Q0)(Q1)(Q0)(Q1)(Q1)(Q1)(Q1)(Q2)(Q0→Q1 at 49)(Q2)(Q0→Q1 at 62)(Q2)(Q2)(Q2)
 ```
-- WT：P1 12, P2 44, P3 19, P4 45, P5 20, P6 0 → **avg = 140/6 = 23.33**
-- RT（end of first run − arrival）：P1 4, P2 6, P3 6, P4 4, P5 4 (49−45), P6 4 (62−58) → **avg = 28/6 = 4.67**
+- WT：P1 12, P2 44, P3 19, P4 45, P5 20, P6 0 → **avg** $= \frac{140}{6} = 23.33$
+- RT（end of first run − arrival）：P1 4, P2 6, P3 6, P4 4, P5 4 (49−45), P6 4 (62−58) → **avg** $= \frac{28}{6} = 4.67$
 
 ### 14.2 S26 Q4.3 Dynamic priority（larger = higher；waiting rate α，running rate β；tie → larger ID）
 - P1 (0, 7), P2 (3, 5), P3 (6, 6), P4 (9, 4)
-- (a) α = 0, β = 3（running process priority 上升，waiting 不變 → 一旦 run 就霸住）：**`0 P1 7 P3 13 P4 17 P2 22`**
+- (a) $\alpha = 0,\ \beta = 3$（running process priority 上升，waiting 不變 → 一旦 run 就霸住）：**`0 P1 7 P3 13 P4 17 P2 22`**
   - t=7：P2, P3 都係 0 → tie → larger ID → **P3**；t=13：P2 (0), P4 (0) → **P4**。
-- (b) α = 1, β = 0，只考慮 P1、P2，每 3 個 unit check：**`0 P1 3 P2 6 P1 9 P2 11 P1 12`**
+- (b) $\alpha = 1,\ \beta = 0$，只考慮 P1、P2，每 3 個 unit check：**`0 P1 3 P2 6 P1 9 P2 11 P1 12`**
   - t=3：P1 = 0 (ran 3), P2 = 0 → tie → P2；t=6：P1 = 3, P2 = 0 → P1；t=9：P1 = 3, P2 = 3 → tie → P2；t=11 P2 完 → P1。
-- (c) α = 1, β = −2，初始 30，每 3 unit check：**`0 P1 3 P2 6 P3 9 P4 12 P1 15 P2 17 P3 20 P4 21 P1 22`**
+- (c) $\alpha = 1,\ \beta = -2$，初始 30，每 3 unit check：**`0 P1 3 P2 6 P3 9 P4 12 P1 15 P2 17 P3 20 P4 21 P1 22`**
   - t=3：P1 = 30−6 = 24, P2 = 30 → P2；t=6：P1 27, P2 24, P3 30 → P3；t=9：P1 30, P2 27, P3 24, P4 30 → tie → P4；t=12：P1 33 → P1；t=15：P1 27, P2 33, P3 30, P4 27 → P2（17 完）；t=17：P1 29, P3 32, P4 29 → P3（20 完）；t=20：P1 32, P4 32 → tie → P4（21 完）；t=21：P1。
 
-### 14.3 S26 Q2.3 自訂 policy（fᵢ = 1/(a·cᵢ + b)，揀 fᵢ 最大）
-- (a) **Yes** — I/O-bound processes have small average CPU bursts cᵢ → larger fᵢ → higher priority.
-- (b) **Yes** — a CPU-bound process (large cᵢ, low fᵢ) can starve if higher-priority I/O-bound processes keep arriving.
+### 14.3 S26 Q2.3 自訂 policy（揀 fᵢ 最大）
+
+$$
+f_i = \frac{1}{a\,c_i + b} \qquad (a, b > 0)
+$$
+
+- (a) **Yes** — I/O-bound processes have small average CPU bursts $c_i$ → larger $f_i$ → higher priority.
+- (b) **Yes** — a CPU-bound process (large $c_i$, low $f_i$) can starve if higher-priority I/O-bound processes keep arriving.
 
 ### 14.4 F19 Q3.5 LUF (Least Used First)（揀用 CPU 最少嘅；tie → FCFS；preempt on arrival）
 - P1 (0, 25), P2 (15, 25), P3 (25, 5), P4 (40, 5)
@@ -452,7 +480,7 @@ CPU scheduling 可能喺四種情況發生：
 ### 14.8 F20 Q4.3 Priority + RR（smaller = higher；preemptive；same priority RR q=4）
 - P1 0/9/2, P2 3/3/1, P3 8/5/4, P4 10/2/4, P5 16/8/5, P6 20/5/3
 - **`0 P1 3 P2 6 P1 12 P3 16 P4 18 P3 19 P5 20 P6 25 P5 32`**
-- WT = 3, 0, 6, 6, 8, 0 → **avg = 23/6 = 3.83**
+- WT = 3, 0, 6, 6, 8, 0 → **avg** $= \frac{23}{6} = 3.83$
 
 ### 14.9 Sp21 Q2.1（P1 0/2, P2 4/12, P3 6/6, P4 9/4, P5 13/5）
 | Alg | Gantt | WT | Avg |
@@ -506,7 +534,7 @@ CPU scheduling 可能喺四種情況發生：
 | EDF: dynamic priority by deadline | ✅ |
 | EDF requires periodic tasks | ❌ |
 | EDF optimal, up to 100% utilization (theory) | ✅ |
-| Little's formula n = λW only for FCFS | ❌（any algorithm） |
+| Little's formula $n = \lambda W$ only for FCFS | ❌（any algorithm） |
 | Response time (course) = first start − arrival | ❌（**end of first run − arrival**） |
 
 ---
@@ -514,7 +542,7 @@ CPU scheduling 可能喺四種情況發生：
 ## 16. 自我測驗
 1. P1(0,5), P2(1,3), P3(2,1)：SRTF Gantt？（`0 P1 1 P2 2 P3 3 P2 5 P1 9`；WT = 4,1,0 → 5/3）
 2. 10 個 jobs 各 100 s 同時到，RR q=1 vs FCFS 平均 TAT？（RR ≈ 995.5 s；FCFS = 550 s）
-3. α = 0.5，τ₀ = 10，bursts 6, 4 → τ₂？（τ₁ = 8；τ₂ = 6）
+3. $\alpha = 0.5,\ \tau_0 = 10$，bursts 6, 4 → $\tau_2$？（$\tau_1 = 8$；$\tau_2 = 6$）
 4. 兩個 tasks：A (t=2, p=5)、B (t=4, p=10)：U = 0.8，RM 得唔得？（0.8 ≤ 0.828 → guaranteed）
 5. PCS vs SCS？
 6. Push vs pull migration？

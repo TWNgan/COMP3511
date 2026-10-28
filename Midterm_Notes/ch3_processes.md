@@ -28,6 +28,7 @@
   - **Nonmaskable interrupt** — reserved for events like **unrecoverable memory errors, power failure**
   - **Maskable interrupt** — **can be turned off by the CPU** before executing critical instruction sequences；device controllers 用（可以 delay）
 - **Interrupt priority levels** ⭐ — **a high-priority interrupt can preempt the execution of a low-priority interrupt**；CPU 可以 defer low-priority interrupts 而唔使 mask 全部。
+  - Lab 2 補充：**a trap (software interrupt) is given a relatively LOW interrupt priority compared with device interrupts**；**multi-CPU systems can process interrupts concurrently**。
 - **A trap or exception is a software-generated interrupt caused either by an error (e.g., arithmetic error / divide by zero) or a user request (a system call).** ⭐
 - **All modern operating systems are interrupt-driven**；每秒幾百個 interrupts。
 
@@ -40,7 +41,7 @@
 ### 0.3 DMA (Direct Memory Access) ⭐⭐ [3.25–3.26]
 - **Programmed I/O** — **CPU runs special I/O instructions to move one byte at a time between memory and slow devices**（keyboard, mouse）。
 - **DMA** — for **fast devices and large amounts of data**：**DMA controller bypasses the CPU to transfer data between I/O device and memory directly**；CPU/OS 只係 **initialize** DMA controller。→ **relieves the CPU from slow data movement**。
-- 步驟：OS writes **DMA command block** into memory（**source and destination addresses, read or write mode, number of bytes**）→ writes location of command block to DMA controller → **bus mastering**（DMA controller grabs bus from CPU）→ **when done, sends an interrupt to the CPU to signal completion**。
+- 步驟：OS writes **DMA command block** into memory（**source and destination addresses, read or write mode, number of bytes**）→ writes location of command block to DMA controller → **bus mastering**（DMA controller grabs bus from CPU — **momentarily prevents the CPU from accessing main memory**, Lab 2）→ **when done, sends an interrupt to the CPU to signal completion**。
 - **Six-step DMA transfer [3.26]**：
   1. Device driver is told to transfer disk data to buffer at address X
   2. Device driver tells disk controller to transfer C bytes from disk to buffer at address X
@@ -318,7 +319,7 @@ else { wait(NULL); printf("Child Complete"); exit(0); }      /* parent */
 ### 9.1 基本規則
 1. **每 call 一次 fork()，「每個執行到嗰句嘅 process」都會變兩個**：parent（return child PID > 0 → **true**）、child（return 0 → **false**）。
 2. **Child 由 fork() 下一句開始行**，有 parent 所有 variables 嘅 **copy**（包括 loop counter `i`）。
-3. **n 句連續 fork()（無條件）→ 2ⁿ processes。**
+3. **n 句連續 fork()（無條件）→ $2^n$ processes。**
 4. **Short-circuit evaluation** ⭐：
    - `A && B`：A **false (0 → child)** 就**唔會**執行 B；A **true (parent)** 先執行 B。
    - `A || B`：A **true (parent)** 就**唔會**執行 B；A **false (child)** 先執行 B。
@@ -329,11 +330,11 @@ else { wait(NULL); printf("Child Complete"); exit(0); }      /* parent */
 ### 9.2 常見 pattern 公式（全部已用真 C 程式驗證 ✅）
 | Code（每個 iteration，所有 process 都繼續 loop） | 每 iteration 每個 process 變成 | n 次後 processes |
 |---|---|---|
-| `fork();` | 2 | **2ⁿ** |
-| `fork(); fork();` [3.44] | 4 | **4ⁿ**（slide：10 次 → 4¹⁰） |
-| `if (fork()) fork();` [3.45] | 3（parent 再 fork 一次） | **3ⁿ**（slide：3¹⁰） |
-| `if (fork() == 0) fork();`（Sp21 MC8） | 3（child 再 fork） | **3ⁿ**（n=3 → **27**） |
-| `if (fork() && fork()) ...`/`fork() \|\| fork()` | 3 | 3ⁿ |
+| `fork();` | 2 | **$2^n$** |
+| `fork(); fork();` [3.44] | 4 | **$4^n$**（slide：10 次 → $4^{10}$） |
+| `if (fork()) fork();` [3.45] | 3（parent 再 fork 一次） | **$3^n$**（slide：$3^{10}$） |
+| `if (fork() == 0) fork();`（Sp21 MC8） | 3（child 再 fork） | **$3^n$**（n=3 → **27**） |
+| `if (fork() && fork()) ...`/`fork() \|\| fork()` | 3 | $3^n$ |
 
 ### 9.3 有 break / return 嘅 loop（追蹤「仲 active」嘅 process）
 **S26 Q3.1**：
@@ -345,8 +346,8 @@ for (int i = 0; i < n; i++) {
 ```
 - 每個 active process 每 iteration：第一個 fork 產生 child（→ else → **break**，停）；parent 再 fork 一次，**新 child（第二個）繼續 loop**（佢喺 if branch 入面，return 0 但已經喺 if 入面）。
 - 所以 1 個 active → 3 個 processes，其中 **2 個繼續 active**、1 個 stopped。
-- **A_k = 2^k**（iteration k 開始前 active 數）；每 iteration 新增 2^k 個 break。
-- **Total processes = 2ⁿ (active) + (2ⁿ − 1) (stopped) = 2ⁿ⁺¹ − 1**；**break 次數 = 2ⁿ − 1**。
+- **$A_k = 2^k$**（iteration k 開始前 active 數）；每 iteration 新增 $2^k$ 個 break。
+- **Total processes** $= \underbrace{2^n}_{\text{active}} + \underbrace{(2^n - 1)}_{\text{stopped}} = 2^{n+1} - 1$；**break 次數** $= 2^n - 1$。
 - n = 2：**7 processes，3 breaks** ✅；n = 3：15 processes，7 breaks ✅。
 - Process tree（n=2）：P0 → P1 (break), P2 → {P5 (break), P6}, P3 (break), P4… （P0 第 0 輪產生 P1(break)、P2；第 1 輪產生 P3(break)、P4；P2 第 1 輪產生 P5(break)、P6）
 ```
@@ -395,21 +396,21 @@ if (pid1 > 0) if (pid2 == 0) fork();
 if (fork() == 0) { for (int i = 0; i < 5; i++) if (fork() == 0) fork(); }
 fork();
 ```
-- 第一個 fork：child 入 loop；loop 5 次，每次每個 process 變 3 個 → **3⁵ = 243**（包括 child 自己）。
-- 加 original parent = 243 + 1 = 244；最後 fork 全部 ×2 → **(3⁵ + 1) × 2 = 488** ✅
+- 第一個 fork：child 入 loop；loop 5 次，每次每個 process 變 3 個 → **$3^5 = 243$**（包括 child 自己）。
+- 加 original parent = 243 + 1 = 244；最後 fork 全部 ×2 → **$(3^5 + 1) \times 2 = 488$** ✅
 
 **F20 Q3.2**：
 ```c
 if (!fork()) { for (int i = 0; i < n; i++) if (fork()) fork(); }
 fork(); printf("a");
 ```
-- 同上：child branch 變 3ⁿ，加 parent → 3ⁿ + 1，最後 fork ×2 → **"a" 數 = 2(3ⁿ + 1)** ✅（n=1 → 8；n=2 → 20）
+- 同上：child branch 變 $3^n$，加 parent → $3^n + 1$，最後 fork ×2 → **\"a\" 數** $= 2(3^n + 1)$ ✅（n=1 → 8；n=2 → 20）
 
 **F19 Q2.6**（loop 入面 parent 同 child 都 printf）：
 ```c
 for (i = 0; i < n; ++i) { if (fork()) printf("Fork!\n"); else printf("Fork!\n"); }
 ```
-- 第 i 次 iteration（由 1 數）有 2^i 個 process 各印一行 → **2 + 4 + … + 2ⁿ = 2ⁿ⁺¹ − 2** ✅
+- 第 i 次 iteration（由 1 數）有 $2^i$ 個 process 各印一行 → $2 + 4 + \cdots + 2^n = \sum_{i=1}^{n} 2^i = 2^{n+1} - 2$ ✅
 
 ### 9.6 Possible output orderings（輸出次序題）⭐
 **方法**：
@@ -473,7 +474,16 @@ else { printf("Hello4\n"); }
 | **fork 失敗** | `Hello4`（only parent, ret < 0） |
 - 因為有 `wait(NULL)`，Hello3 一定喺 child 嘅輸出之後。
 
-### 9.8 Buffering 陷阱
+### 9.8 更多歷屆 fork 題（Lab 3 review 提供：F22 / F24 / S25，全部驗證 ✅）
+| 題目 | Code（重點） | 答案 |
+|---|---|---|
+| **Fall 2022 Q3** | `for(i<n){ if (fork() == fork()) printf(...); }` | processes $4^n$；printed lines $4^0 + 4^1 + \cdots + 4^{n-1} = \frac{4^n-1}{3}$ |
+| **Fall 2024 P3.1** | `for(i<M){ pid = fork(); if(!pid) for(j<N) fork(); }` | **child** 行 line Y；M=N=1 → 3；一般 $(2^N + 1)^M$ |
+| **Spring 2025 MC12** | `if (fork() \|\| fork()) { if (fork() && !fork()) fork(); }` | **9**（外層 2 入 if × 每個變 4 + 1 入 else） |
+| Lab 3 Ex3 | `for(i<n){ if(fork()){fork();fork();} else fork(); }` | $6^n$（parent 變 4 + child 變 2） |
+- 詳細解釋：**Labs notes L3.7**。Fall 2022 嘅 lines：每輪只有收到兩個 0 嘅 grandchild 印，第 k 輪有 $4^{k-1}$ 個這樣嘅 process。
+
+### 9.9 Buffering 陷阱
 - `printf` 冇 `\n` 或者 output 去 file/pipe → **stdout buffer 未 flush 就 fork → buffer 被複製 → 重複印**。
 - 考試通常講明「stdout is flushed after each printf」或「printf not buffered」。如果冇講，可以寫一句 assumption。
 
@@ -660,9 +670,9 @@ read(fd[0], &child_cnt, sizeof(int));                                    // 5.1 
 ---
 
 ## 14. Past-paper 題目（Ch3）
-- **S26**：MC1 interrupts（C）、MC2 DMA（B）、MC10 fork（C：7, X=6, Y=1）、MC11 context switch（B）、MC12 ordinary pipes false（B）、MC13 zombie（B）、MC14 leave running（A）、Q3.1 fork tree（7 / 3 / 2ⁿ⁺¹−1）、Q3.2 fork+exec cases、Q3.3 pipe/dup 填空
-- **F19**：Q2.1 state transitions、Q2.2 socket 4-tuple、Q2.4 fork+exec、Q2.6（2ⁿ⁺¹−2）、Q2.7（23）
-- **F20**：MC3 interrupt、MC7 fork、MC8 address space（all of above）、MC9 named pipes、MC10 medium-term、Q3.1（8 outputs）、Q3.2（2(3ⁿ+1)）
+- **S26**：MC1 interrupts（C）、MC2 DMA（B）、MC10 fork（C：7, X=6, Y=1）、MC11 context switch（B）、MC12 ordinary pipes false（B）、MC13 zombie（B）、MC14 leave running（A）、Q3.1 fork tree（7 / 3 / $2^{n+1}-1$）、Q3.2 fork+exec cases、Q3.3 pipe/dup 填空
+- **F19**：Q2.1 state transitions、Q2.2 socket 4-tuple、Q2.4 fork+exec、Q2.6（$2^{n+1}-2$）、Q2.7（23）
+- **F20**：MC3 interrupt、MC7 fork、MC8 address space（all of above）、MC9 named pipes、MC10 medium-term、Q3.1（8 outputs）、Q3.2（$2(3^n+1)$）
 - **Sp21**：MC2 interrupt、MC degree of multiprogramming、MC own address space etc.（all）、MC stack、MC short-term、MC fork incorrect（B）、MC pipes not true（C）、MC leave CPU（all）、MC7（5）、MC8（27）、Q1.1（5）、Q1.2（488）、Q1.3 outputs
 - **HW1**：MC1 DMA、MC2 interrupts、MC7 privileged、MC9 fork、MC10 pipes、Q2.3 states、Q2.5 pipe steps、Q3.1–3.3
 

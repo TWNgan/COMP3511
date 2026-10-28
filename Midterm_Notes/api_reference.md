@@ -18,6 +18,16 @@
 | `int chdir(const char *path)` | `<unistd.h>` | 0 / −1 | PA1 `cd`（唔可以用 exec 做 cd，因為要改 shell 自己嘅 cwd） |
 | `sighandler_t signal(int signum, sighandler_t handler)` | `<signal.h>` | 舊 handler | `signal(SIGINT, handler)`；`SIG_IGN` 忽略；`SIG_DFL` default |
 | `int kill(pid_t pid, int sig)` | `<signal.h>` | 0 / −1 | send signal to process |
+| `unsigned int sleep(unsigned int s)` | `<unistd.h>` | 剩餘秒數 | 停 s 秒；`usleep` = µs；`nanosleep`（`<time.h>`）更細 |
+
+**exec family（Lab 3）**：六個 — `execl, execlp, execle, execv, execvp, execvpe`；全部 **replace the current process image，成功唔會 return，失敗 −1**。
+
+| 字母 | 意思 | 例 |
+|---|---|---|
+| **l** (list) | arguments 逐個列出，數目 compile time 已知 | `execlp("ls", "ls", "-l", "-h", NULL);` |
+| **v** (vector) | arguments 放喺 array（尾要 NULL）；數目唔知時用 | `char *a[] = {"ls", "-l", NULL}; execvp("ls", a);` |
+| **p** (path) | 用 **PATH** 搵 program（唔使 full path） | `execlp` / `execvp` / `execvpe` |
+| **e** (env) | 額外傳 environment array | `execle` / `execvpe` |
 
 ### 1.1 經典 fork–exec–wait
 ```c
@@ -56,6 +66,8 @@ int main() { signal(SIGINT, handle_sigint); /* ... */ }
 | `int dup2(int oldfd, int newfd)` | newfd | newfd 已開 → 先 close；`dup2(fd, 1)` = stdout 指向 fd |
 
 - **fd 0 = stdin，1 = stdout，2 = stderr**（`STDIN_FILENO`, `STDOUT_FILENO`, `STDERR_FILENO`）。
+- Lab 3 permission 寫法：`open("hello.txt", O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR)`（**600**：owner read + write）；`O_RDONLY` 開讀。
+- ⚠️ **唔好用 stdio 嘅 `fopen/fread/fwrite/fclose`（`FILE*`）做 PA**：`FILE*` 係 C library struct，**cannot be used in pipe operations**。
 - **Output redirection**（`cmd > out.txt`）：
 ```c
 int fout = open("out.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -73,7 +85,12 @@ dup2(fin, STDIN_FILENO);  close(fin);      /* or: close(0); dup(fin); */
 | Call | 重點 |
 |---|---|
 | `int pipe(int fd[2])` `<unistd.h>` | **fd[0] = read end，fd[1] = write end**；0 / −1；**一定喺 fork() 之前 call** |
-| `int mkfifo(const char *path, mode_t mode)` `<sys/stat.h>` | named pipe（FIFO），之後用 `open()`/`read()`/`write()`；要 `unlink()` 刪除 |
+| `int mkfifo(const char *path, mode_t mode)` `<sys/stat.h>` | named pipe（FIFO），之後用 `open()`/`read()`/`write()`；要 `unlink()` 刪除；0 / −1 |
+| `int access(const char *path, int how)` `<unistd.h>` | `F_OK` 存在、`R_OK`/`W_OK`/`X_OK` 權限；0 = OK，−1 = 唔得（Lab 4：`if (access(FIFO, F_OK) == -1) mkfifo(FIFO, 0777);`） |
+| `FILE *popen(const char *cmd, const char *type)` / `int pclose(FILE *fp)` `<stdio.h>` | fork 一個 child 跑 cmd；`"r"` 讀佢 stdout、`"w"` 寫佢 stdin；`pclose` 等佢完返回 status（**PA1 禁用**） |
+
+- **FIFO 特性（Lab 4）**：`open/read/write` **blocking**，**要兩端都有 process open 先繼續**（可用 `O_NONBLOCK`）；data **讀咗就冇**（唔可以 broadcast）；**≤ `PIPE_BUF` bytes 嘅 write 係 atomic**；一條 FIFO 實際唔適合雙向（可能讀返自己寫嘅）→ 雙向用兩條。
+- **兩條 ordinary pipes 做雙向**：`pipe(p2c); pipe(c2p);` → child：`close(c2p[0]); write(c2p[1], …); close(p2c[1]); read(p2c[0], …);`；parent：`close(c2p[1]); read(c2p[0], …); close(p2c[0]); write(p2c[1], …);`（Lab 4 exam example）。
 
 ### 3.1 Parent → child
 ```c
@@ -124,6 +141,8 @@ wait(NULL); wait(NULL);
 | `int pthread_cancel(pthread_t tid)` | request cancellation（default **deferred**） |
 | `pthread_t pthread_self(void)` | 自己 tid |
 | `int pthread_kill(pthread_t tid, int sig)` | signal 指定 thread |
+| `int pthread_attr_init(pthread_attr_t *attr)` | default attributes（stack size, scheduling info）→ 再傳畀 `pthread_create`（Lab 4 sum example） |
+| `pthread_cond_broadcast(&cond)` | 叫醒**所有**等緊嘅 threads（`pthread_cond_signal` 只叫醒一個） |
 
 ```c
 void *worker(void *arg) { int id = *(int *)arg; printf("thread %d\n", id); return NULL; }
@@ -171,7 +190,10 @@ pthread_mutex_lock(&m); ready = 1; pthread_cond_signal(&c); pthread_mutex_unlock
 ## 5. Compile / Run（Lab 1–2）
 ```bash
 gcc -pedantic -Wall -Wextra -std=c99 -o myshell myshell.c
-gcc prog.c -o prog -pthread        # pthread programs
+gcc prog.c -o prog -lpthread       # pthread programs (or -pthread)
+gcc buggy.c -o buggy -g            # debug info, then: gdb buggy
+./mlfq < input.txt > output.txt    # PA2: input/output redirection
+diff --side-by-side my-out.txt sample-out.txt   # compare outputs (--suppress-common-lines)
 gcc main.c -o main -lm             # link math library (linker!)
 ./prog
 ```

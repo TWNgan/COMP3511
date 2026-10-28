@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ch6 Synchronization · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/site.css?v=1793172171">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
 
-<script src="assets/site.js?v=1793172171"></script>
-<script src="assets/search-index.js?v=1793172171"></script>
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
 </head>
 <body data-page="ch6">
 <header class="topbar">
@@ -27,6 +28,8 @@
 <div class="nav-group">Start</div>
 <a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
 <a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
 <div class="nav-group">Notes</div>
 <a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
 <a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
@@ -34,6 +37,7 @@
 <a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
 <a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
 <a href="ch6.html" data-page="ch6" class="active"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
 <div class="nav-group">Reference</div>
 <a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
 <a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
@@ -158,7 +162,7 @@ counter--  →  register2 = counter;  register2 = register2 - 1;  counter = regi
 </code></pre>
 <h3 id="s2-3"><a class="anchor" href="#s2-3">#</a>2.3 三個 requirements ⭐⭐⭐（F19 Q4.1 原題）<span class="sref">[6.11]</span></h3>
 <ol>
-<li><strong>Mutual exclusion</strong> — <strong>if process Pᵢ is executing in its critical section, no other processes can be executing in their critical sections.</strong></li>
+<li><strong>Mutual exclusion</strong> — <strong>if process <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is executing in its critical section, no other processes can be executing in their critical sections.</strong></li>
 <li><strong>Progress</strong> — <strong>if no process is executing in its critical section and some processes wish to enter, the selection of the process that will enter next cannot be postponed indefinitely</strong>（只有唔喺 remainder section 嘅 process 先參與決定）。</li>
 <li><strong>Bounded waiting</strong> — <strong>a bound must exist on the number of times other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted.</strong>（i.e. 等待時間有上限，no starvation）</li>
 </ol>
@@ -247,12 +251,12 @@ do {
 </code></pre>
 <p><strong>Sketch proof</strong> <span class="sref">[6.20]</span>：</p>
 <ul>
-<li><strong>Mutual exclusion</strong>：Pᵢ enters CS only if <code>waiting[i] == false</code> or <code>key == false</code>. <code>key</code> becomes false only via <code>test_and_set()</code> — <strong>only the first process to execute test_and_set finds key == false</strong>；others wait. <code>waiting[i]</code> becomes false only when another process leaves its CS, and <strong>only one waiting[i] is set to false</strong> → mutual exclusion。</li>
+<li><strong>Mutual exclusion</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> enters CS only if <code>waiting[i] == false</code> or <code>key == false</code>. <code>key</code> becomes false only via <code>test_and_set()</code> — <strong>only the first process to execute test_and_set finds key == false</strong>；others wait. <code>waiting[i]</code> becomes false only when another process leaves its CS, and <strong>only one waiting[i] is set to false</strong> → mutual exclusion。</li>
 <li><strong>Progress</strong>：a process exiting its CS <strong>either sets lock = false or sets waiting[j] = false</strong> — both let a waiting process proceed。</li>
 <li><strong>Bounded waiting</strong>：the exiting process <strong>scans waiting[] in cyclic order (i+1, i+2, …, n−1, 0, …, i−1)</strong> and designates the first waiting one → <strong>any waiting process enters within n − 1 turns</strong>。</li>
 </ul>
 <blockquote class="callout warn">
-<p>⚠️ <strong>S26 MC25</strong>（which is NOT correct）→ <strong>A.「test_and_set(&amp;lock) releases the lock after the critical section」</strong>（錯：釋放係 <code>lock = false</code> 或者 <code>waiting[j] = false</code>；test_and_set 只會 set lock 為 true）。<span class="ok">✅</span> waiting[i] 表示 Pᵢ 想入 CS；<span class="ok">✅</span> <code>waiting[j] = false</code> 表示 Pᵢ 將 lock 交畀 Pⱼ（lock 冇真正釋放）；<span class="ok">✅</span> 執行 <code>lock = false</code> 後 Pᵢ 可以再入 CS。</p>
+<p>⚠️ <strong>S26 MC25</strong>（which is NOT correct）→ <strong>A.「test_and_set(&amp;lock) releases the lock after the critical section」</strong>（錯：釋放係 <code>lock = false</code> 或者 <code>waiting[j] = false</code>；test_and_set 只會 set lock 為 true）。<span class="ok">✅</span> waiting[i] 表示 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 想入 CS；<span class="ok">✅</span> <code>waiting[j] = false</code> 表示 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 將 lock 交畀 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span>（lock 冇真正釋放）；<span class="ok">✅</span> 執行 <code>lock = false</code> 後 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 可以再入 CS。</p>
 </blockquote>
 <blockquote class="callout answer">
 <p>📝 <strong>Sp21 Q3.2（改錯題）</strong>：版本用 <code>j = i + 1; while (j &lt; n &amp;&amp; !waiting[j]) j++; if (j &lt; n) waiting[j] = false;</code>
@@ -492,8 +496,8 @@ worker2: sem_wait(&amp;sem); lock; counter += 3; printf(&quot;B %d;&quot;, count
 <li>sem 初始 0 → worker2 一定等 worker1 post → <strong>輸出 <code>A 2; B 5;</code></strong>（答案 A）。mutex 保證 counter 更新互斥。</li>
 </ul>
 <hr />
-<h2 id="s7"><a class="anchor" href="#s7">#</a>7. 課本補充（slides 冇，但可能用到）</h2>
-<h3 id="s7-1"><a class="anchor" href="#s7-1">#</a>7.1 Peterson's Solution（two processes, software-only）</h3>
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. 補充：Peterson（Lab 6）&amp; classic problems（Ch7 預覽）</h2>
+<h3 id="s7-1"><a class="anchor" href="#s7-1">#</a>7.1 Peterson's Solution（two processes, software-only；<strong>Lab 6 有教 + 證明</strong>，見 Labs notes L6.1）</h3>
 <pre class="code" data-lang="c"><code>int turn; boolean flag[2];          /* Pi uses j = 1 - i */
 do {
     flag[i] = true;  turn = j;
@@ -636,7 +640,7 @@ Consumer: wait(full);  wait(mutex); remove item; signal(mutex); signal(empty);
 <li>三個 threads 要 A → B → C 次序，用最少 semaphores 寫出來。（s1 = s2 = 0；A; signal(s1) | wait(s1); B; signal(s2) | wait(s2); C）</li>
 </ol>
 
-<nav class="pager"><a href="ch5.html"><small>← 上一頁</small>Ch5 CPU Scheduling</a><a class="next" href="api.html"><small>下一頁 →</small>API 速查 (C / Pthreads)</a></nav>
+<nav class="pager"><a href="ch5.html"><small>← 上一頁</small>Ch5 CPU Scheduling</a><a class="next" href="labs.html"><small>下一頁 →</small>Labs &amp; PA1/PA2</a></nav>
 </div>
 <footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
 </main>
@@ -669,8 +673,8 @@ Consumer: wait(full);  wait(mutex); remove item; signal(mutex); signal(empty);
 <a class="l3" href="#s6-2">6.2 Semaphore 次序（dependency）題（S26 Q5）</a>
 <a class="l3" href="#s6-3">6.3 Semaphore 輸出序列題（F19 Q4.4）</a>
 <a class="l3" href="#s6-4">6.4 Pthread 程式輸出題（S26 MC23）</a>
-<a class="l2" href="#s7">7. 課本補充（slides 冇，但可能用到）</a>
-<a class="l3" href="#s7-1">7.1 Peterson&#x27;s Solution（two processes, software-only）</a>
+<a class="l2" href="#s7">7. 補充：Peterson（Lab 6）&amp; classic problems（Ch7 預覽）</a>
+<a class="l3" href="#s7-1">7.1 Peterson&#x27;s Solution（two processes, software-only；Lab 6 有教 + 證明，見 Labs notes L6.1）</a>
 <a class="l3" href="#s7-2">7.2 Classic problems with semaphores（Ch7 預覽）</a>
 <a class="l2" href="#s8">8. 常見陷阱 &amp; MC 速查</a>
 <a class="l2" href="#s9">9. Past-paper 題目（Ch6）</a>

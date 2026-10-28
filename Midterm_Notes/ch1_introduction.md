@@ -81,7 +81,7 @@
 ### 3.1 單位 [1.28]
 - **bit**（0/1）；**byte = 8 bits**（大部分電腦最細嘅 convenient chunk，冇 move 1 bit 嘅 instruction，但有 move 1 byte）。
 - **word** = 一個 architecture 嘅 **native unit of data**（64-bit registers → 64-bit (8-byte) word）。
-- **KB = 1,024 bytes；MB = 1,024² bytes；GB = 1,024³；TB = 1,024⁴；PB = 1,024⁵**。
+- **KB = $2^{10}$ = 1,024 bytes；MB = $1024^{2}$ bytes；GB = $1024^{3}$；TB = $1024^{4}$；PB = $1024^{5}$**。
 - 廠商通常 round off（MB ≈ 1 million bytes）；**networking measured in bits**（Mb/s, Gb/s）。
 
 ### 3.2 Storage Hierarchy [1.29] ⭐
@@ -147,10 +147,15 @@ L1 cache 0.5 ns；branch mispredict 5 ns；L2 cache 7 ns；mutex lock/unlock 25 
 - **Major criterion: cache hit ratio**（percentage of content found in cache）。
 
 ### 4.2 Average access time（公式必背）
-> 🧮 **Average Access Time = (Hit Ratio × Hit Time) + (Miss Ratio × Miss Time)**
-- Miss Ratio = 1 − Hit Ratio。
-- **HW1 例**：hit ratio 90%、hit time 2 ns、miss time 50 ns → 0.9×2 + 0.1×50 = 1.8 + 5 = **6.8 ns**。
-- 如果題目畀 **miss penalty**（額外時間）而唔係 miss time：Miss Time = Hit Time + Miss Penalty → AMAT = Hit Time + Miss Ratio × Miss Penalty（兩條公式結果一樣）。
+> 🧮 **Average Access Time（AMAT）**
+>
+> $$
+> \text{AMAT} = (\text{Hit Ratio} \times \text{Hit Time}) + (\text{Miss Ratio} \times \text{Miss Time})
+> $$
+
+- $\text{Miss Ratio} = 1 - \text{Hit Ratio}$。
+- **HW1 例**：hit ratio 90%、hit time 2 ns、miss time 50 ns → $0.9 \times 2 + 0.1 \times 50 = 1.8 + 5 =$ **6.8 ns**。
+- 如果題目畀 **miss penalty**（額外時間）而唔係 miss time：$T_{\text{miss}} = T_{\text{hit}} + \text{penalty}$ → $\text{AMAT} = T_{\text{hit}} + (1-h) \times \text{penalty}$（兩條公式結果一樣）。
 
 > 📝 **S26 Q2.2 Model answer（high hit ratio 夠唔夠？）**：*No. Cache performance is not judged only by cache hit ratio. Although hit ratio is a major criterion, the overall performance should be evaluated using the average access time, which depends on both the hit time and the miss time (miss penalty). A cache with a high hit ratio but a long hit time or a huge miss penalty can still perform poorly.*
 
@@ -272,6 +277,9 @@ L1 cache 0.5 ns；branch mispredict 5 ns；L2 cache 7 ns；mutex lock/unlock 25 
 - 搬 data（device ↔ main memory）：**CPU in programmed I/O** 或者 **offloaded to a DMA controller**。
 - **Device driver** = kernel module that controls a device。
 - **Kernel I/O subsystem services**：**I/O scheduling, buffering, caching, spooling, device reservation, error handling**。
+  - **Buffering** — store data temporarily while it is being transferred；**Caching** — faster storage holding a **copy** of data（Lab 2）。⭐ **A buffer may hold the only existing copy of a data item, whereas a cache only holds a copy of an item that resides elsewhere.**
+  - **Spooling** — hold output for a device that **cannot accept interleaved data**（e.g. **printer**），coordinating concurrent output。
+- I/O hardware（Lab 2）：**port**（connection point）、**bus**（PCI/PCIe；expansion bus for slow devices）、**controller (host adapter)**；device registers：**data-in, data-out, status, control**。
 - （Interrupt、DMA、dual-mode 詳細見 **Ch3 notes §0**（slides 3.21–3.31））
 
 ---

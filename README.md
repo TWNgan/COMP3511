@@ -8,8 +8,8 @@ exam-ready model answers in English.
 
 | What | Where |
 |---|---|
-| Study website — chapter notes, search, MC quiz, past-paper bank, CPU-scheduling simulator, calculators | [`Midterm_Site/`](Midterm_Site/index.html) |
-| Printable cheat book — 91 pages, A4, print double-sided (flip on long edge) | [`COMP3511_Midterm_CheatBook.pdf`](COMP3511_Midterm_CheatBook.pdf) |
+| Study website — chapter notes, Labs & PA1/PA2 notes, search, MC quiz, past-paper bank, CPU-scheduling simulator, calculators | [`Midterm_Site/`](Midterm_Site/index.html) |
+| Printable cheat book — 103 pages, A4, LaTeX-rendered formulas, print double-sided (flip on long edge) | [`COMP3511_Midterm_CheatBook.pdf`](COMP3511_Midterm_CheatBook.pdf) |
 | Source notes (Markdown) | [`Midterm_Notes/`](Midterm_Notes/) |
 | Build and verification scripts | [`_work/midterm/scripts/`](_work/midterm/scripts/) |
 
@@ -18,10 +18,12 @@ real C programs or the scheduling simulator against the official solutions.
 
 ## Rebuild
 
-Needs Python 3.9+ with `mistune` 3 and `PyMuPDF`, plus Google Chrome for the PDF. The scripts use
-absolute paths for the author's machine (`C:\Code\UST\COMP3511`).
+Needs Python 3.9+ with `mistune` 3 and `PyMuPDF`, Node.js with KaTeX (formulas are pre-rendered at
+build time), plus Google Chrome for the PDF. The scripts use absolute paths for the author's machine
+(`C:\Code\UST\COMP3511`).
 
 ```bash
+npm install --prefix _work/midterm/katex_pkg katex@0.16          # once
 python -I _work/midterm/scripts/build_site.py        # Midterm_Notes/*.md -> Midterm_Site/
 python -I _work/midterm/scripts/build_cheatbook.py   # -> COMP3511_Midterm_CheatBook.pdf / .html
 node _work/midterm/scripts/test_sched.js             # scheduling simulator tests

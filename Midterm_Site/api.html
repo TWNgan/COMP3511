@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>API 速查 (C / Pthreads) · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/site.css?v=1793172171">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
 
-<script src="assets/site.js?v=1793172171"></script>
-<script src="assets/search-index.js?v=1793172171"></script>
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
 </head>
 <body data-page="api">
 <header class="topbar">
@@ -27,6 +28,8 @@
 <div class="nav-group">Start</div>
 <a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
 <a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
 <div class="nav-group">Notes</div>
 <a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
 <a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
@@ -34,6 +37,7 @@
 <a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
 <a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
 <a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
 <div class="nav-group">Reference</div>
 <a href="api.html" data-page="api" class="active"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
 <a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
@@ -130,6 +134,44 @@
   <td>0 / −1</td>
   <td>send signal to process</td>
 </tr>
+<tr>
+  <td><code>unsigned int sleep(unsigned int s)</code></td>
+  <td><code>&lt;unistd.h&gt;</code></td>
+  <td>剩餘秒數</td>
+  <td>停 s 秒；<code>usleep</code> = µs；<code>nanosleep</code>（<code>&lt;time.h&gt;</code>）更細</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>exec family（Lab 3）</strong>：六個 — <code>execl, execlp, execle, execv, execvp, execvpe</code>；全部 <strong>replace the current process image，成功唔會 return，失敗 −1</strong>。</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>字母</th>
+  <th>意思</th>
+  <th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>l</strong> (list)</td>
+  <td>arguments 逐個列出，數目 compile time 已知</td>
+  <td><code>execlp(&quot;ls&quot;, &quot;ls&quot;, &quot;-l&quot;, &quot;-h&quot;, NULL);</code></td>
+</tr>
+<tr>
+  <td><strong>v</strong> (vector)</td>
+  <td>arguments 放喺 array（尾要 NULL）；數目唔知時用</td>
+  <td><code>char *a[] = {&quot;ls&quot;, &quot;-l&quot;, NULL}; execvp(&quot;ls&quot;, a);</code></td>
+</tr>
+<tr>
+  <td><strong>p</strong> (path)</td>
+  <td>用 <strong>PATH</strong> 搵 program（唔使 full path）</td>
+  <td><code>execlp</code> / <code>execvp</code> / <code>execvpe</code></td>
+</tr>
+<tr>
+  <td><strong>e</strong> (env)</td>
+  <td>額外傳 environment array</td>
+  <td><code>execle</code> / <code>execvpe</code></td>
+</tr>
 </tbody>
 </table></div>
 <h3 id="s1-1"><a class="anchor" href="#s1-1">#</a>1.1 經典 fork–exec–wait</h3>
@@ -199,6 +241,8 @@ int main() { signal(SIGINT, handle_sigint); /* ... */ }
 </table></div>
 <ul>
 <li><strong>fd 0 = stdin，1 = stdout，2 = stderr</strong>（<code>STDIN_FILENO</code>, <code>STDOUT_FILENO</code>, <code>STDERR_FILENO</code>）。</li>
+<li>Lab 3 permission 寫法：<code>open(&quot;hello.txt&quot;, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR)</code>（<strong>600</strong>：owner read + write）；<code>O_RDONLY</code> 開讀。</li>
+<li>⚠️ <strong>唔好用 stdio 嘅 <code>fopen/fread/fwrite/fclose</code>（<code>FILE*</code>）做 PA</strong>：<code>FILE*</code> 係 C library struct，<strong>cannot be used in pipe operations</strong>。</li>
 <li><strong>Output redirection</strong>（<code>cmd &gt; out.txt</code>）：</li>
 </ul>
 <pre class="code" data-lang="c"><code>int fout = open(&quot;out.txt&quot;, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -226,10 +270,22 @@ dup2(fin, STDIN_FILENO);  close(fin);      /* or: close(0); dup(fin); */
 </tr>
 <tr>
   <td><code>int mkfifo(const char *path, mode_t mode)</code> <code>&lt;sys/stat.h&gt;</code></td>
-  <td>named pipe（FIFO），之後用 <code>open()</code>/<code>read()</code>/<code>write()</code>；要 <code>unlink()</code> 刪除</td>
+  <td>named pipe（FIFO），之後用 <code>open()</code>/<code>read()</code>/<code>write()</code>；要 <code>unlink()</code> 刪除；0 / −1</td>
+</tr>
+<tr>
+  <td><code>int access(const char *path, int how)</code> <code>&lt;unistd.h&gt;</code></td>
+  <td><code>F_OK</code> 存在、<code>R_OK</code>/<code>W_OK</code>/<code>X_OK</code> 權限；0 = OK，−1 = 唔得（Lab 4：<code>if (access(FIFO, F_OK) == -1) mkfifo(FIFO, 0777);</code>）</td>
+</tr>
+<tr>
+  <td><code>FILE *popen(const char *cmd, const char *type)</code> / <code>int pclose(FILE *fp)</code> <code>&lt;stdio.h&gt;</code></td>
+  <td>fork 一個 child 跑 cmd；<code>&quot;r&quot;</code> 讀佢 stdout、<code>&quot;w&quot;</code> 寫佢 stdin；<code>pclose</code> 等佢完返回 status（<strong>PA1 禁用</strong>）</td>
 </tr>
 </tbody>
 </table></div>
+<ul>
+<li><strong>FIFO 特性（Lab 4）</strong>：<code>open/read/write</code> <strong>blocking</strong>，<strong>要兩端都有 process open 先繼續</strong>（可用 <code>O_NONBLOCK</code>）；data <strong>讀咗就冇</strong>（唔可以 broadcast）；<strong>≤ <code>PIPE_BUF</code> bytes 嘅 write 係 atomic</strong>；一條 FIFO 實際唔適合雙向（可能讀返自己寫嘅）→ 雙向用兩條。</li>
+<li><strong>兩條 ordinary pipes 做雙向</strong>：<code>pipe(p2c); pipe(c2p);</code> → child：<code>close(c2p[0]); write(c2p[1], …); close(p2c[1]); read(p2c[0], …);</code>；parent：<code>close(c2p[1]); read(c2p[0], …); close(p2c[0]); write(p2c[1], …);</code>（Lab 4 exam example）。</li>
+</ul>
 <h3 id="s3-1"><a class="anchor" href="#s3-1">#</a>3.1 Parent → child</h3>
 <pre class="code" data-lang="c"><code>int fd[2]; pipe(fd);
 if (fork() == 0) {               /* child: reader */
@@ -301,6 +357,14 @@ wait(NULL); wait(NULL);
   <td><code>int pthread_kill(pthread_t tid, int sig)</code></td>
   <td>signal 指定 thread</td>
 </tr>
+<tr>
+  <td><code>int pthread_attr_init(pthread_attr_t *attr)</code></td>
+  <td>default attributes（stack size, scheduling info）→ 再傳畀 <code>pthread_create</code>（Lab 4 sum example）</td>
+</tr>
+<tr>
+  <td><code>pthread_cond_broadcast(&amp;cond)</code></td>
+  <td>叫醒<strong>所有</strong>等緊嘅 threads（<code>pthread_cond_signal</code> 只叫醒一個）</td>
+</tr>
 </tbody>
 </table></div>
 <pre class="code" data-lang="c"><code>void *worker(void *arg) { int id = *(int *)arg; printf(&quot;thread %d\n&quot;, id); return NULL; }
@@ -343,7 +407,10 @@ pthread_mutex_lock(&amp;m); ready = 1; pthread_cond_signal(&amp;c); pthread_mute
 <hr />
 <h2 id="s5"><a class="anchor" href="#s5">#</a>5. Compile / Run（Lab 1–2）</h2>
 <pre class="code" data-lang="bash"><code>gcc -pedantic -Wall -Wextra -std=c99 -o myshell myshell.c
-gcc prog.c -o prog -pthread        # pthread programs
+gcc prog.c -o prog -lpthread       # pthread programs (or -pthread)
+gcc buggy.c -o buggy -g            # debug info, then: gdb buggy
+./mlfq &lt; input.txt &gt; output.txt    # PA2: input/output redirection
+diff --side-by-side my-out.txt sample-out.txt   # compare outputs (--suppress-common-lines)
 gcc main.c -o main -lm             # link math library (linker!)
 ./prog
 </code></pre>
@@ -351,7 +418,7 @@ gcc main.c -o main -lm             # link math library (linker!)
 <li><code>gcc -c main.c</code> → <code>main.o</code>（compiler）；<code>gcc -o main main.o -lm</code>（linker）；<code>./main</code>（loader）<span class="sref">[2.32]</span>。</li>
 </ul>
 
-<nav class="pager"><a href="ch6.html"><small>← 上一頁</small>Ch6 Synchronization</a><a class="next" href="glossary.html"><small>下一頁 →</small>Glossary A–Z</a></nav>
+<nav class="pager"><a href="labs.html"><small>← 上一頁</small>Labs &amp; PA1/PA2</a><a class="next" href="glossary.html"><small>下一頁 →</small>Glossary A–Z</a></nav>
 </div>
 <footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
 </main>

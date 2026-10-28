@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/site.css?v=1793172171">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
 
-<script src="assets/site.js?v=1793172171"></script>
-<script src="assets/search-index.js?v=1793172171"></script>
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
 </head>
 <body data-page="index">
 <header class="topbar">
@@ -27,6 +28,8 @@
 <div class="nav-group">Start</div>
 <a href="index.html" data-page="index" class="active"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
 <a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
 <div class="nav-group">Notes</div>
 <a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
 <a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
@@ -34,6 +37,7 @@
 <a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
 <a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
 <a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
 <div class="nav-group">Reference</div>
 <a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
 <a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
@@ -59,14 +63,17 @@
 (3) 用 <a href="tools.html">Scheduler 工具</a> 做 Gantt chart 對答案；(4) 做晒 <a href="quiz.html">MC Quiz</a> 同 <a href="bank.html">歷屆長題</a>；
 (5) 考試帶打印咗嘅 <a href="../COMP3511_Midterm_CheatBook.pdf">Cheat Book</a>。按 <code>/</code> 隨時搜尋。</p></blockquote>
 <div class="grid"><div class="card" data-page="ch0"><span class="weight">必讀</span><h3>考試攻略 Strategy</h3><ul><li>試卷結構預測 + 時間分配</li><li>題型 → 方法 index</li><li>24 小時溫習計劃 + 必帶清單</li></ul><a class="go" href="ch0.html">打開 →</a></div>
+<div class="card" data-page="essentials"><span class="weight">考前必睇</span><h3>考場一頁通 Essentials</h3><ul><li>公式卡（LaTeX）</li><li>本科 conventions</li><li>Top traps 陷阱表</li></ul><a class="go" href="essentials.html">打開 →</a></div>
+<div class="card" data-page="playbooks"><span class="weight">計數題</span><h3>解題 Playbooks</h3><ul><li>fork / pipe / scheduling / sync 步驟</li><li>Amdahl / powers / RM 預計表</li><li>歷屆 fork 答案總表</li></ul><a class="go" href="playbooks.html">打開 →</a></div>
 <div class="card" data-page="ch1"><span class="weight">MC 2–4 題</span><h3>Ch1 Introduction</h3><ul><li>Caching + AMAT + locality</li><li>von Neumann / storage hierarchy</li><li>SMP / multicore / NUMA / virtualization</li></ul><a class="go" href="ch1.html">打開 →</a></div>
 <div class="card" data-page="ch2"><span class="weight">MC 3–5 + short</span><h3>Ch2 OS Structures</h3><ul><li>API vs system call / printf→write</li><li>Linker vs loader</li><li>Monolithic / layered / microkernel / LKM</li></ul><a class="go" href="ch2.html">打開 →</a></div>
 <div class="card" data-page="ch3"><span class="weight">~24 分</span><h3>Ch3 Processes</h3><ul><li>fork() 解題大法（公式 + 例題）</li><li>Interrupt / DMA / dual mode</li><li>Pipe / dup / zombie / IPC</li></ul><a class="go" href="ch3.html">打開 →</a></div>
 <div class="card" data-page="ch4"><span class="weight">MC 3–4</span><h3>Ch4 Threads</h3><ul><li>Shared vs private</li><li>Amdahl 計算</li><li>Models / signals / cancellation</li></ul><a class="go" href="ch4.html">打開 →</a></div>
 <div class="card" data-page="ch5"><span class="weight">~27 分（最重）</span><h3>Ch5 CPU Scheduling</h3><ul><li>Gantt 流程 + response time 定義</li><li>MLFQ 規則 + RM/EDF</li><li>全部歷屆計算題答案</li></ul><a class="go" href="ch5.html">打開 →</a></div>
 <div class="card" data-page="ch6"><span class="weight">8–15 分</span><h3>Ch6 Synchronization</h3><ul><li>Race condition 可能值</li><li>Semaphore 次序 / 序列題</li><li>TAS / CAS / swap spinlock</li></ul><a class="go" href="ch6.html">打開 →</a></div>
+<div class="card" data-page="labs"><span class="weight">PA 考點</span><h3>Labs & PA1/PA2</h3><ul><li>Lab 3 system calls / dup / exec family</li><li>PA2 MLFQ 規則 + Lab 4–6 exam examples</li><li>F22 / F24 / S25 / S23 歷屆題</li></ul><a class="go" href="labs.html">打開 →</a></div>
 <div class="card" data-page="api"><span class="weight">Lab / PA</span><h3>API 速查</h3><ul><li>fork / exec / wait / pipe / dup2</li><li>Pthreads mutex / semaphore</li><li>Redirection & pipeline code</li></ul><a class="go" href="api.html">打開 →</a></div>
-<div class="card" data-page="bank"><span class="weight">Practice</span><h3>歷屆試題</h3><ul><li>S26 / F20 / F19 / Sp21 / HW</li><li>連標準答案（已驗證）</li><li>按 paper / chapter 篩選</li></ul><a class="go" href="bank.html">打開 →</a></div>
+<div class="card" data-page="bank"><span class="weight">Practice</span><h3>歷屆試題</h3><ul><li>S26 / F20 / F19 / Sp21 / HW + Lab 例題</li><li>連標準答案（已驗證）</li><li>按 paper / chapter 篩選</li></ul><a class="go" href="bank.html">打開 →</a></div>
 <div class="card" data-page="quiz"><span class="weight">Practice</span><h3>MC Quiz</h3><ul><li>~150 題 MC（歷屆 + 新題）</li><li>即時對答案 + 解釋</li><li>錯題重溫</li></ul><a class="go" href="quiz.html">打開 →</a></div>
 <div class="card" data-page="tools"><span class="weight">Practice</span><h3>工具</h3><ul><li>CPU scheduling 模擬器（Gantt + 步驟）</li><li>RM / EDF / MLFQ / dynamic priority</li><li>Amdahl / AMAT / Little 計算機</li></ul><a class="go" href="tools.html">打開 →</a></div></div>
 <h2 id="key-facts">⚡ 最易失分嘅 10 件事</h2>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>考場一頁通 Essentials · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793186763">
+<link rel="stylesheet" href="assets/site.css?v=1793186763">
+
+<script src="assets/site.js?v=1793186763"></script>
+<script src="assets/search-index.js?v=1793186763"></script>
+</head>
+<body data-page="essentials">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials" class="active"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">Start</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="exam-day-essentials">Exam-Day Essentials（考場一頁通）</h1>
+<h2 id="e1-formula-card"><a class="anchor" href="#e1-formula-card">#</a>E1. 必背公式卡 Formula Card</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>主題</th>
+  <th>公式</th>
+  <th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Average access time</strong> <span class="sref">[1.32]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">AMAT</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord mathnormal">h</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">hit</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">miss</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>（若畀 penalty：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">miss</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">hit</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">penalty</span></span></span></span></span>）</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.9</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">0.1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">50</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>6.8 ns</strong></td>
+</tr>
+<tr>
+  <td><strong>Amdahl's Law</strong> <span class="sref">[4.12]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">speedup</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2574em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>；<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>；<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span> = <strong>serial</strong></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">0.25</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span></span></span></span> <strong>1.6</strong></td>
+</tr>
+<tr>
+  <td>Amdahl 反解</td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.363em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1/</span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/9</span></span></span></span></td>
+</tr>
+<tr>
+  <td><strong>Turnaround</strong> <span class="sref">[5.8]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">TAT</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>（completion − arrival）</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>Waiting</strong> <span class="sref">[5.8]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">WT</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">TAT</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">burst</span></span></span></span></span>（= Gantt 上嘅 gaps 總和）</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>Response（本科）</strong> <span class="sref">[5.12]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">RT</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord text"><span class="mord">end of FIRST run</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>（RR/MLFQ：第一個 quantum 完；non-preemptive：= TAT）</td>
+  <td>RR4：P1=4, P2=7, P3=10</td>
+</tr>
+<tr>
+  <td><strong>Exponential averaging</strong> <span class="sref">[5.19]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6389em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">.25</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">6</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span></span></span></span> <strong>9</strong></td>
+</tr>
+<tr>
+  <td><strong>Little's formula</strong> <span class="sref">[5.57]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">W</span></span></span></span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">3/</span><span class="mord text"><span class="mord">s</span></span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">12</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>4 s</strong></td>
+</tr>
+<tr>
+  <td><strong>RR bound</strong> <span class="sref">[5.11]</span></td>
+  <td>冇 process 等多過 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span></td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>RT utilization</strong> <span class="sref">[5.49]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1725em;vertical-align:-0.8804em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2921em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>；<strong><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span></span></span></span> 一定 miss</strong></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">25/50</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">35/80</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.94</span></span></span></span></td>
+</tr>
+<tr>
+  <td><strong>RM bound</strong>（課本）</td>
+  <td>保證可排：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.238em;vertical-align:-0.35em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1/</span><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span></span></span></span>：N=1 1.000、2 0.828、3 0.780、4 0.757、5 0.743、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span> 0.693</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>EDF</strong> <span class="sref">[5.52]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span></span> 時）理論上可排</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>fork 數目</strong></td>
+  <td>n 個無條件 fork → <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>；<code>if(fork()) fork();</code> 每輪 ×3 → <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span></td>
+  <td>見 Playbook P1</td>
+</tr>
+<tr>
+  <td><strong>Bounded buffer (in/out)</strong> <span class="sref">[3.54]</span></td>
+  <td>最多 <strong>BUFFER_SIZE − 1</strong> items</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>Semaphore（blocking）</strong> <span class="sref">[6.26]</span></td>
+  <td><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7335em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord">value</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">∣</span><span class="mord text"><span class="mord">value</span></span><span class="mclose">∣</span></span></span></span> = 等緊嘅 processes 數</td>
+  <td></td>
+</tr>
+<tr>
+  <td><strong>Storage units</strong> <span class="sref">[1.28]</span></td>
+  <td>KB <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span></span></span></span> B；MB <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">20</span></span></span></span></span></span></span></span></span></span></span></span>；GB <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">30</span></span></span></span></span></span></span></span></span></span></span></span>；networks 用 <strong>bits</strong></td>
+  <td></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="e2-conventions-assumption"><a class="anchor" href="#e2-conventions-assumption">#</a>E2. 本科 Conventions（考試照用，唔確定就寫 assumption）</h2>
+<ol>
+<li><strong>Response time = completion of the first run − arrival</strong>（slide 5.12；S26 官方答案照用）。</li>
+<li><strong>RR</strong>：quantum 用完 → <strong>tail</strong>；同一時刻有新 arrival → <strong>新 arrival 先入 queue</strong>。</li>
+<li><strong>MLFQ</strong>：新 job → <strong>Q0 tail</strong>；用晒 quantum 仍未完 → <strong>降一級 tail</strong>；<strong>被高 queue 新 arrival preempt → 返自己 queue 嘅 HEAD，保留剩餘 quantum（Q1）/ 剩餘 burst（Q2），唔會降級</strong>；Q0 job 唔會被 preempt；Q1 job 唔會 preempt Q2 job。</li>
+<li><strong>Priority</strong>：<strong>細數字 = 高 priority</strong>（除非題目話 larger = higher，例如 S26 dynamic priority）。</li>
+<li><strong>Ties</strong>：題目有講就跟（S26：smaller ID；dynamic priority：larger ID）；冇講：FCFS（早到先）→ 細 ID；<strong>SRTF / EDF 平手 → 唔 preempt running process</strong>。</li>
+<li><strong>Soft real-time</strong>：miss 咗 deadline 嘅 job <strong>繼續跑完</strong>，但計一次 miss。</li>
+<li><strong>fork 題</strong>：除非另有說明，假設 <strong>printf 即時 flush</strong>、<strong>fork 全部成功</strong>。</li>
+<li><strong>Gantt chart</strong>：每段寫 <strong>start / process / end</strong>；idle 都要畫；MLFQ 標 queue（P1@Q0）。</li>
+</ol>
+<h2 id="e3-top-traps-mc"><a class="anchor" href="#e3-top-traps-mc">#</a>E3. 最易中伏 Top Traps（MC 前睇一次）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th><span class="no">❌</span> 錯誤講法</th>
+  <th><span class="ok">✅</span> 正確</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Main memory is nonvolatile / registers slower than memory</td>
+  <td>volatile；registers 最快；<strong>main memory byte addressable</strong></td>
+</tr>
+<tr>
+  <td>von Neumann：instructions 同 data 分開存</td>
+  <td><strong>same memory</strong>（stored-program）</td>
+</tr>
+<tr>
+  <td>Speedup with N CPUs = N</td>
+  <td><strong>&lt; N</strong>（contention / overhead）</td>
+</tr>
+<tr>
+  <td>NUMA：所有 memory 同樣 latency</td>
+  <td><strong>remote memory slower</strong></td>
+</tr>
+<tr>
+  <td>VM 一定比 native 快</td>
+  <td>minor slowdown</td>
+</tr>
+<tr>
+  <td>printf() 係 system call</td>
+  <td>printf <strong>calls write()</strong> system call</td>
+</tr>
+<tr>
+  <td>API 比 system call 快 / 可以 bypass protection</td>
+  <td>優點 = <strong>portability + hide details（convenient）</strong></td>
+</tr>
+<tr>
+  <td>Microkernel performance 好過 monolithic</td>
+  <td><strong>worse</strong>（message passing）</td>
+</tr>
+<tr>
+  <td>Layered：任何 layer 可 call 任何 layer</td>
+  <td>嗰個係 <strong>LKM</strong>；layered 只 call 下層</td>
+</tr>
+<tr>
+  <td>LKM 要 recompile kernel + reboot</td>
+  <td>可以 <strong>run time load/remove</strong></td>
+</tr>
+<tr>
+  <td>Policy = how</td>
+  <td><strong>Policy = what；mechanism = how</strong></td>
+</tr>
+<tr>
+  <td>Interrupts 全部同一 priority / 只由 I/O 產生</td>
+  <td>有 <strong>priority levels</strong>；<strong>trap = software interrupt</strong></td>
+</tr>
+<tr>
+  <td>DMA 每個 byte interrupt 一次</td>
+  <td><strong>block 完先 interrupt 一次</strong></td>
+</tr>
+<tr>
+  <td>Mode bit 1 = kernel</td>
+  <td><strong>1 = user，0 = kernel</strong></td>
+</tr>
+<tr>
+  <td>Context switch = user→kernel mode switch</td>
+  <td>context switch = <strong>save/restore process state</strong>；越複雜 OS 越慢</td>
+</tr>
+<tr>
+  <td>fork() 令 parent 等 child</td>
+  <td>要 <strong>wait()</strong></td>
+</tr>
+<tr>
+  <td>child 改 global variable → parent 都變</td>
+  <td>各自 <strong>copy</strong></td>
+</tr>
+<tr>
+  <td>exec() 成功會 return</td>
+  <td><strong>唔會 return</strong></td>
+</tr>
+<tr>
+  <td>Zombie 仲行緊 code / 冇 PID</td>
+  <td>terminated，<strong>PID + PCB 仍在</strong>，等 parent wait()</td>
+</tr>
+<tr>
+  <td>Ordinary pipe 任何 process 用到</td>
+  <td><strong>parent–child only</strong>、單向、用完消失</td>
+</tr>
+<tr>
+  <td>Named pipe 用完自動消失</td>
+  <td><strong>explicitly delete</strong>；UNIX FIFO <strong>half-duplex</strong></td>
+</tr>
+<tr>
+  <td>Threads 有自己 address space / files</td>
+  <td><strong>share</strong> code、data、heap、files；<strong>own</strong> PC、registers、<strong>stack</strong></td>
+</tr>
+<tr>
+  <td>Concurrency = 同時執行</td>
+  <td>同時 = <strong>parallelism</strong>；concurrency 單核都得</td>
+</tr>
+<tr>
+  <td>Many-to-many 易 implement / user thread map 去多個 kernel threads</td>
+  <td><strong>difficult</strong>；冇 one-to-many</td>
+</tr>
+<tr>
+  <td>所有 signals deliver 畀所有 threads</td>
+  <td>sync → causing thread；部分 async → all</td>
+</tr>
+<tr>
+  <td>Asynchronous cancellation = 定期 check</td>
+  <td>嗰個係 <strong>deferred</strong>（Pthreads default）</td>
+</tr>
+<tr>
+  <td>FCFS 可以 preemptive</td>
+  <td><strong>FCFS must be non-preemptive</strong></td>
+</tr>
+<tr>
+  <td>RR 一定比 FCFS 好</td>
+  <td>同長度 jobs 時 <strong>TAT 更差</strong></td>
+</tr>
+<tr>
+  <td>q 越大 TAT 越好</td>
+  <td>唔一定；q 太大 → <strong>FCFS</strong></td>
+</tr>
+<tr>
+  <td>MLFQ 要知 burst / 永不 starve</td>
+  <td><strong>唔使知</strong>；可能 starve（要 aging/reshuffle）</td>
+</tr>
+<tr>
+  <td>Multilevel queue 可搬 queue</td>
+  <td>只有 <strong>MLFQ</strong> 可以</td>
+</tr>
+<tr>
+  <td>Multicore 簡化 scheduling</td>
+  <td><strong>complicates</strong>（faster + less power）</td>
+</tr>
+<tr>
+  <td>Hard RT 遲咗都得 / RT scheduler 唔使 preemption</td>
+  <td>遲 = 冇服務；要 <strong>priority + preemption</strong></td>
+</tr>
+<tr>
+  <td>EDF 要 periodic</td>
+  <td><strong>唔需要</strong>；只需 announce deadline</td>
+</tr>
+<tr>
+  <td>Little's formula 只適用 FCFS</td>
+  <td><strong>any algorithm</strong></td>
+</tr>
+<tr>
+  <td>&quot;Synchronization&quot; 係 CS 三條件之一</td>
+  <td><strong>ME + progress + bounded waiting</strong></td>
+</tr>
+<tr>
+  <td>test_and_set 返回新值 / 會 release lock</td>
+  <td>返回 <strong>old value</strong>；release = <code>lock = false</code></td>
+</tr>
+<tr>
+  <td>Binary semaphore = mutex</td>
+  <td>可當 mutex，但<strong>更通用</strong>（init 0 做 ordering）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="e4-answer-templates"><a class="anchor" href="#e4-answer-templates">#</a>E4. 答題模板 Answer Templates</h2>
+<p><strong>Short question（2–4 分）</strong>：<em>[Definition sentence with keywords]. [Why / how — one sentence]. [Example or advantage/disadvantage].</em></p>
+<p><strong>Gantt + averages</strong>：</p>
+<pre class="code" data-lang=""><code>Gantt:  0 P1 4 P2 8 P3 12 ...           (每個 boundary 都寫)
+P | Arr | Burst | Comp | TAT=C-A | WT=TAT-B | RT=end1-A
+avg WT  = (w1 + w2 + ... + wn) / n = x.xx
+avg TAT = (t1 + ... + tn) / n = x.xx
+Assumptions: ties -&gt; ..., new arrival enters queue before preempted process.
+</code></pre>
+<p><strong>fork 題</strong>：<em>Draw tree → count per level → formula → final number</em>；output 題：<em>constraints (wait / same process order) → list all interleavings</em>。</p>
+<p><strong>Race values</strong>：<em>Case 1 (branch …): interleaving … → c = …</em> 逐個列。</p>
+<p><strong>Semaphore 填空</strong>：用 init-0 semaphore：<strong>先做者 <code>signal(s)</code>，後做者開頭 <code>wait(s)</code></strong>；冇需要嘅 blank 寫 <strong><code>/* Nothing */</code></strong>。</p>
+
+<nav class="pager"><a href="ch0.html"><small>← 上一頁</small>考試攻略 Exam Strategy</a><a class="next" href="playbooks.html"><small>下一頁 →</small>解題 Playbooks</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#e1-formula-card">E1. 必背公式卡 Formula Card</a>
+<a class="l2" href="#e2-conventions-assumption">E2. 本科 Conventions（考試照用，唔確定就寫 assumption）</a>
+<a class="l2" href="#e3-top-traps-mc">E3. 最易中伏 Top Traps（MC 前睇一次）</a>
+<a class="l2" href="#e4-answer-templates">E4. 答題模板 Answer Templates</a></aside>
+</div>
+
+</body>
+</html>

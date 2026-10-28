@@ -112,7 +112,7 @@ A cache has hit ratio 95%, hit time 1 ns and miss time 100 ns. The average acces
 
 **Answer: C**
 
-解：0.95 × 1 + 0.05 × 100 = 0.95 + 5 = **5.95 ns**。
+解：$0.95 \times 1 + 0.05 \times 100 = 0.95 + 5 =$ **5.95 ns**。
 
 ---
 
@@ -525,7 +525,7 @@ An application is 50% parallel. As the number of cores approaches infinity, the 
 
 **Answer: B**
 
-解：1/S = 1/0.5 = **2**。
+解：$1/S = 1/0.5 =$ **2**。
 
 ## [P-ch4-8] ch4 | One-to-one drawback
 What is the main drawback of the one-to-one model?
@@ -596,7 +596,7 @@ A common rule of thumb for choosing the RR quantum is:
 解：[5.16]。
 
 ## [P-ch5-4] ch5 | Exponential averaging α = 0
-With exponential averaging, if α = 0 then:
+With exponential averaging, if $\alpha = 0$ then:
 - A. Only the last CPU burst counts
 - B. Recent history does not count; the prediction never changes
 - C. All bursts are weighted equally
@@ -604,7 +604,7 @@ With exponential averaging, if α = 0 then:
 
 **Answer: B**
 
-解：τ(n+1) = τ(n) [5.22]。
+解：$\tau_{n+1} = \tau_n$ [5.22]。
 
 ## [P-ch5-5] ch5 | SJF as priority
 SJF is a special case of priority scheduling where the priority is:
