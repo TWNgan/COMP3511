@@ -29,6 +29,7 @@ PAGES = [
     ("ch0", "ch0_exam_strategy.md", "考試攻略 Exam Strategy", "Start", "Strategy"),
     ("essentials", "cb_essentials.md", "考場一頁通 Essentials", "Start", "Essentials"),
     ("playbooks", "cb_playbooks.md", "解題 Playbooks", "Start", "Playbooks"),
+    ("answers", None, "預測題 Answer Bank", "Start", "Answers"),
     ("ch1", "ch1_introduction.md", "Ch1 Introduction", "Notes", "Ch1"),
     ("ch2", "ch2_os_structures.md", "Ch2 OS Structures", "Notes", "Ch2"),
     ("ch3", "ch3_processes.md", "Ch3 Processes", "Notes", "Ch3"),
@@ -42,7 +43,7 @@ PAGES = [
     ("quiz", None, "MC 練習 Quiz", "Practice", "Quiz"),
     ("tools", None, "工具 Scheduler & Calculators", "Practice", "Tools"),
 ]
-NAV_ICON = {"index": "🏠", "ch0": "🎯", "essentials": "⚡", "playbooks": "🧭", "ch1": "1️⃣", "ch2": "2️⃣",
+NAV_ICON = {"index": "🏠", "ch0": "🎯", "essentials": "⚡", "playbooks": "🧭", "answers": "💯", "ch1": "1️⃣", "ch2": "2️⃣",
             "ch3": "3️⃣", "ch4": "4️⃣", "ch5": "5️⃣", "ch6": "6️⃣", "labs": "🧪", "api": "🧰", "glossary": "🔤",
             "bank": "📜", "quiz": "✅", "tools": "🛠️"}
 MD_PLUGINS = ["table", "strikethrough", "math", "mistune.plugins.math.math_in_quote",
@@ -571,6 +572,61 @@ def build_bank():
     return len(items)
 
 
+XA_FILES = ["xa_ch1_ch2.md", "xa_ch3.md", "xa_ch4.md", "xa_ch5.md", "xa_ch6.md", "xa_cross.md", "xa_code.md"]
+XA_NAMES = {"X1": "Ch1 Introduction", "X2": "Ch2 OS Structures", "X3": "Ch3 Processes · IPC · Interrupts",
+            "X4": "Ch4 Threads", "X5": "Ch5 CPU Scheduling", "X6": "Ch6 Synchronization",
+            "XI": "Cross-chapter traces",
+            "XC": "Copy-ready C programs (compiled & tested)"}
+
+
+def xa_sources():
+    return [read(f) for f in XA_FILES if os.path.exists(os.path.join(NOTES, f))]
+
+
+def build_answers():
+    items = [it for s in xa_sources() for it in parse_bank(s)]
+    secs = []
+    for it in items:
+        p = it["id"].split("-")[0]
+        if p not in secs:
+            secs.append(p)
+    out = ['<h1>預測題 Answer Bank</h1>',
+           '<p>歷屆以外最可能考嘅 short questions，每題連可以直接抄嘅英文答案（粗體 = 評分關鍵字）；每章尾有 True/False 快速判斷；'
+           '最後係已編譯測試嘅完整 C programs（fork / pipe / dup2 / exec / Pthreads / semaphores）。</p>',
+           '<div class="filters" id="xa-f"><b>Section：</b>']
+    for p in secs:
+        out.append('<span class="chip on" data-sec="%s">%s</span>' % (p, p))
+    out.append('</div>')
+    cur = None
+    for it in items:
+        p = it["id"].split("-")[0]
+        if p != cur:
+            cur = p
+            out.append('<h2 id="sec-%s" data-sec="%s">%s · %s</h2>' % (p.lower(), p, p, html.escape(XA_NAMES.get(p, p))))
+        parts = re.split(r"^\*\*Answer:\*\*\s*$", it["body"], flags=re.M)
+        q_html = render_md(parts[0].strip())[0]
+        a_html = render_md(parts[1].strip())[0] if len(parts) > 1 else ""
+        out.append('<div class="qitem" id="%s" data-sec="%s"><div class="qhead"><span class="qid">%s</span>'
+                   '<span class="qtopic">%s</span><span class="qch">%s</span></div>%s%s</div>'
+                   % (it["id"], p, it["id"], html.escape(it["topic"]), it["ch"].upper(), q_html,
+                      ('<div class="ans">%s</div>' % a_html) if a_html else ""))
+        SEARCH.append({"t": "%s %s" % (it["id"], it["topic"]), "u": "answers.html#" + it["id"], "p": "Answer bank",
+                       "x": re.sub(r"\s+", " ", strip_tags(q_html + " " + a_html))[:600], "w": 2})
+    js = """<script>
+(function(){
+  var chips=document.querySelectorAll('#xa-f .chip');
+  function apply(){
+    var on={}; for(var i=0;i<chips.length;i++){on[chips[i].getAttribute('data-sec')]=chips[i].classList.contains('on');}
+    var els=document.querySelectorAll('.qitem[data-sec], h2[data-sec]');
+    for(var j=0;j<els.length;j++){els[j].style.display=on[els[j].getAttribute('data-sec')]?'':'none';}
+  }
+  for(var i=0;i<chips.length;i++) chips[i].addEventListener('click',function(){this.classList.toggle('on');apply();});
+})();
+</script>"""
+    write("answers.html", page("answers", "Answer Bank", "\n".join(out), mark=False, show_toc=False, extra_js=js))
+    return len(items)
+
+
 # ---------------------------------------------------------------- notes pages
 def build_notes():
     for slug, src, title, _grp, _short in PAGES:
@@ -597,6 +653,7 @@ def build_home():
         ("ch0", "考試攻略 Strategy", "必讀", ["試卷結構預測 + 時間分配", "題型 → 方法 index", "24 小時溫習計劃 + 必帶清單"]),
         ("essentials", "考場一頁通 Essentials", "考前必睇", ["公式卡（LaTeX）", "本科 conventions", "Top traps 陷阱表"]),
         ("playbooks", "解題 Playbooks", "計數題", ["fork / pipe / scheduling / sync 步驟", "Amdahl / powers / RM 預計表", "歷屆 fork 答案總表"]),
+        ("answers", "預測題 Answer Bank", "直接抄", ["每章預測 short questions + 英文標準答案", "每章 True/False 快速判斷", "已編譯測試嘅完整 C programs"]),
         ("ch1", "Ch1 Introduction", "MC 2–4 題", ["Caching + AMAT + locality", "von Neumann / storage hierarchy", "SMP / multicore / NUMA / virtualization"]),
         ("ch2", "Ch2 OS Structures", "MC 3–5 + short", ["API vs system call / printf→write", "Linker vs loader", "Monolithic / layered / microkernel / LKM"]),
         ("ch3", "Ch3 Processes", "~24 分", ["fork() 解題大法（公式 + 例題）", "Interrupt / DMA / dual mode", "Pipe / dup / zombie / IPC"]),
@@ -714,13 +771,14 @@ def main():
     os.makedirs(os.path.join(SITE, "assets"), exist_ok=True)
     ensure_katex_assets()
     sources = [source(p[1]) for p in PAGES if p[1]] + [read("qb1_mc_bank.md"), read("qb2_long_bank.md"),
-                                                      read("qb3_practice_mc.md")]
+                                                      read("qb3_practice_mc.md")] + xa_sources()
     formulas = collect_math(sources)
     katex_prerender(formulas)
     print("formulas:", len(set(formulas)))
     build_notes()
     nq = build_quiz()
     nb = build_bank()
+    print("answer bank:", build_answers())
     build_home()
     build_tools()
     write("assets/search-index.js", "window.SEARCH_INDEX = " + json.dumps(SEARCH, ensure_ascii=False) + ";\n")

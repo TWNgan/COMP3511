@@ -33,6 +33,7 @@ CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 PARTS = [
     ("E", "cb_essentials.md", "Exam-Day Essentials", "考場一頁通：公式・慣例・陷阱", "#d63939"),
     ("P", "cb_playbooks.md", "Playbooks", "解題流程 + 預計表", "#e8590c"),
+    ("X", None, "Answer Bank", "預測題 + 直接抄答案・C programs", "#111111"),
     ("1", "ch1_introduction.md", "Ch1 Introduction", "引言", "#1971c2"),
     ("2", "ch2_os_structures.md", "Ch2 OS Structures", "作業系統結構", "#0c8599"),
     ("3", "ch3_processes.md", "Ch3 Processes", "進程・fork・IPC・interrupt", "#2b8a3e"),
@@ -392,6 +393,69 @@ def bank_html():
     return "\n".join(out), heads
 
 
+# ---------------------------------------------------------------- answer bank (part X)
+XA_FILES = ["xa_ch1_ch2.md", "xa_ch3.md", "xa_ch4.md", "xa_ch5.md", "xa_ch6.md", "xa_cross.md", "xa_code.md"]
+XA_NAMES = {"X1": "Ch1 Introduction", "X2": "Ch2 OS Structures", "X3": "Ch3 Processes · IPC · Interrupts",
+            "X4": "Ch4 Threads", "X5": "Ch5 CPU Scheduling", "X6": "Ch6 Synchronization",
+            "XI": "Cross-chapter traces（綜合「發生咩事」題）",
+            "XC": "Copy-ready C programs（Lab / PA coding，已編譯測試）"}
+
+
+def xa_sources():
+    return [read(f) for f in XA_FILES if os.path.exists(os.path.join(NOTES, f))]
+
+
+def xa_html(pages=None):
+    out, heads, buf, sec = [], [], [], None
+    items = [it for src in xa_sources() for it in parse_bank(src)]
+    if os.path.exists(os.path.join(NOTES, "xa_intro.md")):
+        out.append(render(read("xa_intro.md"), "Xi")[0])
+    # question finder: every entry with its page number (filled in on pass 2)
+    finder, cur = [], None
+    for it in items:
+        p = it["id"].split("-")[0]
+        if p != cur:
+            cur = p
+            finder.append('<div class="xf-h">%s · %s</div>' % (p, html.escape(XA_NAMES.get(p, p))))
+        finder.append('<div class="toc-line"><a class="t" href="#%s"><b>%s</b> %s</a>%s</div>'
+                      % (it["id"], it["id"].split("-", 1)[1], render_inline(it["topic"], "xh"), pg(it["id"], pages)))
+    out.append('<h2 id="X-finder">題目搜尋表 Question finder（按章節 → 題目關鍵字 → 頁數）</h2>'
+               '<div class="xf-cols">%s</div>' % "".join(finder))
+    heads.append((2, "X-finder", "題目搜尋表 Question finder"))
+
+    def flush():
+        if buf:
+            out.append('<div class="xa-cols">%s</div>' % "".join(buf))
+            del buf[:]
+    for it in items:
+        p = it["id"].split("-")[0]
+        if p != sec:
+            flush()
+            sec = p
+            hid, title = "X-" + p.lower(), "%s · %s" % (p, XA_NAMES.get(p, p))
+            out.append('<h2 id="%s">%s</h2>' % (hid, html.escape(title)))
+            heads.append((2, hid, title))
+        head = ('<div class="xah"><b class="xid">%s</b> <span class="xt">%s</span></div>'
+                % (it["id"], render_inline(it["topic"], "xh")))
+        parts = re.split(r"^\*\*Answer:\*\*\s*$", it["body"], flags=re.M)
+        if len(parts) == 1:                      # True/False table or note: full width
+            flush()
+            out.append('<div class="xtf" id="%s">%s%s</div>' % (it["id"], head, render(it["body"], "xt")[0]))
+            continue
+        q, a = render(parts[0].strip(), "xq")[0], render(parts[1].strip(), "xa")[0]
+        code_lines = max([c.count("\n") for c in re.findall(r"<pre[\s\S]*?</pre>", a)] or [0])
+        wide = code_lines > 14 or a.count("<th>") > 3
+        entry = ('<div class="xa%s" id="%s">%s<div class="xq">%s</div><div class="xans">%s</div></div>'
+                 % (" wide" if wide else "", it["id"], head, q, a))
+        if wide:
+            flush()
+            out.append(entry)
+        else:
+            buf.append(entry)
+    flush()
+    return "\n".join(out), heads
+
+
 # ---------------------------------------------------------------- index terms
 INDEX_EXTRA = [
     "fork()", "exec()", "execlp", "execvp", "wait()", "waitpid", "exit()", "pipe()", "dup2", "dup(", "mkfifo", "open(", "read()",
@@ -524,6 +588,26 @@ section.part { break-before: page; --pc: #333; }
 .lqh { font-size: 9.2pt; } .lqh b { color: #c2255c; } .lqch { color: #868e96; font-size: 7.5pt; float: right; }
 .lqa { background: #ebfbee; border-left: 2.5pt solid #2b8a3e; padding: 2pt 5pt; margin-top: 2pt; }
 .lqa p { margin: 1pt 0; }
+/* answer bank (part X) */
+.xa-cols { columns: 2; column-gap: 6mm; column-rule: 0.5pt solid #dee2e6; }
+.xa { break-inside: avoid; border-bottom: 0.5pt dotted #adb5bd; padding: 2pt 0 3pt; font-size: 8.2pt; line-height: 1.3; }
+.xa.wide { border: 0.6pt solid #ced4da; border-radius: 3pt; padding: 3pt 6pt; margin: 5pt 0; break-inside: auto; }
+.xa.wide .xah, .xa.wide .xq { break-after: avoid; }
+.xa.wide pre.code { break-inside: auto; font-size: 7.3pt; line-height: 1.22; }
+.xah { font-size: 7.4pt; color: #868e96; }
+.xah .xid { color: #fff; background: #111; padding: 0 3pt; border-radius: 2pt; font-weight: 700; }
+.xq { font-weight: 700; color: #1c3d8f; }
+.xq p, .xans p { margin: 0.8pt 0; }
+.xans ul, .xans ol { margin: 0.5pt 0; padding-left: 12pt; }
+.xans table { font-size: 7.6pt; margin: 1.5pt 0; }
+.xa pre.code { font-size: 7.4pt; margin: 2pt 0; }
+.xf-cols { columns: 2; column-gap: 7mm; font-size: 7.6pt; }
+.xf-cols .toc-line { font-size: 7.6pt; line-height: 1.25; }
+.xf-h { break-after: avoid; font-weight: 800; color: #fff; background: #111; padding: 0.5pt 4pt; margin: 3pt 0 1pt;
+        border-radius: 2pt; font-size: 8pt; }
+.xtf { margin: 5pt 0; }
+.xtf table { font-size: 7.7pt; }
+.xtf td:nth-child(2) { font-weight: 800; text-align: center; white-space: nowrap; }
 /* glossary + index */
 .part-G table { font-size: 7.8pt; }
 .idx-cols { columns: 3; column-gap: 6mm; font-size: 8pt; line-height: 1.32; }
@@ -545,7 +629,9 @@ def build_html(pages=None, index_html=None):
     sections, toc_data, all_links = [], [], []
     for code, src, title, sub, color in PARTS:
         pid = "part-" + code
-        if code == "M":
+        if code == "X":
+            body, heads = xa_html(pages)
+        elif code == "M":
             body, heads = mc_key_html()
         elif code == "Q":
             body, heads = bank_html()
@@ -566,6 +652,8 @@ def build_html(pages=None, index_html=None):
                      % (c[4], c[0], html.escape(c[2]), html.escape(c[3]), pg("part-" + c[0], pages)) for c in PARTS)
     router = [
         ("Formula card / course conventions / top traps", "E-e1-formula-card"),
+        ("ANY short question → predicted Q + copy answer", "X-finder"),
+        ("Write C code: fork / pipe / dup2 / exec / pthreads / sem", "X-xc"),
         ("Interrupt / DMA / trap / dual mode / privileged", "3-s0"),
         ("Cache, locality, average access time", "1-s4"),
         ("von Neumann, storage hierarchy, main memory", "1-s2-1"),
@@ -611,8 +699,8 @@ def build_html(pages=None, index_html=None):
  <div class="box"><h3>點用（How to use）</h3>
   <ol><li><b>先睇 E（考場一頁通）</b>：公式卡、本科 conventions、陷阱表 — MC 前掃一次。</li>
   <li><b>計數題用 P（Playbooks）</b>：fork / pipe / scheduling / sync 步驟 + 預計表（Amdahl、powers、RM bound）。</li>
-  <li><b>概念題 / short question</b> → 對應章節（1–6）入面 📝 Model answer（英文可直接抄）。</li>
-  <li><b>PA / lab API / coding 題</b> → L（Labs &amp; PA1/PA2）+ A（API 速查）。</li>
+  <li><b>概念題 / short question / T-F</b> → 先翻 <b>X（Answer Bank）</b>：按章節排嘅預測題，英文答案直接抄；每章尾有 True/False 快速判斷。冇再去章節（1–6）📝 Model answer。</li>
+  <li><b>PA / lab API / coding 題</b> → X 最後嘅 <b>完整 C programs（已編譯測試）</b> + L（Labs &amp; PA1/PA2）+ A（API 速查）。</li>
   <li><b>見到似曾相識嘅題目</b> → Q（歷屆全解）/ M（MC key）。<b>搵字</b> → 最後嘅 Index（紅色 = 主要頁）。</li>
   <li>右邊（雙數頁左邊）有<b>彩色 tab</b>：同一顏色 = 同一部分。</li></ol></div>
  <div class="box"><h3>Tab legend</h3><div class="legend">%s</div></div>
@@ -800,7 +888,8 @@ def fill_numbers(doc_html, pages):
 def main():
     os.makedirs(WORK, exist_ok=True)
     ensure_katex_assets()
-    sources = [source(p[1]) for p in PARTS if p[1]] + [read("qb1_mc_bank.md"), read("qb3_practice_mc.md")]
+    sources = ([source(p[1]) for p in PARTS if p[1]] + [read("qb1_mc_bank.md"), read("qb3_practice_mc.md")]
+               + xa_sources() + ([read("xa_intro.md")] if os.path.exists(os.path.join(NOTES, "xa_intro.md")) else []))
     formulas = collect_math(sources)
     katex_prerender(formulas)
     print("formulas:", len(formulas))
