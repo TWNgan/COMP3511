@@ -30,6 +30,9 @@ PAGES = [
     ("essentials", "cb_essentials.md", "考場一頁通 Essentials", "Start", "Essentials"),
     ("playbooks", "cb_playbooks.md", "解題 Playbooks", "Start", "Playbooks"),
     ("answers", None, "預測題 Answer Bank", "Start", "Answers"),
+    ("howto-fork", "howto_fork.md", "攻略：fork / pipe 題", "How-to 攻略（點用本書攞分）", "fork 攻略"),
+    ("howto-sched", "howto_sched.md", "攻略：CPU scheduling 題", "How-to 攻略（點用本書攞分）", "Scheduling 攻略"),
+    ("howto-sync", "howto_sync.md", "攻略：Synchronization 題", "How-to 攻略（點用本書攞分）", "Sync 攻略"),
     ("ch1", "ch1_introduction.md", "Ch1 Introduction", "Notes", "Ch1"),
     ("ch2", "ch2_os_structures.md", "Ch2 OS Structures", "Notes", "Ch2"),
     ("ch3", "ch3_processes.md", "Ch3 Processes", "Notes", "Ch3"),
@@ -43,7 +46,8 @@ PAGES = [
     ("quiz", None, "MC 練習 Quiz", "Practice", "Quiz"),
     ("tools", None, "工具 Scheduler & Calculators", "Practice", "Tools"),
 ]
-NAV_ICON = {"index": "🏠", "ch0": "🎯", "essentials": "⚡", "playbooks": "🧭", "answers": "💯", "ch1": "1️⃣", "ch2": "2️⃣",
+NAV_ICON = {"index": "🏠", "ch0": "🎯", "essentials": "⚡", "playbooks": "🧭", "answers": "💯",
+            "howto-fork": "🌳", "howto-sched": "📊", "howto-sync": "🔒", "ch1": "1️⃣", "ch2": "2️⃣",
             "ch3": "3️⃣", "ch4": "4️⃣", "ch5": "5️⃣", "ch6": "6️⃣", "labs": "🧪", "api": "🧰", "glossary": "🔤",
             "bank": "📜", "quiz": "✅", "tools": "🛠️"}
 MD_PLUGINS = ["table", "strikethrough", "math", "mistune.plugins.math.math_in_quote",
@@ -171,9 +175,54 @@ def inject(md):
 
 
 def source(name):
-    """Markdown source of a page (playbooks get their generated tables)."""
+    """Markdown source of a page (playbooks get their generated tables; how-to guides get book page numbers)."""
     md = read(name)
-    return inject(md) if name == "cb_playbooks.md" else md
+    if name == "cb_playbooks.md":
+        return inject(md)
+    if name.startswith("howto_"):
+        return fill_book_refs(md)
+    return md
+
+
+# ---------------------------------------------------------------- page numbers of the printed cheat book
+BOOK_PDF = os.path.join(ROOT, "COMP3511_Midterm_CheatBook.pdf")
+_BOOK = {}
+
+
+def book():
+    """Named destinations and page texts of the built cheat book (the copy the user prints)."""
+    if not _BOOK:
+        import fitz
+        d = fitz.open(BOOK_PDF)
+        _BOOK["names"] = dict((k, v["page"] + 1) for k, v in d.resolve_names().items())
+        _BOOK["texts"] = [d[i].get_text() for i in range(d.page_count)]
+        _BOOK["pages"] = d.page_count
+        d.close()
+    return _BOOK
+
+
+def book_ref(kind, key):
+    """{{p:anchor}} = named destination; {{q:S26-Q3.1}} = past-paper question in part Q; {{t:text}} = first page with text."""
+    b = book()
+    pg = None
+    if kind == "p":
+        pg = b["names"].get(key)
+    elif kind == "q":
+        lo, hi = b["names"]["part-Q"], b["names"]["part-M"] - 1
+        pat = re.compile(re.escape(key) + r"(?![0-9.])")
+        pg = next((i + 1 for i in range(lo - 1, hi) if pat.search(b["texts"][i])), None)
+    else:
+        lo = b["names"]["part-E"]
+        pg = next((i + 1 for i in range(lo - 1, b["pages"]) if key in b["texts"][i]), None)
+    if pg is None:
+        print("  !! book reference not found:", kind, key)
+        return "p.?"
+    return "p.%d" % pg
+
+
+def fill_book_refs(md):
+    md = md.replace("{{pages}}", str(book()["pages"]))
+    return re.sub(r"\{\{([pqt]):([^}]+)\}\}", lambda m: book_ref(m.group(1), m.group(2).strip()), md)
 
 
 # ---------------------------------------------------------------- markdown helpers
@@ -654,6 +703,9 @@ def build_home():
         ("essentials", "考場一頁通 Essentials", "考前必睇", ["公式卡（LaTeX）", "本科 conventions", "Top traps 陷阱表"]),
         ("playbooks", "解題 Playbooks", "計數題", ["fork / pipe / scheduling / sync 步驟", "Amdahl / powers / RM 預計表", "歷屆 fork 答案總表"]),
         ("answers", "預測題 Answer Bank", "直接抄", ["每章預測 short questions + 英文標準答案", "每章 True/False 快速判斷", "已編譯測試嘅完整 C programs"]),
+        ("howto-fork", "攻略：fork / pipe 題", "點用本書", ["認題型 → 翻邊頁（印刷版頁數）", "數 process / tree / 輸出次序 / exec", "pipe 填空 + 寫 code 抄邊段"]),
+        ("howto-sched", "攻略：Scheduling 題", "點用本書", ["Gantt 8 步（照 P3 表做）", "MLFQ 追蹤表 + RM/EDF 流程", "每類對答案用嘅已解題"]),
+        ("howto-sync", "攻略：Sync 題", "點用本書", ["可能值 4 步", "Semaphore 次序 / 輸出序列", "Spinlock 填空 + requirements 判斷表"]),
         ("ch1", "Ch1 Introduction", "MC 2–4 題", ["Caching + AMAT + locality", "von Neumann / storage hierarchy", "SMP / multicore / NUMA / virtualization"]),
         ("ch2", "Ch2 OS Structures", "MC 3–5 + short", ["API vs system call / printf→write", "Linker vs loader", "Monolithic / layered / microkernel / LKM"]),
         ("ch3", "Ch3 Processes", "~24 分", ["fork() 解題大法（公式 + 例題）", "Interrupt / DMA / dual mode", "Pipe / dup / zombie / IPC"]),

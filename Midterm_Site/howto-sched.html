@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>攻略：CPU scheduling 題 · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793265186">
+<link rel="stylesheet" href="assets/site.css?v=1793265186">
+
+<script src="assets/site.js?v=1793265186"></script>
+<script src="assets/search-index.js?v=1793265186"></script>
+</head>
+<body data-page="howto-sched">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
+<a href="answers.html" data-page="answers"><span>💯</span><span>預測題 Answer Bank</span><span class="done-dot"></span></a>
+<div class="nav-group">How-to 攻略（點用本書攞分）</div>
+<a href="howto-fork.html" data-page="howto-fork"><span>🌳</span><span>攻略：fork / pipe 題</span><span class="done-dot"></span></a>
+<a href="howto-sched.html" data-page="howto-sched" class="active"><span>📊</span><span>攻略：CPU scheduling 題</span><span class="done-dot"></span></a>
+<a href="howto-sync.html" data-page="howto-sync"><span>🔒</span><span>攻略：Synchronization 題</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">How-to 攻略（點用本書攞分）</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="cpu-scheduling-cheat-book">攻略：CPU scheduling 題點用 cheat book 攞分</h1>
+<blockquote class="callout tip">
+<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（165 頁版）。Scheduling 係<strong>最多分</strong>嘅部分（歷屆約 27 分），而且 <strong>Gantt chart 由左至右改，錯一格之後冇分</strong>（F20 改卷規則），所以每一步都照書做、逐格對。</p>
+</blockquote>
+<h2 id="s0"><a class="anchor" href="#s0">#</a>0. 入場前：貼 6 張 sticky notes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>貼喺</th>
+  <th>頁</th>
+  <th>用嚟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>E2 本科 Conventions</strong></td>
+  <td><strong>p.4</strong></td>
+  <td>tie、RR 新 arrival、MLFQ 規則、response time 定義</td>
+</tr>
+<tr>
+  <td><strong>E4 答題模板</strong></td>
+  <td><strong>p.5</strong></td>
+  <td>Gantt + 表 + 平均數寫法</td>
+</tr>
+<tr>
+  <td><strong>P3 Scheduling Playbook</strong></td>
+  <td><strong>p.7</strong></td>
+  <td>每個 algorithm「揀邊個 / 幾時重揀」</td>
+</tr>
+<tr>
+  <td><strong>P5 RM bound 表</strong></td>
+  <td><strong>p.8</strong></td>
+  <td>RM 可唔可以排</td>
+</tr>
+<tr>
+  <td><strong>Ch5 §13 Gantt 萬用流程</strong></td>
+  <td><strong>p.117</strong></td>
+  <td>逐步 + tie-breaking</td>
+</tr>
+<tr>
+  <td><strong>Ch5 §14 歷屆計算全集</strong></td>
+  <td><strong>p.118</strong></td>
+  <td>同類已解題（對答案用）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. 先認類型</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>題目字眼</th>
+  <th>跳去</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS / SJF / SRTF / RR / (non-)preemptive priority + &quot;Gantt chart&quot;、&quot;average waiting / turnaround / response time&quot;</td>
+  <td><strong>§2</strong></td>
+</tr>
+<tr>
+  <td>&quot;priority scheduling … processes with the same priority are scheduled RR&quot;</td>
+  <td><strong>§3</strong></td>
+</tr>
+<tr>
+  <td>&quot;multilevel feedback queue&quot;、Q0 / Q1 / Q2、&quot;aging&quot;、&quot;two-level&quot;</td>
+  <td><strong>§4</strong></td>
+</tr>
+<tr>
+  <td>&quot;rate-monotonic&quot;、&quot;EDF&quot;、&quot;period&quot;、&quot;deadline&quot;、&quot;CPU utilization&quot;</td>
+  <td><strong>§5</strong></td>
+</tr>
+<tr>
+  <td>&quot;predict the next CPU burst&quot;（α、τ）、Little's formula、context-switch overhead、RR bound</td>
+  <td><strong>§6</strong></td>
+</tr>
+<tr>
+  <td>自訂 policy：dynamic priority（α、β）、&quot;least used first&quot;、公式 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td>
+  <td><strong>§7</strong></td>
+</tr>
+<tr>
+  <td>冇數字：why / compare / which algorithm…</td>
+  <td>題目搜尋表 <strong>p.9</strong> → <strong>X5（p.42）</strong> 直接抄</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. FCFS / SJF / SRTF / RR / Priority：Gantt + 平均數</h2>
+<p><strong>Step 0 — 先寫 assumptions（照抄 E2，p.4）</strong>，放喺答案最頂：
+<em>&quot;Assumptions: ties are broken by FCFS, then smaller process ID; in RR a newly arrived process enters the ready queue before the preempted process; response time = end of the first run − arrival time.&quot;</em></p>
+<p><strong>Step 1</strong> — 喺 rough paper 抄個表：P、arrival、burst（、priority）。</p>
+<p><strong>Step 2</strong> — 翻 <strong>P3 表（p.7）</strong>，搵你個 algorithm 嗰行，抄低兩樣嘢：<strong>「揀邊個」</strong>同<strong>「幾時重新揀」</strong>：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>你個 algorithm</th>
+  <th>揀邊個</th>
+  <th>幾時重新揀</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>FCFS</td>
+  <td>最早到</td>
+  <td>有人完成</td>
+</tr>
+<tr>
+  <td>SJF</td>
+  <td><strong>已經到咗</strong>嘅最短 burst</td>
+  <td>有人完成</td>
+</tr>
+<tr>
+  <td>SRTF</td>
+  <td>最短 <strong>remaining</strong></td>
+  <td>有人完成 + <strong>每個 arrival</strong>（平手唔 preempt）</td>
+</tr>
+<tr>
+  <td>RR q</td>
+  <td>queue 頭</td>
+  <td>完成 / 用完 q（用完 → 排 queue 尾）</td>
+</tr>
+<tr>
+  <td>Priority NP / P</td>
+  <td>最細數字</td>
+  <td>完成 /（P：較高 priority 嘅 arrival）</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Step 3</strong> — 喺時間軸點出所有 <strong>arrival 時間</strong>；之後一路行一路加 <strong>完成時間</strong>同（RR）<strong>quantum 用完時間</strong>。</p>
+<p><strong>Step 4</strong> — 每個 event 時間，寫低 <strong>ready queue（照次序）</strong>，再照 Step 2 揀下一個。RR：用完 q 嘅排<strong>尾</strong>；同一時刻有新 arrival → <strong>新 arrival 先入</strong>。</p>
+<p><strong>Step 5</strong> — 寫 Gantt：<code>0 P1 3 P3 5 P1 8 …</code>（<strong>每個 boundary 都寫</strong>；CPU 冇嘢做都要寫 idle）。</p>
+<p><strong>Step 6</strong> — 填表（公式喺 <strong>E1，p.4</strong>）：</p>
+<pre class="code" data-lang=""><code>P  | Arr | Burst | Completion | TAT = C - A | WT = TAT - Burst | RT = end of 1st run - A
+</code></pre>
+<ul>
+<li><strong>RT 用本科定義</strong>：第一次上 CPU 嗰段<strong>完結</strong>嘅時間 − arrival（non-preemptive 時 RT = TAT）。</li>
+</ul>
+<p><strong>Step 7</strong> — 平均數連 working：<em>avg WT = (2 + 10 + 0 + 3) / 4 = 3.75</em>。</p>
+<p><strong>Step 8 — 自我檢查</strong>（P3 第 8 步）：最後完成時間 = 全部 burst 加埋 + idle；每個 process 喺 Gantt 上各段加埋 = 佢嘅 burst。</p>
+<blockquote class="callout answer">
+<p>📝 <strong>示範（SRTF）</strong>：P1 (0, 6)、P2 (2, 5)、P3 (3, 2)、P4 (5, 4)。</p>
+<ul>
+<li>P3 表 SRTF：揀最短 remaining；每個 arrival 都重新揀；平手唔 preempt。</li>
+<li>t = 0：得 P1 → 行 P1。t = 2：P2 (5) vs P1 剩 4 → 繼續 P1。t = 3：P3 (2) vs P1 剩 3 → <strong>轉 P3</strong>。</li>
+<li>t = 5：P3 完；ready = P1 (3)、P2 (5)、P4 (4) → P1。t = 8：P1 完 → P4 (4) &lt; P2 (5) → P4。t = 12 → P2 → 17。</li>
+<li>Gantt <code>0 P1 3 P3 5 P1 8 P4 12 P2 17</code>；WT = 2, 10, 0, 3 → <strong>avg 3.75</strong>。</li>
+<li>書入面 <strong>X5-22（p.45）</strong> 有同一組數嘅 FCFS / SJF / SRTF / RR 全部答案 → <strong>考前用佢練一次，對答案</strong>。</li>
+</ul>
+</blockquote>
+<p><strong>同類已解題（考試時見到似嘅就對住做）</strong>：<strong>X5-22（p.45）</strong>、<strong>X5-25 priority（p.45）</strong>、<strong>F19 Q3.6（p.139）</strong>、<strong>F20 Q4.1（p.140）</strong>、<strong>Sp21 Q2.1（p.141）</strong>、<strong>HW2 Q3.2（p.143）</strong>、<strong>Lab 5 review（p.132）</strong>。</p>
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Priority + RR（同 priority 輪流）</h2>
+<ol>
+<li>照 §2 步驟，但<strong>每個 priority level 一條 queue</strong>（細數字 = 高，<strong>E2 第 4 點</strong>）。</li>
+<li>規則（<strong>X5-26，p.45</strong> 有完整示範）：<ul>
+<li>被<strong>更高 priority</strong> 嘅 arrival preempt → 返<strong>自己 level 嘅 queue 頭</strong>，<strong>保留剩餘 quantum</strong>；</li>
+<li>用完 quantum → 排自己 level 嘅 <strong>queue 尾</strong>；</li>
+<li>同一 level 得一個 process → 佢繼續行。</li>
+</ul>
+</li>
+<li>同類原題：<strong>S23（p.144）</strong>、<strong>F20 Q4.3（p.140）</strong>、<strong>Lab 5 L5.2（p.132）</strong>。</li>
+<li>最常錯：preempt 完重新畀返成個 quantum（<strong>錯</strong>，書入面有標）。</li>
+</ol>
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. MLFQ（每年必考）</h2>
+<ol>
+<li>抄低題目規則（幾多條 queue、每條 quantum、最後一條 FCFS、有冇 aging）。題目冇講嘅 → 用 <strong>E2 第 3 點（p.4）</strong>，<strong>寫做 assumption</strong>。</li>
+<li>Rough paper 畫 <strong>P3 嘅 MLFQ 追蹤表（p.7）</strong>：</li>
+</ol>
+<pre class="code" data-lang=""><code>t | event | Q0 | Q1 (rem q) | Q2 | running (queue, q left, burst left)
+</code></pre>
+<ol start="3">
+<li>每個 event 照呢幾條（E2 第 3 點）：<ul>
+<li>新 job → <strong>Q0 尾</strong>；</li>
+<li>用完 quantum 仲未完 → <strong>降一級，排尾</strong>；</li>
+<li>被<strong>高層 queue 新 arrival</strong> preempt → 返<strong>自己 queue 頭</strong>，<strong>保留剩餘 quantum</strong>，<strong>唔降級</strong>；</li>
+<li>只係最高非空 queue 先可以行；Q0 job 唔會被新 arrival preempt。</li>
+</ul>
+</li>
+<li>Gantt 標 queue：<code>0 P1@Q0 4 P2@Q0 8 P1@Q1 …</code>（E2 第 8 點）。</li>
+<li>表 + 平均數同 §2 一樣。</li>
+<li>對答案用：<strong>X5-34（p.46）</strong> 完整示範（連 queue 狀態）、<strong>Ch5 §8.2 lecture example（p.113）</strong>、<strong>§8.4 checklist（p.113）</strong>；原題 <strong>S26 Q4.1（p.136）</strong>、<strong>Sp21 Q2.2（p.141）</strong>、<strong>HW2 Q3.3（p.143）</strong>；two-level + aging：<strong>F20 Q4.2（p.140）</strong>。</li>
+<li>純文字題（&quot;why MLFQ&quot;、&quot;parameters of MLFQ&quot;、&quot;advantages&quot;）→ <strong>X5-31 至 X5-33（p.46）</strong> 直接抄。</li>
+</ol>
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. RM / EDF（real-time）</h2>
+<ol>
+<li><strong>計 U</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>（<strong>E1，p.4</strong>），寫晒條式。</li>
+<li><strong>判斷</strong>：<ul>
+<li><strong>RM</strong>：查 <strong>P5 RM bound 表（p.8）</strong>（N = 2 → 0.828、N = 3 → 0.780…）。<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span></span></span></span> bound → <em>&quot;schedulable by RM (guaranteed)&quot;</em>；<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span></span></span></span> bound → <em>&quot;not guaranteed — draw the timeline&quot;</em>。</li>
+<li><strong>EDF</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>（deadline = period）→ <em>&quot;schedulable by EDF&quot;</em>。</li>
+<li><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> → <em>&quot;overloaded: no algorithm can meet all deadlines&quot;</em>。</li>
+</ul>
+</li>
+<li><strong>要畫 timeline</strong>：照 <strong>P3「RM / EDF 追蹤」（p.7）</strong>：<ul>
+<li>每個 task 列 <strong>release 時間</strong> <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span></span></span></span> 同 <strong>deadline = release + d</strong>（題目 d &lt; p 就用 d！見 <strong>S26 Q4.2，p.136</strong>）；</li>
+<li>逐個時間單位揀：<strong>RM = period 最短</strong>（固定）；<strong>EDF = absolute deadline 最早</strong>；平手 → 唔 preempt（E2 第 5 點）。</li>
+</ul>
+</li>
+<li><strong>Deadline miss</strong>：完成時間 &gt; deadline 就係 miss；soft real-time → <strong>嗰個 job 繼續行完</strong>，計一次 miss（E2 第 6 點）。</li>
+<li><strong>答卷寫法</strong>：U 條式 → 同 bound 比較一句 → Gantt → 逐個 miss 寫「P2 misses its deadline at t = 7」。</li>
+<li>對答案用：<strong>X5-53（p.50）</strong>（同一組 task 嘅 RM vs EDF timeline）、<strong>X5-52（p.50）</strong>（四組 U 判斷）、<strong>Ch5 §11.5 做題方法（p.116）</strong>、<strong>Lab 5 L5.3（p.132）</strong>；原題 <strong>Sp21 Q2.3（p.141）</strong>、<strong>F19 Q3.4（p.138）</strong>、<strong>HW2 Q2.5（p.143）</strong>。</li>
+</ol>
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. 公式題（直接代入）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>題目</th>
+  <th>公式頁</th>
+  <th>已解示範（照格式抄）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Exponential averaging（α、τ）</td>
+  <td>E1 <strong>p.4</strong>、P5 權重表 <strong>p.8</strong></td>
+  <td><strong>X5-19（p.44）</strong>、<strong>X5-20（p.44）</strong></td>
+</tr>
+<tr>
+  <td>Little's formula <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">λW</span></span></span></span></td>
+  <td>E1</td>
+  <td><strong>X5-55（p.50）</strong>（記得先轉單位）</td>
+</tr>
+<tr>
+  <td>RR + context switch：efficiency / utilization</td>
+  <td>—</td>
+  <td><strong>X5-13（p.43）</strong>、<strong>X5-14（p.44）</strong></td>
+</tr>
+<tr>
+  <td>RR 等待上限 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span></td>
+  <td>E1</td>
+  <td><strong>X5-11（p.43）</strong></td>
+</tr>
+<tr>
+  <td>Response time 定義</td>
+  <td>E2 第 1 點</td>
+  <td><strong>X5-07（p.43）</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>答卷寫法</strong>：formula → 代數 → 答案（連 unit）。逐步寫，錯數都有 method 分。</p>
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. 自訂 policy（dynamic priority、LUF、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 公式）</h2>
+<ol>
+<li>P3 表有「Dynamic priority」同「LUF」兩行（p.7）。</li>
+<li>每個決策時間點<strong>列一個表</strong>：每個 process 嘅 priority / 用咗幾多 CPU / <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 值 → 照題目規則揀 → 平手照<strong>題目</strong>講（例如 S26：larger ID）。</li>
+<li>對答案用：<strong>Ch5 §14.2 至 §14.4（p.118）</strong>；原題 <strong>S26 Q4.3（p.136）</strong>、<strong>S26 Q2.3（p.135）</strong>、<strong>F19 Q3.5（p.138）</strong>。</li>
+</ol>
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. 交卷前 30 秒 checklist</h2>
+<ul>
+<li>有冇寫 <strong>assumptions</strong>（tie、RR 新 arrival、response time 定義）？</li>
+<li>Gantt <strong>每個 boundary</strong> 有冇寫？有冇漏 idle？</li>
+<li>每個 process 嘅段數加埋 = burst？最後完成時間 = 總 burst + idle？</li>
+<li>RT 係「<strong>第一段完結</strong> − arrival」（唔係開始）？</li>
+<li>MLFQ：preempt 之後有冇<strong>錯降級 / 錯 reset quantum</strong>？</li>
+</ul>
+
+<nav class="pager"><a href="howto-fork.html"><small>← 上一頁</small>攻略：fork / pipe 題</a><a class="next" href="howto-sync.html"><small>下一頁 →</small>攻略：Synchronization 題</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s0">0. 入場前：貼 6 張 sticky notes</a>
+<a class="l2" href="#s1">1. 先認類型</a>
+<a class="l2" href="#s2">2. FCFS / SJF / SRTF / RR / Priority：Gantt + 平均數</a>
+<a class="l2" href="#s3">3. Priority + RR（同 priority 輪流）</a>
+<a class="l2" href="#s4">4. MLFQ（每年必考）</a>
+<a class="l2" href="#s5">5. RM / EDF（real-time）</a>
+<a class="l2" href="#s6">6. 公式題（直接代入）</a>
+<a class="l2" href="#s7">7. 自訂 policy（dynamic priority、LUF、fi​ 公式）</a>
+<a class="l2" href="#s8">8. 交卷前 30 秒 checklist</a></aside>
+</div>
+
+</body>
+</html>

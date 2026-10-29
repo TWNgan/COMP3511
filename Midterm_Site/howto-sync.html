@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>攻略：Synchronization 題 · COMP3511 Midterm</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793265186">
+<link rel="stylesheet" href="assets/site.css?v=1793265186">
+
+<script src="assets/site.js?v=1793265186"></script>
+<script src="assets/search-index.js?v=1793265186"></script>
+</head>
+<body data-page="howto-sync">
+<header class="topbar">
+  <button class="btn menu-btn" id="menu-btn" aria-label="menu">☰</button>
+  <a class="brand" href="index.html">COMP3511 <span>Midterm</span><span class="hide-sm"> OP Notes</span></a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="搜尋 Search（按 / 或 Ctrl+K）: fork, MLFQ, zombie, Amdahl…" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn hide-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️ Cheat Book</a>
+  <a class="btn show-sm" href="../COMP3511_Midterm_CheatBook.pdf" title="Printable cheat book">🖨️</a>
+  <button class="btn" id="theme-btn" aria-label="theme">🌙</button>
+</header>
+<div class="layout">
+<nav class="sidebar">
+<div class="nav-group">Start</div>
+<a href="index.html" data-page="index"><span>🏠</span><span>首頁 Home</span><span class="done-dot"></span></a>
+<a href="ch0.html" data-page="ch0"><span>🎯</span><span>考試攻略 Exam Strategy</span><span class="done-dot"></span></a>
+<a href="essentials.html" data-page="essentials"><span>⚡</span><span>考場一頁通 Essentials</span><span class="done-dot"></span></a>
+<a href="playbooks.html" data-page="playbooks"><span>🧭</span><span>解題 Playbooks</span><span class="done-dot"></span></a>
+<a href="answers.html" data-page="answers"><span>💯</span><span>預測題 Answer Bank</span><span class="done-dot"></span></a>
+<div class="nav-group">How-to 攻略（點用本書攞分）</div>
+<a href="howto-fork.html" data-page="howto-fork"><span>🌳</span><span>攻略：fork / pipe 題</span><span class="done-dot"></span></a>
+<a href="howto-sched.html" data-page="howto-sched"><span>📊</span><span>攻略：CPU scheduling 題</span><span class="done-dot"></span></a>
+<a href="howto-sync.html" data-page="howto-sync" class="active"><span>🔒</span><span>攻略：Synchronization 題</span><span class="done-dot"></span></a>
+<div class="nav-group">Notes</div>
+<a href="ch1.html" data-page="ch1"><span>1️⃣</span><span>Ch1 Introduction</span><span class="done-dot"></span></a>
+<a href="ch2.html" data-page="ch2"><span>2️⃣</span><span>Ch2 OS Structures</span><span class="done-dot"></span></a>
+<a href="ch3.html" data-page="ch3"><span>3️⃣</span><span>Ch3 Processes</span><span class="done-dot"></span></a>
+<a href="ch4.html" data-page="ch4"><span>4️⃣</span><span>Ch4 Threads</span><span class="done-dot"></span></a>
+<a href="ch5.html" data-page="ch5"><span>5️⃣</span><span>Ch5 CPU Scheduling</span><span class="done-dot"></span></a>
+<a href="ch6.html" data-page="ch6"><span>6️⃣</span><span>Ch6 Synchronization</span><span class="done-dot"></span></a>
+<a href="labs.html" data-page="labs"><span>🧪</span><span>Labs &amp; PA1/PA2</span><span class="done-dot"></span></a>
+<div class="nav-group">Reference</div>
+<a href="api.html" data-page="api"><span>🧰</span><span>API 速查 (C / Pthreads)</span><span class="done-dot"></span></a>
+<a href="glossary.html" data-page="glossary"><span>🔤</span><span>Glossary A–Z</span><span class="done-dot"></span></a>
+<div class="nav-group">Practice</div>
+<a href="bank.html" data-page="bank"><span>📜</span><span>歷屆試題 Past Papers</span><span class="done-dot"></span></a>
+<a href="quiz.html" data-page="quiz"><span>✅</span><span>MC 練習 Quiz</span><span class="done-dot"></span></a>
+<a href="tools.html" data-page="tools"><span>🛠️</span><span>工具 Scheduler &amp; Calculators</span><span class="done-dot"></span></a>
+<div class="nav-group">Print</div>
+<a href="../COMP3511_Midterm_CheatBook.pdf"><span>🖨️</span><span>Cheat Book (PDF)</span></a>
+<a href="../COMP3511_Midterm_CheatBook.html"><span>📖</span><span>Cheat Book (HTML)</span></a>
+</nav>
+<main>
+<div class="content">
+<div class="page-head"><span class="tag">How-to 攻略（點用本書攞分）</span><button class="btn mark-done" id="mark-done"></button></div>
+<h1 id="synchronization-cheat-book">攻略：Synchronization 題點用 cheat book 攞分</h1>
+<blockquote class="callout tip">
+<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（165 頁版）。Sync 題（歷屆約 8–15 分）幾乎全部係固定套路：<strong>可能值、semaphore 次序、輸出序列、用 atomic instruction 寫 lock、三個 requirement 判斷</strong>。</p>
+</blockquote>
+<h2 id="s0"><a class="anchor" href="#s0">#</a>0. 入場前：貼 4 張 sticky notes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>貼喺</th>
+  <th>頁</th>
+  <th>用嚟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>P4 Synchronization Playbook</strong></td>
+  <td><strong>p.7</strong></td>
+  <td>可能值方法、semaphore 次序規則、spinlock 表</td>
+</tr>
+<tr>
+  <td><strong>Ch6 §6 做題方法</strong></td>
+  <td><strong>p.125</strong></td>
+  <td>歷屆題型逐步示範</td>
+</tr>
+<tr>
+  <td><strong>X6 答案庫（判斷表、填空、例題）</strong></td>
+  <td><strong>p.52</strong></td>
+  <td>直接抄答案 / 對答案</td>
+</tr>
+<tr>
+  <td><strong>XC mutex / semaphore programs</strong></td>
+  <td><strong>p.68</strong></td>
+  <td>寫 code 題</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="s1"><a class="anchor" href="#s1">#</a>1. 先認類型</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>題目字眼</th>
+  <th>跳去</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>&quot;What are all the possible values of c / x / counter?&quot;</td>
+  <td><strong>§2 可能值</strong></td>
+</tr>
+<tr>
+  <td>&quot;Initialize the semaphores / fill in wait() and signal() so that S1 runs before S2…&quot;、precedence graph</td>
+  <td><strong>§3 semaphore 次序</strong></td>
+</tr>
+<tr>
+  <td>&quot;Which outputs are possible?&quot;、&quot;Is the sequence … possible?&quot;（有 semaphores）</td>
+  <td><strong>§4 輸出序列</strong></td>
+</tr>
+<tr>
+  <td>&quot;Implement a lock using <code>test_and_set</code> / <code>compare_and_swap</code> / <code>swap</code> / 新 instruction&quot;、填空</td>
+  <td><strong>§5 spinlock</strong></td>
+</tr>
+<tr>
+  <td>&quot;Does this solution satisfy mutual exclusion / progress / bounded waiting?&quot;</td>
+  <td><strong>§6 三個 requirements</strong></td>
+</tr>
+<tr>
+  <td>&quot;Write a program with a mutex / semaphores&quot;、producer–consumer、readers–writers</td>
+  <td><strong>§7 code</strong></td>
+</tr>
+<tr>
+  <td>定義 / 解釋：race condition、critical section、spinlock pros/cons、semaphore vs mutex</td>
+  <td>題目搜尋表 <strong>p.9</strong> → <strong>X6（p.52）</strong> 直接抄</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="s2"><a class="anchor" href="#s2">#</a>2. 所有可能值（race condition）</h2>
+<p>照 <strong>P4「Race 可能值」（p.7）</strong> 四步，全部機械式：</p>
+<ol>
+<li><strong>拆 T1 做 atomic steps</strong>：<code>if (a &gt; 0)</code> = 讀 a；<code>c = a + b</code> = 讀 a → 讀 b → 寫 c（<strong>由左至右讀</strong>）；<code>c = b - a</code> = 讀 b → 讀 a → 寫 c。寫成 <em>R1, R2, R3, W</em>。</li>
+<li><strong>T2 嘅 writes 次序固定</strong>（例如 <code>a = -1;</code> 先，<code>b = 10;</code> 後）；佢哋可以插入 T1 每個空位（R1 之前、R1–R2 之間…）。</li>
+<li><strong>逐個插法計</strong>：每個 read 見到新值定舊值 → 行邊個 branch → 計結果。如果 T2 都寫同一個變數（例如兩邊都寫 c），<strong>最後寫嗰個贏</strong>，記得加埋呢啲 case。</li>
+<li>收集所有<strong>唔同</strong>嘅值。</li>
+</ol>
+<p><strong>答卷寫法</strong>（<strong>E4 模板，p.5</strong>）：逐個 case 列：<em>&quot;Case 1: T1 reads a = 3, then T2 runs a = −1; b = 10; T1 reads b = 10 → c = 13.&quot;</em> → 最後 <em>&quot;Possible values: {4, 6, 8, 9, 11, 13}&quot;</em>。<strong>每個 distinct 值都有分</strong>，所以寧願多列 case。</p>
+<blockquote class="callout answer">
+<p>📝 <strong>完整示範</strong>：<strong>X6-41（p.58）</strong>（6 個值，連表）。同類原題：<strong>F19 Q4.3（p.139）</strong>、<strong>F20 Q5（p.140）</strong>、<strong>Lab 6 Q7（p.146）</strong>、<strong>HW1 Q3.1（p.142）</strong>；<code>counter++ / counter--</code> 版：<strong>X6-02（p.52）</strong>。</p>
+</blockquote>
+<h2 id="s3"><a class="anchor" href="#s3">#</a>3. Semaphore 次序 / precedence graph 填空</h2>
+<p>照 <strong>P4「Semaphore 次序」（p.7）</strong>：</p>
+<ol>
+<li>畫出要求嘅次序：每個「X 要喺 Y 之前」畫一條箭咀 X → Y。</li>
+<li><strong>每條箭咀 = 一個 semaphore，初始值 0</strong>：<strong>X 做完之後 <code>signal(s)</code>；Y 開始之前 <code>wait(s)</code></strong>。</li>
+<li>一個 statement 有兩個前置 → <strong>兩個 <code>wait</code></strong>（例：<strong>X6-37，p.58</strong>）。</li>
+<li><strong>輪流</strong>（T1 → T2 → T3 → T1 …）→ 第一個 semaphore <strong>= 1</strong>，其餘 <strong>= 0</strong>；每個 thread <code>wait(自己)</code> … <code>signal(下一個)</code>（<strong>X6-38，p.58</strong>；<strong>Lab 6 Q1，p.145</strong>）。</li>
+<li>「最多 k 個同時」→ 一個 semaphore = <strong>k</strong>；mutual exclusion → <strong>1</strong>（<strong>X6-24 / X6-26，p.55</strong>）。</li>
+<li>唔使填嘢嘅 BLANK → 寫 <code>/* Nothing */</code>。</li>
+</ol>
+<p><strong>答卷寫法</strong>：每個 semaphore 寫「名 = 初始值」，再逐個 BLANK 填；加一句 <em>&quot;S1 signals s after it finishes; S2 waits on s before it starts, so S2 always follows S1.&quot;</em>
+同類原題：<strong>S26 Q5（p.136）</strong>、<strong>Lab 6 Q2（p.145）</strong>；示範 <strong>X6-25（p.56）</strong>。</p>
+<h2 id="s4"><a class="anchor" href="#s4">#</a>4. 有 semaphores 嘅輸出序列</h2>
+<p><strong>「呢個序列可唔可能？」</strong> → 照 <strong>P4「Semaphore 序列可行性」</strong>：</p>
+<ol>
+<li>寫低每個 semaphore 嘅<strong>初始值</strong>。</li>
+<li>跟住個序列逐個字：搵出邊個 process 印 → 行到嗰度之前要經過嘅 <code>wait</code>，<strong>當時個值一定要 &gt; 0</strong>（否則嗰個 process 要等，序列就唔得）；<code>signal</code> 就 +1。</li>
+<li>全部行得通 → possible；卡住 → impossible，寫低<strong>卡喺邊個 <code>wait</code>、個值係幾多</strong>。</li>
+</ol>
+<p><strong>「列出所有可能輸出」</strong> → <strong>X6-43（p.59）</strong> 方法：</p>
+<ol>
+<li>每個 process 自己嘅次序固定；</li>
+<li>每對 <code>signal(s)</code> → <code>wait(s)</code> 加一條「之前」約束；</li>
+<li>列晒符合約束嘅次序；</li>
+<li>檢查會唔會 deadlock（<strong>X6-44，p.59</strong>：數 permits，追到全部人卡住為止）。</li>
+</ol>
+<p>同類原題：<strong>F19 Q4.4（p.139）</strong>、<strong>Lab 6 Q4（p.145）</strong>、<strong>Lab 6 Q5（p.146）</strong>。</p>
+<h2 id="s5"><a class="anchor" href="#s5">#</a>5. 用 atomic instruction 寫 spinlock / 填空</h2>
+<ol>
+<li>讀題目畀嘅 instruction 定義，問自己：<strong>「返回咩值代表我攞到 lock？」</strong></li>
+<li>套 <strong>P4 spinlock 表（p.7）</strong> 嘅格式：</li>
+</ol>
+<pre class="code" data-lang="c"><code>while (instr(...) 返回「攞唔到」嘅值)
+    ;                     /* spin */
+/* critical section */
+lock = 「free」嘅值;       /* release */
+</code></pre>
+<ol start="3">
+<li>表入面已經有四隻：<code>test_and_set</code>、<code>compare_and_swap</code>、<code>swap</code>、<code>compare_and_reset</code>；新 instruction（例如 <code>fetch_and_add</code>）→ <strong>X6-40（p.58）</strong>。</li>
+<li>填空版 → <strong>X6-39（p.58）</strong>；bounded-waiting TAS 填空 / 改錯 → <strong>P4「Bounded-waiting TAS 檢查點」</strong> + <strong>X6-15 至 X6-17（p.54）</strong>。</li>
+<li>同類原題：<strong>S26 Q2.4 swap（p.135）</strong>、<strong>Sp21 Q3.1 compare_and_reset（p.141）</strong>、<strong>Sp21 Q3.2（p.141）</strong>。</li>
+</ol>
+<p><strong>答卷寫法</strong>：code + 一句 <em>&quot;The lock is acquired only when the instruction returns the old value 'free'; the release stores the free value back.&quot;</em></p>
+<h2 id="s6"><a class="anchor" href="#s6">#</a>6. 「滿唔滿足 ME / progress / bounded waiting？」</h2>
+<ol>
+<li>先翻 <strong>X6-32 判斷表（p.57）</strong>：九種常見 protocol（只用 <code>turn</code>、flag 先 check 後 set、flag 先 set 後 check、Peterson、Peterson 調轉、TAS、CAS、bounded-waiting TAS、非 atomic acquire）。<strong>搵到一樣嘅就抄嗰行 Yes/No + reason</strong>。</li>
+<li>搵唔到 → 用 <strong>X6-33 至 X6-36（p.57）</strong> 嘅「反例」寫法逐個試：<ul>
+<li><strong>ME</strong>：試搵一個 interleaving 令<strong>兩個都入到 CS</strong>（兩邊都過咗 check 先改變數）→ 搵到 = violated。</li>
+<li><strong>Progress</strong>：試一個 process 留喺 <strong>remainder section</strong>（唔想入），另一個入唔入到？入唔到 = violated；或者兩個互相等（deadlock）= violated。</li>
+<li><strong>Bounded waiting</strong>：一個 process 等緊，另一個可唔可以<strong>無限次</strong>再入？可以 = violated。</li>
+</ul>
+</li>
+<li>定義原文：<strong>X6-06（p.52）</strong>（三個 requirements + 點樣會違反）。</li>
+</ol>
+<p><strong>答卷寫法</strong>：每個 requirement 一行：<em>&quot;Mutual exclusion: satisfied, because … / violated: P0 … then P1 …, both enter.&quot;</em> 有反例就寫出 interleaving（攞分關鍵）。</p>
+<h2 id="s7"><a class="anchor" href="#s7">#</a>7. 寫 code（mutex / semaphores / classic problems）</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>題目要求</th>
+  <th>抄</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>兩個 thread 加同一個 counter，要保證正確</td>
+  <td><strong>XC-15（p.68）</strong></td>
+</tr>
+<tr>
+  <td>用 semaphores 保證 T1 → T2 → T3</td>
+  <td><strong>XC-16（p.68）</strong></td>
+</tr>
+<tr>
+  <td>Producer–consumer（bounded buffer）</td>
+  <td><strong>XC-17（p.69）</strong>、pseudo-code <strong>X6-47（p.59）</strong></td>
+</tr>
+<tr>
+  <td>Readers–writers</td>
+  <td><strong>XC-18（p.69）</strong>、<strong>X6-48（p.60）</strong>、Lab 6 版 <strong>Lab 6 Q6（p.146）</strong></td>
+</tr>
+<tr>
+  <td>Mutex 填空（<code>pthread_mutex_lock</code> …）</td>
+  <td><strong>Lab 6 Q3（p.145）</strong></td>
+</tr>
+<tr>
+  <td>Condition variable</td>
+  <td><strong>X6-50（p.60）</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="s8"><a class="anchor" href="#s8">#</a>8. 交卷前 30 秒 checklist</h2>
+<ul>
+<li>可能值：有冇<strong>由左至右</strong>讀 operands？有冇漏「T2 全部喺前 / 全部喺後」兩個極端？</li>
+<li>Semaphore 次序：所有「之前」關係都用 <strong>init 0</strong> 嘅 semaphore？輪流嗰個係咪得<strong>第一個 = 1</strong>？</li>
+<li>Spinlock：<code>test_and_set</code> / <code>compare_and_swap</code> 返回 <strong>old value</strong>（<strong>E3 traps，p.4</strong>）。</li>
+<li><code>wait</code> / <code>signal</code> 調轉或者漏咗：<strong>X6-45（p.59）</strong> 有晒每種後果。</li>
+</ul>
+
+<nav class="pager"><a href="howto-sched.html"><small>← 上一頁</small>攻略：CPU scheduling 題</a><a class="next" href="ch1.html"><small>下一頁 →</small>Ch1 Introduction</a></nav>
+</div>
+<footer class="site">COMP3511 Fall 2026 · Midterm 29-Oct-2026 (Thu) 8–10 PM · L1 LTD · L2 LSKG012 · L3 LTB · notes generated from lecture slides 1–6</footer>
+</main>
+<aside class="toc"><div class="toc-title">本頁內容 On this page</div>
+<a class="l2" href="#s0">0. 入場前：貼 4 張 sticky notes</a>
+<a class="l2" href="#s1">1. 先認類型</a>
+<a class="l2" href="#s2">2. 所有可能值（race condition）</a>
+<a class="l2" href="#s3">3. Semaphore 次序 / precedence graph 填空</a>
+<a class="l2" href="#s4">4. 有 semaphores 嘅輸出序列</a>
+<a class="l2" href="#s5">5. 用 atomic instruction 寫 spinlock / 填空</a>
+<a class="l2" href="#s6">6. 「滿唔滿足 ME / progress / bounded waiting？」</a>
+<a class="l2" href="#s7">7. 寫 code（mutex / semaphores / classic problems）</a>
+<a class="l2" href="#s8">8. 交卷前 30 秒 checklist</a></aside>
+</div>
+
+</body>
+</html>
