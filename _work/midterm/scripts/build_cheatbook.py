@@ -31,6 +31,7 @@ CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 # code, source, English title (footer/tab), Chinese subtitle, colour
 PARTS = [
+    ("H", None, "How-to Guide", "攻略・fork・sched・sync", "#b08900"),
     ("E", "cb_essentials.md", "Exam-Day Essentials", "考場一頁通：公式・慣例・陷阱", "#d63939"),
     ("P", "cb_playbooks.md", "Playbooks", "解題流程 + 預計表", "#e8590c"),
     ("X", None, "Answer Bank", "預測題 + 直接抄答案・C programs", "#111111"),
@@ -388,8 +389,9 @@ def bank_html():
         parts = re.split(r"^\*\*Answer:\*\*\s*$", it["body"], flags=re.M)
         q = render(parts[0].strip(), "qq")[0]
         a = render(parts[1].strip(), "qa")[0] if len(parts) > 1 else ""
-        out.append('<div class="lq"><div class="lqh"><b>%s</b> %s <span class="lqch">%s</span></div>%s'
-                   '<div class="lqa"><b>Answer.</b> %s</div></div>' % (it["id"], html.escape(it["topic"]), it["ch"].upper(), q, a))
+        out.append('<div class="lq" id="Q-%s"><div class="lqh"><b>%s</b> %s <span class="lqch">%s</span></div>%s'
+                   '<div class="lqa"><b>Answer.</b> %s</div></div>'
+                   % (it["id"], it["id"], html.escape(it["topic"]), it["ch"].upper(), q, a))
     return "\n".join(out), heads
 
 
@@ -569,8 +571,8 @@ section.part { break-before: page; --pc: #333; }
 .toc-line .dots { flex: 0 0 auto; }
 .pg { display: inline-block; min-width: 18pt; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 .toc-part .tp .pg { color: #fff; margin-left: auto; }
-.router { columns: 2; column-gap: 7mm; font-size: 8.4pt; }
-.router .rr { display: flex; gap: 4pt; border-bottom: 0.5pt dotted #b8bec7; padding: 1.3pt 0; break-inside: avoid; }
+.router { columns: 2; column-gap: 7mm; font-size: 8.2pt; }
+.router .rr { display: flex; gap: 4pt; border-bottom: 0.5pt dotted #b8bec7; padding: 1pt 0; break-inside: avoid; }
 .router .rr a { flex: 1; }
 /* MC key */
 .mc-cols { columns: 2; column-gap: 6mm; column-rule: 0.5pt solid #dee2e6; }
@@ -601,6 +603,11 @@ section.part { break-before: page; --pc: #333; }
 .xans ul, .xans ol { margin: 0.5pt 0; padding-left: 12pt; }
 .xans table { font-size: 7.6pt; margin: 1.5pt 0; }
 .xa pre.code { font-size: 7.4pt; margin: 2pt 0; }
+/* how-to guides (part H) */
+.pb { break-before: page; }
+.pgi { font-weight: 800; }
+.part-H a { text-decoration: underline; text-decoration-color: #b08900; }
+.part-H h2 { background: #fff8db; }
 .xf-cols { columns: 2; column-gap: 7mm; font-size: 7.6pt; }
 .xf-cols .toc-line { font-size: 7.6pt; line-height: 1.25; }
 .xf-h { break-after: avoid; font-weight: 800; color: #fff; background: #111; padding: 0.5pt 4pt; margin: 3pt 0 1pt;
@@ -625,11 +632,37 @@ def pg(hid, pages):
     return '<span class="pg" data-id="%s">%s</span>' % (hid, (pages.get(hid, "000") if pages else "000"))
 
 
+HOWTO_FILES = ["howto_fork.md", "howto_sched.md", "howto_sync.md"]
+
+
+def howto_refs(md, pages):
+    """Guide placeholders -> clickable page references, numbered on pass 2 like the TOC."""
+    md = md.replace("（{{pages}} 頁版）", "")
+
+    def rep(m):
+        anchor = ("Q-" if m.group(1) == "q" else "") + m.group(2).strip()
+        return '<a href="#%s">p.<span class="pgi" data-id="%s">%s</span></a>' % (
+            anchor, anchor, (pages.get(anchor, "000") if pages else "000"))
+    return re.sub(r"\{\{([pq]):([^}]+)\}\}", rep, md)
+
+
+def howto_html(pages=None):
+    """Part H: the three how-to guides (same sources as the website's how-to pages), one per page."""
+    chunks = []
+    for k, name in enumerate(HOWTO_FILES):
+        md = howto_refs(read(name), pages)
+        md = re.sub(r"^(#{1,5}) ", lambda m: "#" + m.group(1) + " ", md, flags=re.M)   # H1 -> H2, H2 -> H3
+        chunks.append(('<div class="pb"></div>\n\n' if k else "") + md)
+    return render("\n\n".join(chunks), "H")
+
+
 def build_html(pages=None, index_html=None):
     sections, toc_data, all_links = [], [], []
     for code, src, title, sub, color in PARTS:
         pid = "part-" + code
-        if code == "X":
+        if code == "H":
+            body, heads = howto_html(pages)
+        elif code == "X":
             body, heads = xa_html(pages)
         elif code == "M":
             body, heads = mc_key_html()
@@ -641,6 +674,8 @@ def build_html(pages=None, index_html=None):
         else:
             md = re.sub(r"^# .*\n", "", source(src), count=1)  # drop the file's own H1; we print our own part header
             body, heads = render(md, code)
+            if code == "P":   # anchors for the P1 steps (the how-to guides link to them)
+                body = re.sub(r"<p><strong>Step (\d) — ", r'<p id="P-p1-step\1"><strong>Step \1 — ', body)
         h1 = ('<h1 id="%s" style="background:%s"><span class="code">%s</span>%s<span class="sub">%s</span></h1>'
               % (pid, color, code, html.escape(title), html.escape(sub)))
         sections.append('<section class="part part-%s" style="--pc:%s">%s\n%s</section>' % (code, color, h1, body))
@@ -651,6 +686,7 @@ def build_html(pages=None, index_html=None):
     legend = "".join('<div><span class="sw" style="background:%s">%s</span><span class="lt">%s · %s</span>%s</div>'
                      % (c[4], c[0], html.escape(c[2]), html.escape(c[3]), pg("part-" + c[0], pages)) for c in PARTS)
     router = [
+        ("Stuck on fork / scheduling / sync? → how-to guide", "part-H"),
         ("Formula card / course conventions / top traps", "E-e1-formula-card"),
         ("ANY short question → predicted Q + copy answer", "X-finder"),
         ("Write C code: fork / pipe / dup2 / exec / pthreads / sem", "X-xc"),
@@ -684,9 +720,6 @@ def build_html(pages=None, index_html=None):
         ("Named pipe / FIFO, popen, Pthreads (Lab 4)", "L-l4-lab-4-named-pipes"),
         ("Priority + RR with arrivals; PA2 MLFQ spec", "L-l5-lab-5-scheduling-review"),
         ("Peterson + Lab 6 sync sample questions", "L-l6-lab-6-synchronization-review"),
-        ("C / Pthreads API", "part-A"),
-        ("MC answer key", "part-M"),
-        ("Glossary A–Z / Index", "part-G"),
     ]
     router_rows = "".join('<div class="rr"><a href="#%s">%s</a>%s</div>' % (t, html.escape(q), pg(t, pages))
                           for q, t in router)
@@ -697,12 +730,13 @@ def build_html(pages=None, index_html=None):
   Coverage: Chapters 1–6 (to Synchronization Tools) · open-book · calculator allowed · bring rough sheets<br>
   中文解釋 + English keywords / model answers · 所有 fork / scheduling / sync 答案已用程式驗證</div></div>
  <div class="box"><h3>點用（How to use）</h3>
-  <ol><li><b>先睇 E（考場一頁通）</b>：公式卡、本科 conventions、陷阱表 — MC 前掃一次。</li>
+  <ol><li><b>唔記得點用？翻 H（攻略）</b>：fork / scheduling / sync 每類題「認題型 → 翻邊頁 → 照做 → 照寫」。</li>
+  <li><b>先睇 E（考場一頁通）</b>：公式卡、本科 conventions、陷阱表 — MC 前掃一次。</li>
   <li><b>計數題用 P（Playbooks）</b>：fork / pipe / scheduling / sync 步驟 + 預計表（Amdahl、powers、RM bound）。</li>
   <li><b>概念題 / short question / T-F</b> → 先翻 <b>X（Answer Bank）</b>：按章節排嘅預測題，英文答案直接抄；每章尾有 True/False 快速判斷。冇再去章節（1–6）📝 Model answer。</li>
   <li><b>PA / lab API / coding 題</b> → X 最後嘅 <b>完整 C programs（已編譯測試）</b> + L（Labs &amp; PA1/PA2）+ A（API 速查）。</li>
   <li><b>見到似曾相識嘅題目</b> → Q（歷屆全解）/ M（MC key）。<b>搵字</b> → 最後嘅 Index（紅色 = 主要頁）。</li>
-  <li>右邊（雙數頁左邊）有<b>彩色 tab</b>：同一顏色 = 同一部分。</li></ol></div>
+  </ol></div>
  <div class="box"><h3>Tab legend</h3><div class="legend">%s</div></div>
  <div class="box"><h3>題型 Router（見到 → 翻去）</h3>
   <div class="router">%s</div></div>
@@ -757,7 +791,7 @@ def part_ranges(pages, n_pages):
 def compute_index(pdf_path, ranges):
     d = fitz.open(pdf_path)
     skip = set()
-    for code in ("I", "G"):
+    for code in ("I", "G", "H"):
         if code in ranges:
             skip.update(range(ranges[code][0], ranges[code][1] + 1))
     first_content = min(r[0] for r in ranges.values())
@@ -880,16 +914,17 @@ def decorate(pdf_in, pdf_out, pages):
 
 def fill_numbers(doc_html, pages):
     def rep(m):
-        hid = m.group(1)
-        return '<span class="pg" data-id="%s">%s</span>' % (hid, pages.get(hid, "–"))
-    return re.sub(r'<span class="pg" data-id="([^"]+)">[^<]*</span>', rep, doc_html)
+        cls, hid = m.group(1), m.group(2)
+        return '<span class="%s" data-id="%s">%s</span>' % (cls, hid, pages.get(hid, "–"))
+    return re.sub(r'<span class="(pg|pgi)" data-id="([^"]+)">[^<]*</span>', rep, doc_html)
 
 
 def main():
     os.makedirs(WORK, exist_ok=True)
     ensure_katex_assets()
     sources = ([source(p[1]) for p in PARTS if p[1]] + [read("qb1_mc_bank.md"), read("qb3_practice_mc.md")]
-               + xa_sources() + ([read("xa_intro.md")] if os.path.exists(os.path.join(NOTES, "xa_intro.md")) else []))
+               + xa_sources() + ([read("xa_intro.md")] if os.path.exists(os.path.join(NOTES, "xa_intro.md")) else [])
+               + [read(f) for f in HOWTO_FILES])
     formulas = collect_math(sources)
     katex_prerender(formulas)
     print("formulas:", len(formulas))

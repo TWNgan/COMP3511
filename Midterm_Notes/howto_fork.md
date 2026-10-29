@@ -54,7 +54,7 @@
 
 ## 3. 類型 B — 畫 process tree
 
-1. 翻 **P1 Step 4（{{t:Step 4 — Process tree}}）**：每個 node 寫名（P0、P1、P2…），旁邊寫 **佢喺第幾個 iteration（i 值）出世**；child 由 fork 下一句開始、**繼承 i 值**繼續 loop。
+1. 翻 **P1 Step 4（{{p:P-p1-step4}}）**：每個 node 寫名（P0、P1、P2…），旁邊寫 **佢喺第幾個 iteration（i 值）出世**；child 由 fork 下一句開始、**繼承 i 值**繼續 loop。
 2. 由 P0 開始，一個 iteration 畫一層：每個仍然 active 嘅 node 照嗰輪 code 逐句行，**邊個 process 執行 `fork()`，就由佢拉一條箭咀去新 child**（child 再 fork 就由 child 再拉，所以會有孫）。
 3. 有 `break` / `return` → 嗰個 node 之後**唔再生**。例子：**Ch3 §9.3（{{p:3-s9-3}}）**、原題 **S26 Q3.1（{{q:S26-Q3.1}}）**。
 4. **自我檢查**：node 總數 = §2 計到嘅 total。
@@ -63,7 +63,7 @@
 
 ## 4. 類型 C — 所有可能輸出 / 次序
 
-1. 翻 **P1 Step 5（{{t:Step 5 — Output ordering}}）** 同 **Ch3 §9.6（{{p:3-s9-6}}）**。
+1. 翻 **P1 Step 5（{{p:P-p1-step5}}）** 同 **Ch3 §9.6（{{p:3-s9-6}}）**。
 2. 喺 rough paper：**每個 process 一行**，寫低佢印嘅字（同一 process 嘅次序**固定**）。
 3. 加約束（用箭咀連）：
    - parent 喺 `wait()` 之後印嘅 → 一定喺 child（同 child 嘅子孫）所有輸出**之後**；
@@ -76,7 +76,7 @@
 
 ## 5. 類型 D — exec 成功 / 失敗、fork 失敗
 
-1. 翻 **P1 Step 6（{{t:Step 6 — exec}}）** + **Ch3 §9.7（{{p:3-s9-7}}）**；原題 **S26 Q3.2（{{q:S26-Q3.2}}）**。
+1. 翻 **P1 Step 6（{{p:P-p1-step6}}）** + **Ch3 §9.7（{{p:3-s9-7}}）**；原題 **S26 Q3.2（{{q:S26-Q3.2}}）**。
 2. 照三個情況逐個寫：
    - **(I) fork ✓、exec ✓**：child 只印 exec **之前**嘅嘢（exec 之後嘅 code **永遠唔行**）+ parent 嘅輸出。
    - **(II) fork ✓、exec ✗**：exec 返回 −1，child **繼續行 exec 之後嘅 code**（loop 入面會繼續 fork！見 **X3-31（{{p:X3-31}}）**）。

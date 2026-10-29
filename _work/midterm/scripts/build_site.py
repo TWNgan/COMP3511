@@ -208,9 +208,11 @@ def book_ref(kind, key):
     if kind == "p":
         pg = b["names"].get(key)
     elif kind == "q":
-        lo, hi = b["names"]["part-Q"], b["names"]["part-M"] - 1
-        pat = re.compile(re.escape(key) + r"(?![0-9.])")
-        pg = next((i + 1 for i in range(lo - 1, hi) if pat.search(b["texts"][i])), None)
+        pg = b["names"].get("Q-" + key)          # anchor on each past-paper question (cheat book part Q)
+        if pg is None:
+            lo, hi = b["names"]["part-Q"], b["names"]["part-M"] - 1
+            pat = re.compile(re.escape(key) + r"(?![0-9.])")
+            pg = next((i + 1 for i in range(lo - 1, hi) if pat.search(b["texts"][i])), None)
     else:
         lo = b["names"]["part-E"]
         pg = next((i + 1 for i in range(lo - 1, b["pages"]) if key in b["texts"][i]), None)
