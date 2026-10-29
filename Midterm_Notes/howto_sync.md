@@ -33,6 +33,16 @@
 
 **答卷寫法**（**E4 模板，{{p:E-e4-answer-templates}}**）：逐個 case 列：*"Case 1: T1 reads a = 3, then T2 runs a = −1; b = 10; T1 reads b = 10 → c = 13."* → 最後 *"Possible values: {4, 6, 8, 9, 11, 13}"*。**每個 distinct 值都有分**，所以寧願多列 case。
 
+**📝 例子**（X6-41）：`a = 3, b = 5, c = 0`；T1：`if (a > 0) c = a + b; else c = b - a;`；T2：`a = -1; b = 10;`
+- 拆 T1：**R1** 讀 a（if）→ then：**R2** 讀 a、**R3** 讀 b、**W** 寫 c；else：讀 b、讀 a、寫 c。
+- T2 兩句（`a = -1` 一定喺 `b = 10` 之前）插入唔同空位：
+  - 兩句都喺 T1 之後 → then，a = 3、b = 5 → **8**
+  - `a = -1` 喺 R1 後、R2 前；`b = 10` 喺 R3 後 → a = −1、b = 5 → **4**
+  - 兩句都喺 R1 後、R2 前 → a = −1、b = 10 → **9**
+  - 兩句都喺 R2 後、R3 前 → a = 3、b = 10 → **13**
+  - `a = -1` 喺 R1 前 → 行 else（a = −1）：讀 b 見 5 → 5 − (−1) = **6**；讀 b 見 10 → 10 − (−1) = **11**
+- 答：**c ∈ {4, 6, 8, 9, 11, 13}**，每個值配返一個 interleaving。
+
 > 📝 **完整示範**：**X6-41（{{p:X6-41}}）**（6 個值，連表）。同類原題：**F19 Q4.3（{{q:F19-Q4.3}}）**、**F20 Q5（{{q:F20-Q5}}）**、**Lab 6 Q7（{{q:Lab6-Q7}}）**、**HW1 Q3.1（{{q:HW1-Q3.1}}）**；`counter++ / counter--` 版：**X6-02（{{p:X6-02}}）**。
 
 ## 3. Semaphore 次序 / precedence graph 填空
@@ -48,6 +58,15 @@
 **答卷寫法**：每個 semaphore 寫「名 = 初始值」，再逐個 BLANK 填；加一句 *"S1 signals s after it finishes; S2 waits on s before it starts, so S2 always follows S1."*
 同類原題：**S26 Q5（{{q:S26-Q5}}）**、**Lab 6 Q2（{{q:Lab6-Q2}}）**；示範 **X6-25（{{p:X6-25}}）**。
 
+**📝 例子 1**：要 S1（P1）→ S2（P2）→ S3（P3）。
+- 兩條箭咀 → 兩個 semaphore，init 0：`s12 = 0, s23 = 0`。
+- P1：`S1; signal(s12);`　P2：`wait(s12); S2; signal(s23);`　P3：`wait(s23); S3;`
+- 寫：*"s12 and s23 start at 0, so P2 blocks until P1 signals after S1, and P3 blocks until P2 signals after S2."*
+
+**📝 例子 2（輪流，Lab 6 Q1）**：T1 → T2 → T3 → T1 … 永遠咁輪。
+- 三個 semaphore：**S1 = 1、S2 = 0、S3 = 0**（得第一個 = 1）。
+- T1：`wait(S1); CS; signal(S2);`　T2：`wait(S2); CS; signal(S3);`　T3：`wait(S3); CS; signal(S1);`
+
 ## 4. 有 semaphores 嘅輸出序列
 
 **「呢個序列可唔可能？」** → 照 **P4「Semaphore 序列可行性」**：
@@ -62,6 +81,11 @@
 4. 檢查會唔會 deadlock（**X6-44，{{p:X6-44}}**：數 permits，追到全部人卡住為止）。
 
 同類原題：**F19 Q4.4（{{q:F19-Q4.4}}）**、**Lab 6 Q4（{{q:Lab6-Q4}}）**、**Lab 6 Q5（{{q:Lab6-Q5}}）**。
+
+**📝 例子**（X6-43）：`s = 0, t = 0`；P1：`print A; signal(s); wait(t); print C;`；P2：`print B; wait(s); signal(t); print D;`
+- 約束：A 先過 C、B 先過 D（同一 process）；D 要等 P2 過 `wait(s)` → 要 P1 `signal(s)`（A 之後）；C 要等 `signal(t)`（B 之後）。
+- 所以 A、B 都喺 C、D 之前 → **ABCD、ABDC、BACD、BADC**（4 個）。
+- 「**BDAC** 得唔得？」→ 唔得：*"D requires P2 to pass wait(s), but s stays 0 until P1 signals it after printing A, so D cannot be printed before A."*
 
 ## 5. 用 atomic instruction 寫 spinlock / 填空
 
@@ -81,6 +105,19 @@ lock = 「free」嘅值;       /* release */
 
 **答卷寫法**：code + 一句 *"The lock is acquired only when the instruction returns the old value 'free'; the release stores the free value back."*
 
+**📝 例子**：題目畀 `int swap(int *v, int new)`：**原子地**將 `*v` 設做 `new`，返回**舊值**。用佢寫 lock（`lock = 0` = free）。
+- 問自己：返回 **0（舊值 = free）** 先代表我攞到 lock → 返回 1 就繼續 spin。
+
+```c
+int lock = 0;                    /* shared, 0 = free */
+while (swap(&lock, 1) == 1)      /* old value 1: someone holds it, keep spinning */
+    ;
+/* critical section */
+lock = 0;                        /* release: store the free value */
+```
+
+- 同 P4 表 `swap` 嗰行一樣（S26 Q2.4 原題）。
+
 ## 6. 「滿唔滿足 ME / progress / bounded waiting？」
 
 1. 先翻 **X6-32 判斷表（{{p:X6-32}}）**：九種常見 protocol（只用 `turn`、flag 先 check 後 set、flag 先 set 後 check、Peterson、Peterson 調轉、TAS、CAS、bounded-waiting TAS、非 atomic acquire）。**搵到一樣嘅就抄嗰行 Yes/No + reason**。
@@ -92,6 +129,13 @@ lock = 「free」嘅值;       /* release */
 
 **答卷寫法**：每個 requirement 一行：*"Mutual exclusion: satisfied, because … / violated: P0 … then P1 …, both enter."* 有反例就寫出 interleaving（攞分關鍵）。
 
+**📝 例子**：共享 `int turn = 0;`；Pi：`while (turn != i) ; /* CS */ turn = j;`（j = 1 − i）
+- X6-32 表第一行 → ME **Yes**、Progress **No**、BW Yes。
+- 寫：
+  - *"Mutual exclusion: satisfied — Pi enters only when turn == i, and turn has a single value."*
+  - *"Progress: violated — if turn == 1 and P1 stays in its remainder section, P0 cannot enter although the critical section is free (strict alternation)."*
+  - *"Bounded waiting: satisfied — after Pi requests, Pj can enter at most once before turn passes to Pi."*
+
 ## 7. 寫 code（mutex / semaphores / classic problems）
 
 | 題目要求 | 抄 |
@@ -102,6 +146,10 @@ lock = 「free」嘅值;       /* release */
 | Readers–writers | **XC-18（{{p:XC-18}}）**、**X6-48（{{p:X6-48}}）**、Lab 6 版 **Lab 6 Q6（{{q:Lab6-Q6}}）** |
 | Mutex 填空（`pthread_mutex_lock` …） | **Lab 6 Q3（{{q:Lab6-Q3}}）** |
 | Condition variable | **X6-50（{{p:X6-50}}）** |
+
+**📝 例子**：「Two threads each add 1 to a shared counter 100000 times. Make sure the final value is always 200000.」
+- 翻 **XC-15（{{p:XC-15}}）** → **成段抄，唔使改**（mutex lock → `counter++` → unlock）。
+- 如果題目指定用 semaphore：`sem_t s; sem_init(&s, 0, 1);`，將 `pthread_mutex_lock(&lock)` / `pthread_mutex_unlock(&lock)` 換做 `sem_wait(&s)` / `sem_post(&s)`。
 
 ## 8. 交卷前 30 秒 checklist
 

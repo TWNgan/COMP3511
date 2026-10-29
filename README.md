@@ -9,7 +9,7 @@ exam-ready model answers in English.
 | What | Where |
 |---|---|
 | Study website — chapter notes, Labs & PA1/PA2 notes, answer bank, search, MC quiz, past-paper bank, CPU-scheduling simulator, calculators | [`Midterm_Site/`](Midterm_Site/index.html) |
-| Printable cheat book — 173 pages (part H = how-to guide), A4, LaTeX-rendered formulas, print double-sided (flip on long edge); part X = 313 predicted questions with copy-ready answers, True/False verdicts and 19 compile-tested C programs | [`COMP3511_Midterm_CheatBook.pdf`](COMP3511_Midterm_CheatBook.pdf) |
+| Printable cheat book — 176 pages (part H = how-to guide), A4, LaTeX-rendered formulas, print double-sided (flip on long edge); part X = 313 predicted questions with copy-ready answers, True/False verdicts and 19 compile-tested C programs | [`COMP3511_Midterm_CheatBook.pdf`](COMP3511_Midterm_CheatBook.pdf) |
 | Source notes (Markdown) | [`Midterm_Notes/`](Midterm_Notes/) |
 | Build and verification scripts | [`_work/midterm/scripts/`](_work/midterm/scripts/) |
 

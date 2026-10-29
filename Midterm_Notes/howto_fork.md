@@ -52,6 +52,20 @@
 > - `printf` 喺 loop 之後，每個 process 印一次 → **27**。
 > - 寫：*"In each iteration, fork() returns 0 in the child, so only the child forks again: each process becomes 3. After 3 iterations: $3^3 = 27$ processes, so X is printed 27 times."* + 1 個 iteration 嘅 tree（P0 → C1 → C2）。
 
+**📝 例子 2（有 `break`）**：`for (i = 0; i < 3; i++) { if (fork()) fork(); else break; }`，問總共幾多個 process、幾多個 process 行 `break`。
+- 查 **P1 表（{{p:P-p1-fork-playbook}}）**：row `if (fork()) fork(); else break;` → active ×2；total $2^{n+1}-1$；breaks $2^n-1$（S26 Q3.1）。
+- 查 **P5（{{p:P-p5-pre-computed-tables}}）** 嘅 $2^{n+1}-1$ 同 $2^n-1$ 兩欄，n = 3 → **15 processes、7 breaks**。
+- 想自己核對 → 一輪法表（每個 active process 每輪：第一個 child break；parent 同第二個 child 繼續）：
+
+| iteration | active（繼續 loop） | 今輪新 break | total |
+|---|---|---|---|
+| 開始 | 1 | 0 | 1 |
+| i = 0 | 2 | 1 | 3 |
+| i = 1 | 4 | 2 | 7 |
+| i = 2 | 8 | 4 | 15 |
+
+- 寫：*"In each iteration the first child breaks out of the loop, while the parent and the second child continue, so the active processes double. Total = $2^{n+1}-1$ = 15 processes; $2^n-1$ = 7 of them execute break."*
+
 ## 3. 類型 B — 畫 process tree
 
 1. 翻 **P1 Step 4（{{p:P-p1-step4}}）**：每個 node 寫名（P0、P1、P2…），旁邊寫 **佢喺第幾個 iteration（i 值）出世**；child 由 fork 下一句開始、**繼承 i 值**繼續 loop。
@@ -60,6 +74,16 @@
 4. **自我檢查**：node 總數 = §2 計到嘅 total。
 
 **答卷寫法**：箭咀 parent → child，每條線標 *i = 0 / 1 / 2*；最底寫 *"Total: N processes"*。
+
+**📝 例子**：`for (i = 0; i < 2; i++) fork();` 畫 process tree。
+
+```
+P0 --(i=0)--> P1 --(i=1)--> P3
+P0 --(i=1)--> P2
+```
+
+- P0 喺 i = 0 生 P1、i = 1 生 P2；P1 由 i = 0 嗰個 fork 之後開始（i 仲係 0），所以 i = 1 再生 P3；P2、P3 出世時已經係最後一輪，唔再生。
+- 檢查：node 數 = 4 = P1 表 `fork();` 嘅 $2^n$（n = 2）✔。答卷最底寫 *"Total: 4 processes."*
 
 ## 4. 類型 C — 所有可能輸出 / 次序
 
@@ -74,6 +98,18 @@
 
 **答卷寫法**：*"Assume each printf is flushed immediately."* 然後 (1)、(2)、(3)… 逐個 output 列出；問「幾多個」就寫總數 + 點數。
 
+**📝 例子**（假設 printf 即時 flush）：
+
+```c
+printf("A");
+if (fork() == 0) { printf("B"); printf("D"); }
+else             { wait(NULL); printf("C"); printf("E"); }
+```
+
+- 每個 process 一行：child：B → D；parent：（wait）→ C → E；A 喺 fork 之前，**最先**。
+- 約束：parent `wait(NULL)` → C、E 一定喺 B、D 之後 → **只有 1 個 output：ABDCE**。
+- 如果**冇** `wait(NULL)`：A 之後係 (B, D) 同 (C, E) 嘅任意合併 → $\binom{4}{2} = 6$ 個：**ABDCE、ABCDE、ABCED、ACBDE、ACBED、ACEBD**。
+
 ## 5. 類型 D — exec 成功 / 失敗、fork 失敗
 
 1. 翻 **P1 Step 6（{{p:P-p1-step6}}）** + **Ch3 §9.7（{{p:3-s9-7}}）**；原題 **S26 Q3.2（{{q:S26-Q3.2}}）**。
@@ -83,6 +119,20 @@
    - **(III) fork ✗**：冇 child，只有 `pid < 0` 嗰個 branch 嘅輸出。
 
 **答卷寫法**：三個 bullet，每個寫「印咩 + 一句原因」（*"exec replaces the process image, so the code after it never runs"*）。
+
+**📝 例子**：
+
+```c
+printf("1");
+pid_t pid = fork();
+if (pid < 0)       printf("F");
+else if (pid == 0) { execlp("ls", "ls", NULL); printf("2"); }
+else               { wait(NULL); printf("3"); }
+```
+
+- **(I) fork ✓、exec ✓**：**1、ls 嘅輸出、3**（"2" 永遠唔印：exec 已經換咗成個 program）。
+- **(II) fork ✓、exec ✗**：**1 2 3**（exec 返回 −1，child 繼續行 `printf("2")`；parent wait 完先印 3）。
+- **(III) fork ✗**：**1 F**（冇 child）。
 
 ## 6. 類型 E — pipe / dup / open 填空
 
@@ -106,6 +156,18 @@
    - 個 BLANK 唔使填嘢 → 寫 `/* Nothing */`（**E4 模板，{{p:E-e4-answer-templates}}**）。
 5. 同類原題：**S26 Q3.3（{{q:S26-Q3.3}}）**、**HW1 Q3.3（{{q:HW1-Q3.3}}）**、**HW1 Q2.5（{{q:HW1-Q2.5}}）**；完整程式：**XC-05（{{p:XC-05}}）**、**XC-06（{{p:XC-06}}）**、**XC-08（{{p:XC-08}}）**、**XC-09（{{p:XC-09}}）**。
 
+**📝 例子**：parent 將 x = 6 經 pipe 傳畀 child，child 印出嚟。
+
+```c
+int fd[2], x = 6, y;
+BLANK1;
+if (fork() == 0) { BLANK2; BLANK3; printf("%d\n", y); }
+else             { BLANK4; BLANK5; wait(NULL); }
+```
+
+- child 印 `y` → child = **reader**；parent = **writer**（P2 表 Reader / Writer 兩行照抄）。
+- **BLANK1** `pipe(fd);`（fork 之前）· **BLANK2** `close(fd[1]);` · **BLANK3** `read(fd[0], &y, sizeof(y));` · **BLANK4** `close(fd[0]);` · **BLANK5** `write(fd[1], &x, sizeof(x));` → 印 **6**。
+
 ## 7. 類型 F — 叫你寫 program
 
 翻 **XC（{{p:X-xc}}）**，搵最似嘅 program **成段抄**，再改字串 / 檔名 / 數目：
@@ -127,9 +189,15 @@
 
 **答卷寫法**：保留 comments（graders 睇得明 = 攞分）；記得 `wait()`、exec 之後 `perror(...); exit(1);`、close 唔用嘅 pipe ends。API 參數唔記得 → **A 部 API 速查（{{p:part-A}}）**。
 
+**📝 例子**：「Write a program in which the parent sends "hello" to its child through a pipe, and the child prints it.」
+- 翻 **XC-05（{{p:XC-05}}）**（parent → child 傳字串）→ **成段抄**，只改一行：`const char *msg = "Greetings";` → `const char *msg = "hello";`。
+- 其餘（`pipe` 喺 fork 之前、兩邊 close 唔用嗰端、`wait(NULL)`）保持不變 = 全部都係攞分位。
+
 ## 8. 類型 G — fork + pthread_create 混合
 
 直接翻 **X4-32 至 X4-36（{{p:X4-32}}–{{p:X4-36}}）**：已解好「幾多 process / thread / 印幾多次」嘅五種寫法。規則（抄落答卷）：*"fork() in a multithreaded process duplicates only the calling thread (Linux)."*；*"Threads share globals, processes get a copy."*（**X4-34（{{p:X4-34}}）**）。
+
+**📝 例子**：global `count = 0`；main 開一個 thread 做 `count++` 再 join；跟住 `fork()`；child 再開 thread 做 `count++`，印 count；parent `wait(NULL)` 之後印 count。→ 同 **X4-34** 一模一樣：**`child: 2` 先，之後 `parent: 1`**（thread 同 main 共用 count → 1；fork 之後 child 有自己一份 → 2；parent 嗰份仍然係 1）。
 
 ## 9. 交卷前 30 秒 checklist
 

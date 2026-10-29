@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>攻略：Synchronization 題 · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793266616">
-<link rel="stylesheet" href="assets/site.css?v=1793266616">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793267837">
+<link rel="stylesheet" href="assets/site.css?v=1793267837">
 
-<script src="assets/site.js?v=1793266616"></script>
-<script src="assets/search-index.js?v=1793266616"></script>
+<script src="assets/site.js?v=1793267837"></script>
+<script src="assets/search-index.js?v=1793267837"></script>
 </head>
 <body data-page="howto-sync">
 <header class="topbar">
@@ -59,7 +59,7 @@
 <div class="page-head"><span class="tag">How-to 攻略（點用本書攞分）</span><button class="btn mark-done" id="mark-done"></button></div>
 <h1 id="synchronization-cheat-book">攻略：Synchronization 題點用 cheat book 攞分</h1>
 <blockquote class="callout tip">
-<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（173 頁版）。Sync 題（歷屆約 8–15 分）幾乎全部係固定套路：<strong>可能值、semaphore 次序、輸出序列、用 atomic instruction 寫 lock、三個 requirement 判斷</strong>。</p>
+<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（176 頁版）。Sync 題（歷屆約 8–15 分）幾乎全部係固定套路：<strong>可能值、semaphore 次序、輸出序列、用 atomic instruction 寫 lock、三個 requirement 判斷</strong>。</p>
 </blockquote>
 <h2 id="s0"><a class="anchor" href="#s0">#</a>0. 入場前：貼 4 張 sticky notes</h2>
 <div class="tw"><table>
@@ -73,22 +73,22 @@
 <tbody>
 <tr>
   <td><strong>P4 Synchronization Playbook</strong></td>
-  <td><strong>p.15</strong></td>
+  <td><strong>p.18</strong></td>
   <td>可能值方法、semaphore 次序規則、spinlock 表</td>
 </tr>
 <tr>
   <td><strong>Ch6 §6 做題方法</strong></td>
-  <td><strong>p.133</strong></td>
+  <td><strong>p.136</strong></td>
   <td>歷屆題型逐步示範</td>
 </tr>
 <tr>
   <td><strong>X6 答案庫（判斷表、填空、例題）</strong></td>
-  <td><strong>p.60</strong></td>
+  <td><strong>p.63</strong></td>
   <td>直接抄答案 / 對答案</td>
 </tr>
 <tr>
   <td><strong>XC mutex / semaphore programs</strong></td>
-  <td><strong>p.76</strong></td>
+  <td><strong>p.79</strong></td>
   <td>寫 code 題</td>
 </tr>
 </tbody>
@@ -128,34 +128,58 @@
 </tr>
 <tr>
   <td>定義 / 解釋：race condition、critical section、spinlock pros/cons、semaphore vs mutex</td>
-  <td>題目搜尋表 <strong>p.17</strong> → <strong>X6（p.60）</strong> 直接抄</td>
+  <td>題目搜尋表 <strong>p.20</strong> → <strong>X6（p.63）</strong> 直接抄</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="s2"><a class="anchor" href="#s2">#</a>2. 所有可能值（race condition）</h2>
-<p>照 <strong>P4「Race 可能值」（p.15）</strong> 四步，全部機械式：</p>
+<p>照 <strong>P4「Race 可能值」（p.18）</strong> 四步，全部機械式：</p>
 <ol>
 <li><strong>拆 T1 做 atomic steps</strong>：<code>if (a &gt; 0)</code> = 讀 a；<code>c = a + b</code> = 讀 a → 讀 b → 寫 c（<strong>由左至右讀</strong>）；<code>c = b - a</code> = 讀 b → 讀 a → 寫 c。寫成 <em>R1, R2, R3, W</em>。</li>
 <li><strong>T2 嘅 writes 次序固定</strong>（例如 <code>a = -1;</code> 先，<code>b = 10;</code> 後）；佢哋可以插入 T1 每個空位（R1 之前、R1–R2 之間…）。</li>
 <li><strong>逐個插法計</strong>：每個 read 見到新值定舊值 → 行邊個 branch → 計結果。如果 T2 都寫同一個變數（例如兩邊都寫 c），<strong>最後寫嗰個贏</strong>，記得加埋呢啲 case。</li>
 <li>收集所有<strong>唔同</strong>嘅值。</li>
 </ol>
-<p><strong>答卷寫法</strong>（<strong>E4 模板，p.13</strong>）：逐個 case 列：<em>&quot;Case 1: T1 reads a = 3, then T2 runs a = −1; b = 10; T1 reads b = 10 → c = 13.&quot;</em> → 最後 <em>&quot;Possible values: {4, 6, 8, 9, 11, 13}&quot;</em>。<strong>每個 distinct 值都有分</strong>，所以寧願多列 case。</p>
+<p><strong>答卷寫法</strong>（<strong>E4 模板，p.16</strong>）：逐個 case 列：<em>&quot;Case 1: T1 reads a = 3, then T2 runs a = −1; b = 10; T1 reads b = 10 → c = 13.&quot;</em> → 最後 <em>&quot;Possible values: {4, 6, 8, 9, 11, 13}&quot;</em>。<strong>每個 distinct 值都有分</strong>，所以寧願多列 case。</p>
+<p><strong>📝 例子</strong>（X6-41）：<code>a = 3, b = 5, c = 0</code>；T1：<code>if (a &gt; 0) c = a + b; else c = b - a;</code>；T2：<code>a = -1; b = 10;</code></p>
+<ul>
+<li>拆 T1：<strong>R1</strong> 讀 a（if）→ then：<strong>R2</strong> 讀 a、<strong>R3</strong> 讀 b、<strong>W</strong> 寫 c；else：讀 b、讀 a、寫 c。</li>
+<li>T2 兩句（<code>a = -1</code> 一定喺 <code>b = 10</code> 之前）插入唔同空位：<ul>
+<li>兩句都喺 T1 之後 → then，a = 3、b = 5 → <strong>8</strong></li>
+<li><code>a = -1</code> 喺 R1 後、R2 前；<code>b = 10</code> 喺 R3 後 → a = −1、b = 5 → <strong>4</strong></li>
+<li>兩句都喺 R1 後、R2 前 → a = −1、b = 10 → <strong>9</strong></li>
+<li>兩句都喺 R2 後、R3 前 → a = 3、b = 10 → <strong>13</strong></li>
+<li><code>a = -1</code> 喺 R1 前 → 行 else（a = −1）：讀 b 見 5 → 5 − (−1) = <strong>6</strong>；讀 b 見 10 → 10 − (−1) = <strong>11</strong></li>
+</ul>
+</li>
+<li>答：<strong>c ∈ {4, 6, 8, 9, 11, 13}</strong>，每個值配返一個 interleaving。</li>
+</ul>
 <blockquote class="callout answer">
-<p>📝 <strong>完整示範</strong>：<strong>X6-41（p.66）</strong>（6 個值，連表）。同類原題：<strong>F19 Q4.3（p.147）</strong>、<strong>F20 Q5（p.148）</strong>、<strong>Lab 6 Q7（p.154）</strong>、<strong>HW1 Q3.1（p.150）</strong>；<code>counter++ / counter--</code> 版：<strong>X6-02（p.60）</strong>。</p>
+<p>📝 <strong>完整示範</strong>：<strong>X6-41（p.69）</strong>（6 個值，連表）。同類原題：<strong>F19 Q4.3（p.150）</strong>、<strong>F20 Q5（p.151）</strong>、<strong>Lab 6 Q7（p.157）</strong>、<strong>HW1 Q3.1（p.153）</strong>；<code>counter++ / counter--</code> 版：<strong>X6-02（p.63）</strong>。</p>
 </blockquote>
 <h2 id="s3"><a class="anchor" href="#s3">#</a>3. Semaphore 次序 / precedence graph 填空</h2>
-<p>照 <strong>P4「Semaphore 次序」（p.15）</strong>：</p>
+<p>照 <strong>P4「Semaphore 次序」（p.18）</strong>：</p>
 <ol>
 <li>畫出要求嘅次序：每個「X 要喺 Y 之前」畫一條箭咀 X → Y。</li>
 <li><strong>每條箭咀 = 一個 semaphore，初始值 0</strong>：<strong>X 做完之後 <code>signal(s)</code>；Y 開始之前 <code>wait(s)</code></strong>。</li>
-<li>一個 statement 有兩個前置 → <strong>兩個 <code>wait</code></strong>（例：<strong>X6-37，p.66</strong>）。</li>
-<li><strong>輪流</strong>（T1 → T2 → T3 → T1 …）→ 第一個 semaphore <strong>= 1</strong>，其餘 <strong>= 0</strong>；每個 thread <code>wait(自己)</code> … <code>signal(下一個)</code>（<strong>X6-38，p.66</strong>；<strong>Lab 6 Q1，p.153</strong>）。</li>
-<li>「最多 k 個同時」→ 一個 semaphore = <strong>k</strong>；mutual exclusion → <strong>1</strong>（<strong>X6-24 / X6-26，p.63</strong>）。</li>
+<li>一個 statement 有兩個前置 → <strong>兩個 <code>wait</code></strong>（例：<strong>X6-37，p.69</strong>）。</li>
+<li><strong>輪流</strong>（T1 → T2 → T3 → T1 …）→ 第一個 semaphore <strong>= 1</strong>，其餘 <strong>= 0</strong>；每個 thread <code>wait(自己)</code> … <code>signal(下一個)</code>（<strong>X6-38，p.69</strong>；<strong>Lab 6 Q1，p.156</strong>）。</li>
+<li>「最多 k 個同時」→ 一個 semaphore = <strong>k</strong>；mutual exclusion → <strong>1</strong>（<strong>X6-24 / X6-26，p.66</strong>）。</li>
 <li>唔使填嘢嘅 BLANK → 寫 <code>/* Nothing */</code>。</li>
 </ol>
 <p><strong>答卷寫法</strong>：每個 semaphore 寫「名 = 初始值」，再逐個 BLANK 填；加一句 <em>&quot;S1 signals s after it finishes; S2 waits on s before it starts, so S2 always follows S1.&quot;</em>
-同類原題：<strong>S26 Q5（p.144）</strong>、<strong>Lab 6 Q2（p.153）</strong>；示範 <strong>X6-25（p.64）</strong>。</p>
+同類原題：<strong>S26 Q5（p.147）</strong>、<strong>Lab 6 Q2（p.156）</strong>；示範 <strong>X6-25（p.67）</strong>。</p>
+<p><strong>📝 例子 1</strong>：要 S1（P1）→ S2（P2）→ S3（P3）。</p>
+<ul>
+<li>兩條箭咀 → 兩個 semaphore，init 0：<code>s12 = 0, s23 = 0</code>。</li>
+<li>P1：<code>S1; signal(s12);</code>　P2：<code>wait(s12); S2; signal(s23);</code>　P3：<code>wait(s23); S3;</code></li>
+<li>寫：<em>&quot;s12 and s23 start at 0, so P2 blocks until P1 signals after S1, and P3 blocks until P2 signals after S2.&quot;</em></li>
+</ul>
+<p><strong>📝 例子 2（輪流，Lab 6 Q1）</strong>：T1 → T2 → T3 → T1 … 永遠咁輪。</p>
+<ul>
+<li>三個 semaphore：<strong>S1 = 1、S2 = 0、S3 = 0</strong>（得第一個 = 1）。</li>
+<li>T1：<code>wait(S1); CS; signal(S2);</code>　T2：<code>wait(S2); CS; signal(S3);</code>　T3：<code>wait(S3); CS; signal(S1);</code></li>
+</ul>
 <h2 id="s4"><a class="anchor" href="#s4">#</a>4. 有 semaphores 嘅輸出序列</h2>
 <p><strong>「呢個序列可唔可能？」</strong> → 照 <strong>P4「Semaphore 序列可行性」</strong>：</p>
 <ol>
@@ -163,18 +187,24 @@
 <li>跟住個序列逐個字：搵出邊個 process 印 → 行到嗰度之前要經過嘅 <code>wait</code>，<strong>當時個值一定要 &gt; 0</strong>（否則嗰個 process 要等，序列就唔得）；<code>signal</code> 就 +1。</li>
 <li>全部行得通 → possible；卡住 → impossible，寫低<strong>卡喺邊個 <code>wait</code>、個值係幾多</strong>。</li>
 </ol>
-<p><strong>「列出所有可能輸出」</strong> → <strong>X6-43（p.67）</strong> 方法：</p>
+<p><strong>「列出所有可能輸出」</strong> → <strong>X6-43（p.70）</strong> 方法：</p>
 <ol>
 <li>每個 process 自己嘅次序固定；</li>
 <li>每對 <code>signal(s)</code> → <code>wait(s)</code> 加一條「之前」約束；</li>
 <li>列晒符合約束嘅次序；</li>
-<li>檢查會唔會 deadlock（<strong>X6-44，p.67</strong>：數 permits，追到全部人卡住為止）。</li>
+<li>檢查會唔會 deadlock（<strong>X6-44，p.70</strong>：數 permits，追到全部人卡住為止）。</li>
 </ol>
-<p>同類原題：<strong>F19 Q4.4（p.147）</strong>、<strong>Lab 6 Q4（p.153）</strong>、<strong>Lab 6 Q5（p.154）</strong>。</p>
+<p>同類原題：<strong>F19 Q4.4（p.150）</strong>、<strong>Lab 6 Q4（p.156）</strong>、<strong>Lab 6 Q5（p.157）</strong>。</p>
+<p><strong>📝 例子</strong>（X6-43）：<code>s = 0, t = 0</code>；P1：<code>print A; signal(s); wait(t); print C;</code>；P2：<code>print B; wait(s); signal(t); print D;</code></p>
+<ul>
+<li>約束：A 先過 C、B 先過 D（同一 process）；D 要等 P2 過 <code>wait(s)</code> → 要 P1 <code>signal(s)</code>（A 之後）；C 要等 <code>signal(t)</code>（B 之後）。</li>
+<li>所以 A、B 都喺 C、D 之前 → <strong>ABCD、ABDC、BACD、BADC</strong>（4 個）。</li>
+<li>「<strong>BDAC</strong> 得唔得？」→ 唔得：<em>&quot;D requires P2 to pass wait(s), but s stays 0 until P1 signals it after printing A, so D cannot be printed before A.&quot;</em></li>
+</ul>
 <h2 id="s5"><a class="anchor" href="#s5">#</a>5. 用 atomic instruction 寫 spinlock / 填空</h2>
 <ol>
 <li>讀題目畀嘅 instruction 定義，問自己：<strong>「返回咩值代表我攞到 lock？」</strong></li>
-<li>套 <strong>P4 spinlock 表（p.15）</strong> 嘅格式：</li>
+<li>套 <strong>P4 spinlock 表（p.18）</strong> 嘅格式：</li>
 </ol>
 <pre class="code" data-lang="c"><code>while (instr(...) 返回「攞唔到」嘅值)
     ;                     /* spin */
@@ -182,23 +212,46 @@
 lock = 「free」嘅值;       /* release */
 </code></pre>
 <ol start="3">
-<li>表入面已經有四隻：<code>test_and_set</code>、<code>compare_and_swap</code>、<code>swap</code>、<code>compare_and_reset</code>；新 instruction（例如 <code>fetch_and_add</code>）→ <strong>X6-40（p.66）</strong>。</li>
-<li>填空版 → <strong>X6-39（p.66）</strong>；bounded-waiting TAS 填空 / 改錯 → <strong>P4「Bounded-waiting TAS 檢查點」</strong> + <strong>X6-15 至 X6-17（p.62）</strong>。</li>
-<li>同類原題：<strong>S26 Q2.4 swap（p.143）</strong>、<strong>Sp21 Q3.1 compare_and_reset（p.149）</strong>、<strong>Sp21 Q3.2（p.149）</strong>。</li>
+<li>表入面已經有四隻：<code>test_and_set</code>、<code>compare_and_swap</code>、<code>swap</code>、<code>compare_and_reset</code>；新 instruction（例如 <code>fetch_and_add</code>）→ <strong>X6-40（p.69）</strong>。</li>
+<li>填空版 → <strong>X6-39（p.69）</strong>；bounded-waiting TAS 填空 / 改錯 → <strong>P4「Bounded-waiting TAS 檢查點」</strong> + <strong>X6-15 至 X6-17（p.65）</strong>。</li>
+<li>同類原題：<strong>S26 Q2.4 swap（p.146）</strong>、<strong>Sp21 Q3.1 compare_and_reset（p.152）</strong>、<strong>Sp21 Q3.2（p.152）</strong>。</li>
 </ol>
 <p><strong>答卷寫法</strong>：code + 一句 <em>&quot;The lock is acquired only when the instruction returns the old value 'free'; the release stores the free value back.&quot;</em></p>
+<p><strong>📝 例子</strong>：題目畀 <code>int swap(int *v, int new)</code>：<strong>原子地</strong>將 <code>*v</code> 設做 <code>new</code>，返回<strong>舊值</strong>。用佢寫 lock（<code>lock = 0</code> = free）。</p>
+<ul>
+<li>問自己：返回 <strong>0（舊值 = free）</strong> 先代表我攞到 lock → 返回 1 就繼續 spin。</li>
+</ul>
+<pre class="code" data-lang="c"><code>int lock = 0;                    /* shared, 0 = free */
+while (swap(&amp;lock, 1) == 1)      /* old value 1: someone holds it, keep spinning */
+    ;
+/* critical section */
+lock = 0;                        /* release: store the free value */
+</code></pre>
+<ul>
+<li>同 P4 表 <code>swap</code> 嗰行一樣（S26 Q2.4 原題）。</li>
+</ul>
 <h2 id="s6"><a class="anchor" href="#s6">#</a>6. 「滿唔滿足 ME / progress / bounded waiting？」</h2>
 <ol>
-<li>先翻 <strong>X6-32 判斷表（p.65）</strong>：九種常見 protocol（只用 <code>turn</code>、flag 先 check 後 set、flag 先 set 後 check、Peterson、Peterson 調轉、TAS、CAS、bounded-waiting TAS、非 atomic acquire）。<strong>搵到一樣嘅就抄嗰行 Yes/No + reason</strong>。</li>
-<li>搵唔到 → 用 <strong>X6-33 至 X6-36（p.65）</strong> 嘅「反例」寫法逐個試：<ul>
+<li>先翻 <strong>X6-32 判斷表（p.68）</strong>：九種常見 protocol（只用 <code>turn</code>、flag 先 check 後 set、flag 先 set 後 check、Peterson、Peterson 調轉、TAS、CAS、bounded-waiting TAS、非 atomic acquire）。<strong>搵到一樣嘅就抄嗰行 Yes/No + reason</strong>。</li>
+<li>搵唔到 → 用 <strong>X6-33 至 X6-36（p.68）</strong> 嘅「反例」寫法逐個試：<ul>
 <li><strong>ME</strong>：試搵一個 interleaving 令<strong>兩個都入到 CS</strong>（兩邊都過咗 check 先改變數）→ 搵到 = violated。</li>
 <li><strong>Progress</strong>：試一個 process 留喺 <strong>remainder section</strong>（唔想入），另一個入唔入到？入唔到 = violated；或者兩個互相等（deadlock）= violated。</li>
 <li><strong>Bounded waiting</strong>：一個 process 等緊，另一個可唔可以<strong>無限次</strong>再入？可以 = violated。</li>
 </ul>
 </li>
-<li>定義原文：<strong>X6-06（p.60）</strong>（三個 requirements + 點樣會違反）。</li>
+<li>定義原文：<strong>X6-06（p.63）</strong>（三個 requirements + 點樣會違反）。</li>
 </ol>
 <p><strong>答卷寫法</strong>：每個 requirement 一行：<em>&quot;Mutual exclusion: satisfied, because … / violated: P0 … then P1 …, both enter.&quot;</em> 有反例就寫出 interleaving（攞分關鍵）。</p>
+<p><strong>📝 例子</strong>：共享 <code>int turn = 0;</code>；Pi：<code>while (turn != i) ; /* CS */ turn = j;</code>（j = 1 − i）</p>
+<ul>
+<li>X6-32 表第一行 → ME <strong>Yes</strong>、Progress <strong>No</strong>、BW Yes。</li>
+<li>寫：<ul>
+<li><em>&quot;Mutual exclusion: satisfied — Pi enters only when turn == i, and turn has a single value.&quot;</em></li>
+<li><em>&quot;Progress: violated — if turn == 1 and P1 stays in its remainder section, P0 cannot enter although the critical section is free (strict alternation).&quot;</em></li>
+<li><em>&quot;Bounded waiting: satisfied — after Pi requests, Pj can enter at most once before turn passes to Pi.&quot;</em></li>
+</ul>
+</li>
+</ul>
 <h2 id="s7"><a class="anchor" href="#s7">#</a>7. 寫 code（mutex / semaphores / classic problems）</h2>
 <div class="tw"><table>
 <thead>
@@ -210,36 +263,41 @@ lock = 「free」嘅值;       /* release */
 <tbody>
 <tr>
   <td>兩個 thread 加同一個 counter，要保證正確</td>
-  <td><strong>XC-15（p.76）</strong></td>
+  <td><strong>XC-15（p.79）</strong></td>
 </tr>
 <tr>
   <td>用 semaphores 保證 T1 → T2 → T3</td>
-  <td><strong>XC-16（p.76）</strong></td>
+  <td><strong>XC-16（p.79）</strong></td>
 </tr>
 <tr>
   <td>Producer–consumer（bounded buffer）</td>
-  <td><strong>XC-17（p.77）</strong>、pseudo-code <strong>X6-47（p.67）</strong></td>
+  <td><strong>XC-17（p.80）</strong>、pseudo-code <strong>X6-47（p.70）</strong></td>
 </tr>
 <tr>
   <td>Readers–writers</td>
-  <td><strong>XC-18（p.77）</strong>、<strong>X6-48（p.68）</strong>、Lab 6 版 <strong>Lab 6 Q6（p.154）</strong></td>
+  <td><strong>XC-18（p.80）</strong>、<strong>X6-48（p.71）</strong>、Lab 6 版 <strong>Lab 6 Q6（p.157）</strong></td>
 </tr>
 <tr>
   <td>Mutex 填空（<code>pthread_mutex_lock</code> …）</td>
-  <td><strong>Lab 6 Q3（p.153）</strong></td>
+  <td><strong>Lab 6 Q3（p.156）</strong></td>
 </tr>
 <tr>
   <td>Condition variable</td>
-  <td><strong>X6-50（p.68）</strong></td>
+  <td><strong>X6-50（p.71）</strong></td>
 </tr>
 </tbody>
 </table></div>
+<p><strong>📝 例子</strong>：「Two threads each add 1 to a shared counter 100000 times. Make sure the final value is always 200000.」</p>
+<ul>
+<li>翻 <strong>XC-15（p.79）</strong> → <strong>成段抄，唔使改</strong>（mutex lock → <code>counter++</code> → unlock）。</li>
+<li>如果題目指定用 semaphore：<code>sem_t s; sem_init(&amp;s, 0, 1);</code>，將 <code>pthread_mutex_lock(&amp;lock)</code> / <code>pthread_mutex_unlock(&amp;lock)</code> 換做 <code>sem_wait(&amp;s)</code> / <code>sem_post(&amp;s)</code>。</li>
+</ul>
 <h2 id="s8"><a class="anchor" href="#s8">#</a>8. 交卷前 30 秒 checklist</h2>
 <ul>
 <li>可能值：有冇<strong>由左至右</strong>讀 operands？有冇漏「T2 全部喺前 / 全部喺後」兩個極端？</li>
 <li>Semaphore 次序：所有「之前」關係都用 <strong>init 0</strong> 嘅 semaphore？輪流嗰個係咪得<strong>第一個 = 1</strong>？</li>
-<li>Spinlock：<code>test_and_set</code> / <code>compare_and_swap</code> 返回 <strong>old value</strong>（<strong>E3 traps，p.12</strong>）。</li>
-<li><code>wait</code> / <code>signal</code> 調轉或者漏咗：<strong>X6-45（p.67）</strong> 有晒每種後果。</li>
+<li>Spinlock：<code>test_and_set</code> / <code>compare_and_swap</code> 返回 <strong>old value</strong>（<strong>E3 traps，p.15</strong>）。</li>
+<li><code>wait</code> / <code>signal</code> 調轉或者漏咗：<strong>X6-45（p.70）</strong> 有晒每種後果。</li>
 </ul>
 
 <nav class="pager"><a href="howto-sched.html"><small>← 上一頁</small>攻略：CPU scheduling 題</a><a class="next" href="ch1.html"><small>下一頁 →</small>Ch1 Introduction</a></nav>

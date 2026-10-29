@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>攻略：fork / pipe 題 · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793266616">
-<link rel="stylesheet" href="assets/site.css?v=1793266616">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793267837">
+<link rel="stylesheet" href="assets/site.css?v=1793267837">
 
-<script src="assets/site.js?v=1793266616"></script>
-<script src="assets/search-index.js?v=1793266616"></script>
+<script src="assets/site.js?v=1793267837"></script>
+<script src="assets/search-index.js?v=1793267837"></script>
 </head>
 <body data-page="howto-fork">
 <header class="topbar">
@@ -59,7 +59,7 @@
 <div class="page-head"><span class="tag">How-to 攻略（點用本書攞分）</span><button class="btn mark-done" id="mark-done"></button></div>
 <h1 id="fork-pipe-cheat-book">攻略：fork / pipe 題點用 cheat book 攞分</h1>
 <blockquote class="callout tip">
-<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。所有頁數 = 印出嚟嗰本 cheat book（173 頁版）。見到 fork / pipe 題：<strong>先認類型（§1）→ 翻指定頁 → 跟步驟 → 用「答卷寫法」寫</strong>。</p>
+<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。所有頁數 = 印出嚟嗰本 cheat book（176 頁版）。見到 fork / pipe 題：<strong>先認類型（§1）→ 翻指定頁 → 跟步驟 → 用「答卷寫法」寫</strong>。</p>
 </blockquote>
 <h2 id="s0"><a class="anchor" href="#s0">#</a>0. 入場前：貼 5 張 sticky notes</h2>
 <div class="tw"><table>
@@ -73,27 +73,27 @@
 <tbody>
 <tr>
   <td><strong>P1 fork Playbook</strong>（pattern 表 + 已驗證答案）</td>
-  <td><strong>p.14</strong></td>
+  <td><strong>p.17</strong></td>
   <td>數 process / 數 print 次數</td>
 </tr>
 <tr>
   <td><strong>P2 pipe / dup 填空表</strong></td>
-  <td><strong>p.15</strong></td>
+  <td><strong>p.18</strong></td>
   <td>pipe / dup2 / open 填空</td>
 </tr>
 <tr>
   <td><strong>P5 Powers 表</strong>（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>…）</td>
-  <td><strong>p.16</strong></td>
+  <td><strong>p.19</strong></td>
   <td>唔使計次方，直接查</td>
 </tr>
 <tr>
   <td><strong>Ch3 §9 fork 解題大法</strong></td>
-  <td><strong>p.102</strong></td>
+  <td><strong>p.105</strong></td>
   <td>break / 短路 / 輸出次序 / exec</td>
 </tr>
 <tr>
   <td><strong>XC 完整 C programs</strong></td>
-  <td><strong>p.71</strong></td>
+  <td><strong>p.74</strong></td>
   <td>「寫 program」題直接抄改</td>
 </tr>
 </tbody>
@@ -149,14 +149,14 @@
 <p><strong>步驟（全部係查表，唔使理解）</strong></p>
 <ol>
 <li>抄低 loop 入面嗰段 code（<code>for (i = 0; i &lt; n; i++) { 呢度 }</code>）同 <strong>n</strong>。</li>
-<li>翻 <strong>P1 Step 2 pattern 表（p.14）</strong>：喺「每 iteration」一欄搵<strong>一模一樣</strong>嘅 code → 讀「n 次後」formula → 代 n。</li>
-<li>次方數唔使計：翻 <strong>P5 Powers 表（p.16）</strong>，行 = n，欄 = formula（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mopen">(</span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord">/3</span></span></span></span> 都有）。</li>
-<li>表冇 → 翻 <strong>P1 Step 3「其他已驗證答案」（p.14）</strong> 同 <strong>Ch3 §9.8（p.105）</strong>：好多係歷屆原題（S26、F19、F20、Sp21、F22、F24、S25、Lab），<strong>一樣就直接抄答案</strong>。</li>
+<li>翻 <strong>P1 Step 2 pattern 表（p.17）</strong>：喺「每 iteration」一欄搵<strong>一模一樣</strong>嘅 code → 讀「n 次後」formula → 代 n。</li>
+<li>次方數唔使計：翻 <strong>P5 Powers 表（p.19）</strong>，行 = n，欄 = formula（<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">6</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mopen">(</span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span>、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord">4</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord">/3</span></span></span></span> 都有）。</li>
+<li>表冇 → 翻 <strong>P1 Step 3「其他已驗證答案」（p.17）</strong> 同 <strong>Ch3 §9.8（p.108）</strong>：好多係歷屆原題（S26、F19、F20、Sp21、F22、F24、S25、Lab），<strong>一樣就直接抄答案</strong>。</li>
 <li>仍然冇 → 用「<strong>一輪法</strong>」（純機械）：<ul>
-<li>喺 rough paper 由 <strong>1 個 process</strong> 開始，<strong>只做一個 iteration</strong>：照 <strong>Ch3 §9.1 規則（p.102）</strong> 逐句行（child 拎到 0；<code>A &amp;&amp; B</code>：A 係 0 就唔做 B；<code>A || B</code>：A 非 0 就唔做 B）。</li>
+<li>喺 rough paper 由 <strong>1 個 process</strong> 開始，<strong>只做一個 iteration</strong>：照 <strong>Ch3 §9.1 規則（p.105）</strong> 逐句行（child 拎到 0；<code>A &amp;&amp; B</code>：A 係 0 就唔做 B；<code>A || B</code>：A 非 0 就唔做 B）。</li>
 <li>數 <strong>k = 做完一輪仲會繼續 loop 嘅 process 數</strong>，同 <strong>s = 停咗嘅</strong>（<code>break</code> / <code>return</code> / <code>exit</code> / exec 成功）。</li>
 <li><strong>s = 0</strong>：答案 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>（查 P5）。</li>
-<li><strong>s &gt; 0</strong>：翻 <strong>Ch3 §9.3（p.103）</strong> 嗰個「active 追蹤表」，逐輪填 <em>iteration · active · 新增 · total</em>。</li>
+<li><strong>s &gt; 0</strong>：翻 <strong>Ch3 §9.3（p.106）</strong> 嗰個「active 追蹤表」，逐輪填 <em>iteration · active · 新增 · total</em>。</li>
 </ul>
 </li>
 <li>問 <strong>print 幾多次</strong>：<ul>
@@ -181,42 +181,117 @@
 <li>寫：<em>&quot;In each iteration, fork() returns 0 in the child, so only the child forks again: each process becomes 3. After 3 iterations: <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">3</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">27</span></span></span></span> processes, so X is printed 27 times.&quot;</em> + 1 個 iteration 嘅 tree（P0 → C1 → C2）。</li>
 </ul>
 </blockquote>
+<p><strong>📝 例子 2（有 <code>break</code>）</strong>：<code>for (i = 0; i &lt; 3; i++) { if (fork()) fork(); else break; }</code>，問總共幾多個 process、幾多個 process 行 <code>break</code>。</p>
+<ul>
+<li>查 <strong>P1 表（p.17）</strong>：row <code>if (fork()) fork(); else break;</code> → active ×2；total <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>；breaks <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>（S26 Q3.1）。</li>
+<li>查 <strong>P5（p.19）</strong> 嘅 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 同 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 兩欄，n = 3 → <strong>15 processes、7 breaks</strong>。</li>
+<li>想自己核對 → 一輪法表（每個 active process 每輪：第一個 child break；parent 同第二個 child 繼續）：</li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>iteration</th>
+  <th>active（繼續 loop）</th>
+  <th>今輪新 break</th>
+  <th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>開始</td>
+  <td>1</td>
+  <td>0</td>
+  <td>1</td>
+</tr>
+<tr>
+  <td>i = 0</td>
+  <td>2</td>
+  <td>1</td>
+  <td>3</td>
+</tr>
+<tr>
+  <td>i = 1</td>
+  <td>4</td>
+  <td>2</td>
+  <td>7</td>
+</tr>
+<tr>
+  <td>i = 2</td>
+  <td>8</td>
+  <td>4</td>
+  <td>15</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>寫：<em>&quot;In each iteration the first child breaks out of the loop, while the parent and the second child continue, so the active processes double. Total = <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> = 15 processes; <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> = 7 of them execute break.&quot;</em></li>
+</ul>
 <h2 id="s3"><a class="anchor" href="#s3">#</a>3. 類型 B — 畫 process tree</h2>
 <ol>
-<li>翻 <strong>P1 Step 4（p.14）</strong>：每個 node 寫名（P0、P1、P2…），旁邊寫 <strong>佢喺第幾個 iteration（i 值）出世</strong>；child 由 fork 下一句開始、<strong>繼承 i 值</strong>繼續 loop。</li>
+<li>翻 <strong>P1 Step 4（p.17）</strong>：每個 node 寫名（P0、P1、P2…），旁邊寫 <strong>佢喺第幾個 iteration（i 值）出世</strong>；child 由 fork 下一句開始、<strong>繼承 i 值</strong>繼續 loop。</li>
 <li>由 P0 開始，一個 iteration 畫一層：每個仍然 active 嘅 node 照嗰輪 code 逐句行，<strong>邊個 process 執行 <code>fork()</code>，就由佢拉一條箭咀去新 child</strong>（child 再 fork 就由 child 再拉，所以會有孫）。</li>
-<li>有 <code>break</code> / <code>return</code> → 嗰個 node 之後<strong>唔再生</strong>。例子：<strong>Ch3 §9.3（p.103）</strong>、原題 <strong>S26 Q3.1（p.143）</strong>。</li>
+<li>有 <code>break</code> / <code>return</code> → 嗰個 node 之後<strong>唔再生</strong>。例子：<strong>Ch3 §9.3（p.106）</strong>、原題 <strong>S26 Q3.1（p.146）</strong>。</li>
 <li><strong>自我檢查</strong>：node 總數 = §2 計到嘅 total。</li>
 </ol>
 <p><strong>答卷寫法</strong>：箭咀 parent → child，每條線標 <em>i = 0 / 1 / 2</em>；最底寫 <em>&quot;Total: N processes&quot;</em>。</p>
+<p><strong>📝 例子</strong>：<code>for (i = 0; i &lt; 2; i++) fork();</code> 畫 process tree。</p>
+<pre class="code" data-lang=""><code>P0 --(i=0)--&gt; P1 --(i=1)--&gt; P3
+P0 --(i=1)--&gt; P2
+</code></pre>
+<ul>
+<li>P0 喺 i = 0 生 P1、i = 1 生 P2；P1 由 i = 0 嗰個 fork 之後開始（i 仲係 0），所以 i = 1 再生 P3；P2、P3 出世時已經係最後一輪，唔再生。</li>
+<li>檢查：node 數 = 4 = P1 表 <code>fork();</code> 嘅 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>（n = 2）<span class="ok">✔</span>。答卷最底寫 <em>&quot;Total: 4 processes.&quot;</em></li>
+</ul>
 <h2 id="s4"><a class="anchor" href="#s4">#</a>4. 類型 C — 所有可能輸出 / 次序</h2>
 <ol>
-<li>翻 <strong>P1 Step 5（p.14）</strong> 同 <strong>Ch3 §9.6（p.104）</strong>。</li>
+<li>翻 <strong>P1 Step 5（p.17）</strong> 同 <strong>Ch3 §9.6（p.107）</strong>。</li>
 <li>喺 rough paper：<strong>每個 process 一行</strong>，寫低佢印嘅字（同一 process 嘅次序<strong>固定</strong>）。</li>
 <li>加約束（用箭咀連）：<ul>
 <li>parent 喺 <code>wait()</code> 之後印嘅 → 一定喺 child（同 child 嘅子孫）所有輸出<strong>之後</strong>；</li>
 <li>fork 之前已印嘅 → 最先；</li>
-<li><code>read()</code> 一條 pipe → 要等對方 <code>write()</code> 之後（例：<strong>X3-50（p.40）</strong>）。</li>
+<li><code>read()</code> 一條 pipe → 要等對方 <code>write()</code> 之後（例：<strong>X3-50（p.43）</strong>）。</li>
 </ul>
 </li>
 <li>逐個位揀「而家可以印邊個」→ 列晒所有次序；數量可以用 Ch3 §9.6 嘅「插空位」方法計。</li>
-<li>同類原題：<strong>F20 Q3.1（p.148）</strong>、<strong>Sp21 Q1.3（p.149）</strong>；threads 版：<strong>X4-24（p.45）</strong>。</li>
+<li>同類原題：<strong>F20 Q3.1（p.151）</strong>、<strong>Sp21 Q1.3（p.152）</strong>；threads 版：<strong>X4-24（p.48）</strong>。</li>
 </ol>
 <p><strong>答卷寫法</strong>：<em>&quot;Assume each printf is flushed immediately.&quot;</em> 然後 (1)、(2)、(3)… 逐個 output 列出；問「幾多個」就寫總數 + 點數。</p>
+<p><strong>📝 例子</strong>（假設 printf 即時 flush）：</p>
+<pre class="code" data-lang="c"><code>printf(&quot;A&quot;);
+if (fork() == 0) { printf(&quot;B&quot;); printf(&quot;D&quot;); }
+else             { wait(NULL); printf(&quot;C&quot;); printf(&quot;E&quot;); }
+</code></pre>
+<ul>
+<li>每個 process 一行：child：B → D；parent：（wait）→ C → E；A 喺 fork 之前，<strong>最先</strong>。</li>
+<li>約束：parent <code>wait(NULL)</code> → C、E 一定喺 B、D 之後 → <strong>只有 1 個 output：ABDCE</strong>。</li>
+<li>如果<strong>冇</strong> <code>wait(NULL)</code>：A 之後係 (B, D) 同 (C, E) 嘅任意合併 → <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2451em;vertical-align:-0.35em;"></span><span class="mord"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8951em;"><span style="top:-2.355em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.144em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">4</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span></span></span></span> 個：<strong>ABDCE、ABCDE、ABCED、ACBDE、ACBED、ACEBD</strong>。</li>
+</ul>
 <h2 id="s5"><a class="anchor" href="#s5">#</a>5. 類型 D — exec 成功 / 失敗、fork 失敗</h2>
 <ol>
-<li>翻 <strong>P1 Step 6（p.15）</strong> + <strong>Ch3 §9.7（p.105）</strong>；原題 <strong>S26 Q3.2（p.144）</strong>。</li>
+<li>翻 <strong>P1 Step 6（p.18）</strong> + <strong>Ch3 §9.7（p.108）</strong>；原題 <strong>S26 Q3.2（p.147）</strong>。</li>
 <li>照三個情況逐個寫：<ul>
 <li><strong>(I) fork ✓、exec ✓</strong>：child 只印 exec <strong>之前</strong>嘅嘢（exec 之後嘅 code <strong>永遠唔行</strong>）+ parent 嘅輸出。</li>
-<li><strong>(II) fork ✓、exec ✗</strong>：exec 返回 −1，child <strong>繼續行 exec 之後嘅 code</strong>（loop 入面會繼續 fork！見 <strong>X3-31（p.37）</strong>）。</li>
+<li><strong>(II) fork ✓、exec ✗</strong>：exec 返回 −1，child <strong>繼續行 exec 之後嘅 code</strong>（loop 入面會繼續 fork！見 <strong>X3-31（p.40）</strong>）。</li>
 <li><strong>(III) fork ✗</strong>：冇 child，只有 <code>pid &lt; 0</code> 嗰個 branch 嘅輸出。</li>
 </ul>
 </li>
 </ol>
 <p><strong>答卷寫法</strong>：三個 bullet，每個寫「印咩 + 一句原因」（<em>&quot;exec replaces the process image, so the code after it never runs&quot;</em>）。</p>
+<p><strong>📝 例子</strong>：</p>
+<pre class="code" data-lang="c"><code>printf(&quot;1&quot;);
+pid_t pid = fork();
+if (pid &lt; 0)       printf(&quot;F&quot;);
+else if (pid == 0) { execlp(&quot;ls&quot;, &quot;ls&quot;, NULL); printf(&quot;2&quot;); }
+else               { wait(NULL); printf(&quot;3&quot;); }
+</code></pre>
+<ul>
+<li><strong>(I) fork ✓、exec ✓</strong>：<strong>1、ls 嘅輸出、3</strong>（&quot;2&quot; 永遠唔印：exec 已經換咗成個 program）。</li>
+<li><strong>(II) fork ✓、exec ✗</strong>：<strong>1 2 3</strong>（exec 返回 −1，child 繼續行 <code>printf(&quot;2&quot;)</code>；parent wait 完先印 3）。</li>
+<li><strong>(III) fork ✗</strong>：<strong>1 F</strong>（冇 child）。</li>
+</ul>
 <h2 id="s6"><a class="anchor" href="#s6">#</a>6. 類型 E — pipe / dup / open 填空</h2>
 <ol>
-<li>翻 <strong>P2 表（p.15）</strong>，逐個 BLANK 對「要做」一欄：</li>
+<li>翻 <strong>P2 表（p.18）</strong>，逐個 BLANK 對「要做」一欄：</li>
 </ol>
 <div class="tw"><table>
 <thead>
@@ -254,18 +329,28 @@
 </table></div>
 <ol start="2">
 <li><strong>點知邊個係 writer / reader</strong>：睇 BLANK 之後嗰句用 <code>read</code> 定 <code>write</code>、用邊個 fd。</li>
-<li>兩條 pipe（雙向）→ 抄 <strong>XC-07（p.73）</strong> / 原題 <strong>Lab 4 EX1（p.153）</strong>。</li>
+<li>兩條 pipe（雙向）→ 抄 <strong>XC-07（p.76）</strong> / 原題 <strong>Lab 4 EX1（p.156）</strong>。</li>
 <li>交卷前 checklist：<ul>
 <li>每個 process 都 <strong>close 自己唔用嗰端</strong>（否則 reader 收唔到 EOF、永遠 block）；</li>
 <li><code>read</code> / <code>write</code> 第二個參數係 <strong>address</strong>（<code>&amp;x</code> / <code>buf</code>），第三個係 <strong>size</strong>（<code>sizeof(x)</code>）；</li>
 <li><strong>fd[0] = read，fd[1] = write</strong>；</li>
-<li>個 BLANK 唔使填嘢 → 寫 <code>/* Nothing */</code>（<strong>E4 模板，p.13</strong>）。</li>
+<li>個 BLANK 唔使填嘢 → 寫 <code>/* Nothing */</code>（<strong>E4 模板，p.16</strong>）。</li>
 </ul>
 </li>
-<li>同類原題：<strong>S26 Q3.3（p.144）</strong>、<strong>HW1 Q3.3（p.150）</strong>、<strong>HW1 Q2.5（p.150）</strong>；完整程式：<strong>XC-05（p.72）</strong>、<strong>XC-06（p.72）</strong>、<strong>XC-08（p.73）</strong>、<strong>XC-09（p.73）</strong>。</li>
+<li>同類原題：<strong>S26 Q3.3（p.147）</strong>、<strong>HW1 Q3.3（p.153）</strong>、<strong>HW1 Q2.5（p.153）</strong>；完整程式：<strong>XC-05（p.75）</strong>、<strong>XC-06（p.75）</strong>、<strong>XC-08（p.76）</strong>、<strong>XC-09（p.76）</strong>。</li>
 </ol>
+<p><strong>📝 例子</strong>：parent 將 x = 6 經 pipe 傳畀 child，child 印出嚟。</p>
+<pre class="code" data-lang="c"><code>int fd[2], x = 6, y;
+BLANK1;
+if (fork() == 0) { BLANK2; BLANK3; printf(&quot;%d\n&quot;, y); }
+else             { BLANK4; BLANK5; wait(NULL); }
+</code></pre>
+<ul>
+<li>child 印 <code>y</code> → child = <strong>reader</strong>；parent = <strong>writer</strong>（P2 表 Reader / Writer 兩行照抄）。</li>
+<li><strong>BLANK1</strong> <code>pipe(fd);</code>（fork 之前）· <strong>BLANK2</strong> <code>close(fd[1]);</code> · <strong>BLANK3</strong> <code>read(fd[0], &amp;y, sizeof(y));</code> · <strong>BLANK4</strong> <code>close(fd[0]);</code> · <strong>BLANK5</strong> <code>write(fd[1], &amp;x, sizeof(x));</code> → 印 <strong>6</strong>。</li>
+</ul>
 <h2 id="s7"><a class="anchor" href="#s7">#</a>7. 類型 F — 叫你寫 program</h2>
-<p>翻 <strong>XC（p.71）</strong>，搵最似嘅 program <strong>成段抄</strong>，再改字串 / 檔名 / 數目：</p>
+<p>翻 <strong>XC（p.74）</strong>，搵最似嘅 program <strong>成段抄</strong>，再改字串 / 檔名 / 數目：</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -276,60 +361,66 @@
 <tbody>
 <tr>
   <td>parent 等 child、印 exit status</td>
-  <td><strong>XC-01（p.71）</strong></td>
+  <td><strong>XC-01（p.74）</strong></td>
 </tr>
 <tr>
   <td>開 N 個 children / 一條 chain</td>
-  <td><strong>XC-02（p.71）</strong> / <strong>XC-03（p.71）</strong></td>
+  <td><strong>XC-02（p.74）</strong> / <strong>XC-03（p.74）</strong></td>
 </tr>
 <tr>
   <td>用 exec 行一個 command</td>
-  <td><strong>XC-04（p.71）</strong></td>
+  <td><strong>XC-04（p.74）</strong></td>
 </tr>
 <tr>
   <td>parent → child 傳字串</td>
-  <td><strong>XC-05（p.72）</strong></td>
+  <td><strong>XC-05（p.75）</strong></td>
 </tr>
 <tr>
   <td>child 計完傳結果畀 parent</td>
-  <td><strong>XC-06（p.72）</strong></td>
+  <td><strong>XC-06（p.75）</strong></td>
 </tr>
 <tr>
   <td>雙向溝通</td>
-  <td><strong>XC-07（p.73）</strong></td>
+  <td><strong>XC-07（p.76）</strong></td>
 </tr>
 <tr>
   <td><code>cmd &lt; in &gt; out</code> redirection</td>
-  <td><strong>XC-08（p.73）</strong></td>
+  <td><strong>XC-08（p.76）</strong></td>
 </tr>
 <tr>
   <td><code>cmd1 | cmd2</code>（例如 <code>ls | wc -l</code>）</td>
-  <td><strong>XC-09（p.73）</strong></td>
+  <td><strong>XC-09（p.76）</strong></td>
 </tr>
 <tr>
   <td>PA1 多段 pipe</td>
-  <td><strong>XC-10（p.74）</strong></td>
+  <td><strong>XC-10（p.77）</strong></td>
 </tr>
 <tr>
   <td>簡單 shell / <code>cd</code> / Ctrl-C</td>
-  <td><strong>XC-11（p.74）</strong></td>
+  <td><strong>XC-11（p.77）</strong></td>
 </tr>
 <tr>
   <td>named pipe (FIFO)</td>
-  <td><strong>XC-12（p.75）</strong></td>
+  <td><strong>XC-12（p.78）</strong></td>
 </tr>
 <tr>
   <td>zombie / orphan 示範</td>
-  <td><strong>XC-19（p.78）</strong></td>
+  <td><strong>XC-19（p.81）</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>答卷寫法</strong>：保留 comments（graders 睇得明 = 攞分）；記得 <code>wait()</code>、exec 之後 <code>perror(...); exit(1);</code>、close 唔用嘅 pipe ends。API 參數唔記得 → <strong>A 部 API 速查（p.164）</strong>。</p>
+<p><strong>答卷寫法</strong>：保留 comments（graders 睇得明 = 攞分）；記得 <code>wait()</code>、exec 之後 <code>perror(...); exit(1);</code>、close 唔用嘅 pipe ends。API 參數唔記得 → <strong>A 部 API 速查（p.167）</strong>。</p>
+<p><strong>📝 例子</strong>：「Write a program in which the parent sends &quot;hello&quot; to its child through a pipe, and the child prints it.」</p>
+<ul>
+<li>翻 <strong>XC-05（p.75）</strong>（parent → child 傳字串）→ <strong>成段抄</strong>，只改一行：<code>const char *msg = &quot;Greetings&quot;;</code> → <code>const char *msg = &quot;hello&quot;;</code>。</li>
+<li>其餘（<code>pipe</code> 喺 fork 之前、兩邊 close 唔用嗰端、<code>wait(NULL)</code>）保持不變 = 全部都係攞分位。</li>
+</ul>
 <h2 id="s8"><a class="anchor" href="#s8">#</a>8. 類型 G — fork + pthread_create 混合</h2>
-<p>直接翻 <strong>X4-32 至 X4-36（p.47–p.48）</strong>：已解好「幾多 process / thread / 印幾多次」嘅五種寫法。規則（抄落答卷）：<em>&quot;fork() in a multithreaded process duplicates only the calling thread (Linux).&quot;</em>；<em>&quot;Threads share globals, processes get a copy.&quot;</em>（<strong>X4-34（p.47）</strong>）。</p>
+<p>直接翻 <strong>X4-32 至 X4-36（p.50–p.51）</strong>：已解好「幾多 process / thread / 印幾多次」嘅五種寫法。規則（抄落答卷）：<em>&quot;fork() in a multithreaded process duplicates only the calling thread (Linux).&quot;</em>；<em>&quot;Threads share globals, processes get a copy.&quot;</em>（<strong>X4-34（p.50）</strong>）。</p>
+<p><strong>📝 例子</strong>：global <code>count = 0</code>；main 開一個 thread 做 <code>count++</code> 再 join；跟住 <code>fork()</code>；child 再開 thread 做 <code>count++</code>，印 count；parent <code>wait(NULL)</code> 之後印 count。→ 同 <strong>X4-34</strong> 一模一樣：<strong><code>child: 2</code> 先，之後 <code>parent: 1</code></strong>（thread 同 main 共用 count → 1；fork 之後 child 有自己一份 → 2；parent 嗰份仍然係 1）。</p>
 <h2 id="s9"><a class="anchor" href="#s9">#</a>9. 交卷前 30 秒 checklist</h2>
 <ul>
-<li>child 拎 <strong>0</strong>、parent 拎 <strong>child PID</strong>、失敗 <strong>−1</strong>（<strong>E3 traps，p.12</strong>）。</li>
+<li>child 拎 <strong>0</strong>、parent 拎 <strong>child PID</strong>、失敗 <strong>−1</strong>（<strong>E3 traps，p.15</strong>）。</li>
 <li><code>&amp;&amp;</code> / <code>||</code> 短路有冇計錯？</li>
 <li><code>break</code> / <code>return</code> 只停<strong>嗰個</strong> process。</li>
 <li>exec 成功 → 之後唔行。</li>

@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>攻略：CPU scheduling 題 · COMP3511 Midterm</title>
-<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793266616">
-<link rel="stylesheet" href="assets/site.css?v=1793266616">
+<link rel="stylesheet" href="assets/katex/katex.min.css?v=1793267837">
+<link rel="stylesheet" href="assets/site.css?v=1793267837">
 
-<script src="assets/site.js?v=1793266616"></script>
-<script src="assets/search-index.js?v=1793266616"></script>
+<script src="assets/site.js?v=1793267837"></script>
+<script src="assets/search-index.js?v=1793267837"></script>
 </head>
 <body data-page="howto-sched">
 <header class="topbar">
@@ -59,7 +59,7 @@
 <div class="page-head"><span class="tag">How-to 攻略（點用本書攞分）</span><button class="btn mark-done" id="mark-done"></button></div>
 <h1 id="cpu-scheduling-cheat-book">攻略：CPU scheduling 題點用 cheat book 攞分</h1>
 <blockquote class="callout tip">
-<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（173 頁版）。Scheduling 係<strong>最多分</strong>嘅部分（歷屆約 27 分），而且 <strong>Gantt chart 由左至右改，錯一格之後冇分</strong>（F20 改卷規則），所以每一步都照書做、逐格對。</p>
+<p>🎯 <strong>呢頁唔係教原理，係教你點「查書 → 照做 → 照寫」</strong>。頁數 = 印出嚟嗰本 cheat book（176 頁版）。Scheduling 係<strong>最多分</strong>嘅部分（歷屆約 27 分），而且 <strong>Gantt chart 由左至右改，錯一格之後冇分</strong>（F20 改卷規則），所以每一步都照書做、逐格對。</p>
 </blockquote>
 <h2 id="s0"><a class="anchor" href="#s0">#</a>0. 入場前：貼 6 張 sticky notes</h2>
 <div class="tw"><table>
@@ -73,32 +73,32 @@
 <tbody>
 <tr>
   <td><strong>E2 本科 Conventions</strong></td>
-  <td><strong>p.12</strong></td>
+  <td><strong>p.15</strong></td>
   <td>tie、RR 新 arrival、MLFQ 規則、response time 定義</td>
 </tr>
 <tr>
   <td><strong>E4 答題模板</strong></td>
-  <td><strong>p.13</strong></td>
+  <td><strong>p.16</strong></td>
   <td>Gantt + 表 + 平均數寫法</td>
 </tr>
 <tr>
   <td><strong>P3 Scheduling Playbook</strong></td>
-  <td><strong>p.15</strong></td>
+  <td><strong>p.18</strong></td>
   <td>每個 algorithm「揀邊個 / 幾時重揀」</td>
 </tr>
 <tr>
   <td><strong>P5 RM bound 表</strong></td>
-  <td><strong>p.16</strong></td>
+  <td><strong>p.19</strong></td>
   <td>RM 可唔可以排</td>
 </tr>
 <tr>
   <td><strong>Ch5 §13 Gantt 萬用流程</strong></td>
-  <td><strong>p.125</strong></td>
+  <td><strong>p.128</strong></td>
   <td>逐步 + tie-breaking</td>
 </tr>
 <tr>
   <td><strong>Ch5 §14 歷屆計算全集</strong></td>
-  <td><strong>p.126</strong></td>
+  <td><strong>p.129</strong></td>
   <td>同類已解題（對答案用）</td>
 </tr>
 </tbody>
@@ -138,15 +138,15 @@
 </tr>
 <tr>
   <td>冇數字：why / compare / which algorithm…</td>
-  <td>題目搜尋表 <strong>p.17</strong> → <strong>X5（p.50）</strong> 直接抄</td>
+  <td>題目搜尋表 <strong>p.20</strong> → <strong>X5（p.53）</strong> 直接抄</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="s2"><a class="anchor" href="#s2">#</a>2. FCFS / SJF / SRTF / RR / Priority：Gantt + 平均數</h2>
-<p><strong>Step 0 — 先寫 assumptions（照抄 E2，p.12）</strong>，放喺答案最頂：
+<p><strong>Step 0 — 先寫 assumptions（照抄 E2，p.15）</strong>，放喺答案最頂：
 <em>&quot;Assumptions: ties are broken by FCFS, then smaller process ID; in RR a newly arrived process enters the ready queue before the preempted process; response time = end of the first run − arrival time.&quot;</em></p>
 <p><strong>Step 1</strong> — 喺 rough paper 抄個表：P、arrival、burst（、priority）。</p>
-<p><strong>Step 2</strong> — 翻 <strong>P3 表（p.15）</strong>，搵你個 algorithm 嗰行，抄低兩樣嘢：<strong>「揀邊個」</strong>同<strong>「幾時重新揀」</strong>：</p>
+<p><strong>Step 2</strong> — 翻 <strong>P3 表（p.18）</strong>，搵你個 algorithm 嗰行，抄低兩樣嘢：<strong>「揀邊個」</strong>同<strong>「幾時重新揀」</strong>：</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -186,7 +186,7 @@
 <p><strong>Step 3</strong> — 喺時間軸點出所有 <strong>arrival 時間</strong>；之後一路行一路加 <strong>完成時間</strong>同（RR）<strong>quantum 用完時間</strong>。</p>
 <p><strong>Step 4</strong> — 每個 event 時間，寫低 <strong>ready queue（照次序）</strong>，再照 Step 2 揀下一個。RR：用完 q 嘅排<strong>尾</strong>；同一時刻有新 arrival → <strong>新 arrival 先入</strong>。</p>
 <p><strong>Step 5</strong> — 寫 Gantt：<code>0 P1 3 P3 5 P1 8 …</code>（<strong>每個 boundary 都寫</strong>；CPU 冇嘢做都要寫 idle）。</p>
-<p><strong>Step 6</strong> — 填表（公式喺 <strong>E1，p.12</strong>）：</p>
+<p><strong>Step 6</strong> — 填表（公式喺 <strong>E1，p.15</strong>）：</p>
 <pre class="code" data-lang=""><code>P  | Arr | Burst | Completion | TAT = C - A | WT = TAT - Burst | RT = end of 1st run - A
 </code></pre>
 <ul>
@@ -201,26 +201,108 @@
 <li>t = 0：得 P1 → 行 P1。t = 2：P2 (5) vs P1 剩 4 → 繼續 P1。t = 3：P3 (2) vs P1 剩 3 → <strong>轉 P3</strong>。</li>
 <li>t = 5：P3 完；ready = P1 (3)、P2 (5)、P4 (4) → P1。t = 8：P1 完 → P4 (4) &lt; P2 (5) → P4。t = 12 → P2 → 17。</li>
 <li>Gantt <code>0 P1 3 P3 5 P1 8 P4 12 P2 17</code>；WT = 2, 10, 0, 3 → <strong>avg 3.75</strong>。</li>
-<li>書入面 <strong>X5-22（p.53）</strong> 有同一組數嘅 FCFS / SJF / SRTF / RR 全部答案 → <strong>考前用佢練一次，對答案</strong>。</li>
+<li>書入面 <strong>X5-22（p.56）</strong> 有同一組數嘅 FCFS / SJF / SRTF / RR 全部答案 → <strong>考前用佢練一次，對答案</strong>。</li>
 </ul>
 </blockquote>
-<p><strong>同類已解題（考試時見到似嘅就對住做）</strong>：<strong>X5-22（p.53）</strong>、<strong>X5-25 priority（p.53）</strong>、<strong>F19 Q3.6（p.147）</strong>、<strong>F20 Q4.1（p.148）</strong>、<strong>Sp21 Q2.1（p.149）</strong>、<strong>HW2 Q3.2（p.151）</strong>、<strong>Lab 5 review（p.140）</strong>。</p>
+<p><strong>📝 例子 2（RR q = 2，同一組數）</strong>：RR 最易錯 queue 次序，所以每個 event 都寫 ready queue（Step 4）：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>t</th>
+  <th>event</th>
+  <th>ready queue（頭 → 尾）</th>
+  <th>行</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>P1 到</td>
+  <td>P1</td>
+  <td>P1 0–2</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>P2 到 + P1 用完 q</td>
+  <td><strong>P2</strong>, P1（新 arrival 先入）</td>
+  <td>P2 2–4</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>P3 到</td>
+  <td>P1, P3</td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>P2 用完 q</td>
+  <td>P1, P3, P2</td>
+  <td>P1 4–6</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>P4 到</td>
+  <td>P3, P2, P4</td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>P1 用完 q</td>
+  <td>P3, P2, P4, P1</td>
+  <td>P3 6–8（完）</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>P3 完</td>
+  <td>P2, P4, P1</td>
+  <td>P2 8–10</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>P2 用完 q</td>
+  <td>P4, P1, P2</td>
+  <td>P4 10–12</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>P4 用完 q</td>
+  <td>P1, P2, P4</td>
+  <td>P1 12–14（完）</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>P1 完</td>
+  <td>P2, P4</td>
+  <td>P2 14–15（完），P4 15–17（完）</td>
+</tr>
+</tbody>
+</table></div>
+<p>Gantt <code>0 P1 2 P2 4 P1 6 P3 8 P2 10 P4 12 P1 14 P2 15 P4 17</code>；RT（第一段完結 − arrival）= 2, 2, 5, 7 → <strong>avg 4</strong>；WT = 8, 8, 3, 8 → <strong>avg 6.75</strong>（同 X5-22 一樣 <span class="ok">✔</span>）。</p>
+<p><strong>同類已解題（考試時見到似嘅就對住做）</strong>：<strong>X5-22（p.56）</strong>、<strong>X5-25 priority（p.56）</strong>、<strong>F19 Q3.6（p.150）</strong>、<strong>F20 Q4.1（p.151）</strong>、<strong>Sp21 Q2.1（p.152）</strong>、<strong>HW2 Q3.2（p.154）</strong>、<strong>Lab 5 review（p.143）</strong>。</p>
 <h2 id="s3"><a class="anchor" href="#s3">#</a>3. Priority + RR（同 priority 輪流）</h2>
 <ol>
 <li>照 §2 步驟，但<strong>每個 priority level 一條 queue</strong>（細數字 = 高，<strong>E2 第 4 點</strong>）。</li>
-<li>規則（<strong>X5-26，p.53</strong> 有完整示範）：<ul>
+<li>規則（<strong>X5-26，p.56</strong> 有完整示範）：<ul>
 <li>被<strong>更高 priority</strong> 嘅 arrival preempt → 返<strong>自己 level 嘅 queue 頭</strong>，<strong>保留剩餘 quantum</strong>；</li>
 <li>用完 quantum → 排自己 level 嘅 <strong>queue 尾</strong>；</li>
 <li>同一 level 得一個 process → 佢繼續行。</li>
 </ul>
 </li>
-<li>同類原題：<strong>S23（p.152）</strong>、<strong>F20 Q4.3（p.148）</strong>、<strong>Lab 5 L5.2（p.140）</strong>。</li>
+<li>同類原題：<strong>S23（p.155）</strong>、<strong>F20 Q4.3（p.151）</strong>、<strong>Lab 5 L5.2（p.143）</strong>。</li>
 <li>最常錯：preempt 完重新畀返成個 quantum（<strong>錯</strong>，書入面有標）。</li>
 </ol>
+<p><strong>📝 例子</strong>（X5-26 嘅數）：P1 (0, 5, pri 2)、P2 (0, 4, 2)、P3 (3, 2, 1)、P4 (4, 3, 2)；q = 2；細數字 = 高。</p>
+<ul>
+<li>t = 0：level 2 queue = P1, P2（同時到 → 細 ID 先）→ P1 0–2；用完 q → 排尾：[P2, P1]。</li>
+<li>t = 2：P2 行。t = 3：<strong>P3（pri 1）preempt P2</strong>（P2 用咗 1 unit）→ P2 返 <strong>level 2 queue 頭，保留剩低 1 unit quantum</strong>：[P2, P1]。</li>
+<li>t = 4：P4 到 → [P2, P1, P4]。t = 5：P3 完 → <strong>P2 只行 5–6</strong>（剩低嗰 1 unit）→ 排尾 → P1 6–8 → P4 8–10 → P2 10–12（完）→ P1 12–13（完）→ P4 13–14（完）。</li>
+<li>Gantt <code>0 P1 2 P2 3 P3 5 P2 6 P1 8 P4 10 P2 12 P1 13 P4 14</code>；WT = 8, 8, 0, 7 → avg = 23/4 = <strong>5.75</strong>。</li>
+<li>錯法：t = 5 畀 P2 一個新 quantum（行 5–7）→ 之後成條 Gantt 錯晒。</li>
+</ul>
 <h2 id="s4"><a class="anchor" href="#s4">#</a>4. MLFQ（每年必考）</h2>
 <ol>
-<li>抄低題目規則（幾多條 queue、每條 quantum、最後一條 FCFS、有冇 aging）。題目冇講嘅 → 用 <strong>E2 第 3 點（p.12）</strong>，<strong>寫做 assumption</strong>。</li>
-<li>Rough paper 畫 <strong>P3 嘅 MLFQ 追蹤表（p.15）</strong>：</li>
+<li>抄低題目規則（幾多條 queue、每條 quantum、最後一條 FCFS、有冇 aging）。題目冇講嘅 → 用 <strong>E2 第 3 點（p.15）</strong>，<strong>寫做 assumption</strong>。</li>
+<li>Rough paper 畫 <strong>P3 嘅 MLFQ 追蹤表（p.18）</strong>：</li>
 </ol>
 <pre class="code" data-lang=""><code>t | event | Q0 | Q1 (rem q) | Q2 | running (queue, q left, burst left)
 </code></pre>
@@ -234,26 +316,143 @@
 </li>
 <li>Gantt 標 queue：<code>0 P1@Q0 4 P2@Q0 8 P1@Q1 …</code>（E2 第 8 點）。</li>
 <li>表 + 平均數同 §2 一樣。</li>
-<li>對答案用：<strong>X5-34（p.54）</strong> 完整示範（連 queue 狀態）、<strong>Ch5 §8.2 lecture example（p.121）</strong>、<strong>§8.4 checklist（p.121）</strong>；原題 <strong>S26 Q4.1（p.144）</strong>、<strong>Sp21 Q2.2（p.149）</strong>、<strong>HW2 Q3.3（p.151）</strong>；two-level + aging：<strong>F20 Q4.2（p.148）</strong>。</li>
-<li>純文字題（&quot;why MLFQ&quot;、&quot;parameters of MLFQ&quot;、&quot;advantages&quot;）→ <strong>X5-31 至 X5-33（p.54）</strong> 直接抄。</li>
+<li>對答案用：<strong>X5-34（p.57）</strong> 完整示範（連 queue 狀態）、<strong>Ch5 §8.2 lecture example（p.124）</strong>、<strong>§8.4 checklist（p.124）</strong>；原題 <strong>S26 Q4.1（p.147）</strong>、<strong>Sp21 Q2.2（p.152）</strong>、<strong>HW2 Q3.3（p.154）</strong>；two-level + aging：<strong>F20 Q4.2（p.151）</strong>。</li>
+<li>純文字題（&quot;why MLFQ&quot;、&quot;parameters of MLFQ&quot;、&quot;advantages&quot;）→ <strong>X5-31 至 X5-33（p.57）</strong> 直接抄。</li>
 </ol>
+<p><strong>📝 例子</strong>（X5-34）：Q0 RR q = 4、Q1 RR q = 8、Q2 FCFS；P1 (0, 14)、P2 (3, 5)、P3 (9, 3)、P4 (15, 2)。Rough paper 追蹤表：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>t</th>
+  <th>event</th>
+  <th>Q0</th>
+  <th>Q1（剩 q）</th>
+  <th>Q2</th>
+  <th>行緊（queue, 剩 q, 剩 burst）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>P1 到</td>
+  <td>P1</td>
+  <td></td>
+  <td></td>
+  <td>P1@Q0 q=4 b=14</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>P2 到（同層，唔 preempt）</td>
+  <td>P2</td>
+  <td></td>
+  <td></td>
+  <td>P1@Q0</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>P1 用完 q → 降 Q1</td>
+  <td></td>
+  <td>P1(8)</td>
+  <td></td>
+  <td>P2@Q0 q=4 b=5</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>P2 用完 q → 降 Q1</td>
+  <td></td>
+  <td>P1(8), P2(8)</td>
+  <td></td>
+  <td>P1@Q1 q=8 b=10</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>P3 到 → preempt P1</td>
+  <td>P3</td>
+  <td><strong>P1(7)</strong>, P2(8)</td>
+  <td></td>
+  <td>P3@Q0（P1 返 Q1 <strong>頭</strong>，留 7）</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>P3 完</td>
+  <td></td>
+  <td>P1(7), P2(8)</td>
+  <td></td>
+  <td>P1@Q1 q=7 b=9</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>P4 到 → preempt P1</td>
+  <td>P4</td>
+  <td><strong>P1(4)</strong>, P2(8)</td>
+  <td></td>
+  <td>P4@Q0（P1 返頭，留 4）</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>P4 完</td>
+  <td></td>
+  <td>P1(4), P2(8)</td>
+  <td></td>
+  <td>P1@Q1 q=4 b=6</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td>P1 用完 q → 降 Q2</td>
+  <td></td>
+  <td>P2(8)</td>
+  <td>P1</td>
+  <td>P2@Q1 b=1</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td>P2 完</td>
+  <td></td>
+  <td></td>
+  <td>P1</td>
+  <td>P1@Q2 b=2</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td>P1 完</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>Gantt <code>0 P1@Q0 4 P2@Q0 8 P1@Q1 9 P3@Q0 12 P1@Q1 15 P4@Q0 17 P1@Q1 21 P2@Q1 22 P1@Q2 24</code>；avg WT = (10 + 14 + 0 + 0)/4 = <strong>6</strong>；avg TAT = <strong>12</strong>；avg RT = (4 + 5 + 3 + 2)/4 = <strong>3.5</strong>。</p>
+<ul>
+<li>錯法：每次 preempt 之後畀 P1 一個新嘅 8 → P1 會喺 Q1 做完，答案全錯。</li>
+</ul>
 <h2 id="s5"><a class="anchor" href="#s5">#</a>5. RM / EDF（real-time）</h2>
 <ol>
-<li><strong>計 U</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>（<strong>E1，p.12</strong>），寫晒條式。</li>
+<li><strong>計 U</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>（<strong>E1，p.15</strong>），寫晒條式。</li>
 <li><strong>判斷</strong>：<ul>
-<li><strong>RM</strong>：查 <strong>P5 RM bound 表（p.16）</strong>（N = 2 → 0.828、N = 3 → 0.780…）。<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span></span></span></span> bound → <em>&quot;schedulable by RM (guaranteed)&quot;</em>；<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span></span></span></span> bound → <em>&quot;not guaranteed — draw the timeline&quot;</em>。</li>
+<li><strong>RM</strong>：查 <strong>P5 RM bound 表（p.19）</strong>（N = 2 → 0.828、N = 3 → 0.780…）。<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span></span></span></span> bound → <em>&quot;schedulable by RM (guaranteed)&quot;</em>；<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span></span></span></span> bound → <em>&quot;not guaranteed — draw the timeline&quot;</em>。</li>
 <li><strong>EDF</strong>：<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8193em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>（deadline = period）→ <em>&quot;schedulable by EDF&quot;</em>。</li>
 <li><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">U</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> → <em>&quot;overloaded: no algorithm can meet all deadlines&quot;</em>。</li>
 </ul>
 </li>
-<li><strong>要畫 timeline</strong>：照 <strong>P3「RM / EDF 追蹤」（p.15）</strong>：<ul>
-<li>每個 task 列 <strong>release 時間</strong> <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span></span></span></span> 同 <strong>deadline = release + d</strong>（題目 d &lt; p 就用 d！見 <strong>S26 Q4.2，p.144</strong>）；</li>
+<li><strong>要畫 timeline</strong>：照 <strong>P3「RM / EDF 追蹤」（p.18）</strong>：<ul>
+<li>每個 task 列 <strong>release 時間</strong> <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mord mathnormal">p</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span></span></span></span> 同 <strong>deadline = release + d</strong>（題目 d &lt; p 就用 d！見 <strong>S26 Q4.2，p.147</strong>）；</li>
 <li>逐個時間單位揀：<strong>RM = period 最短</strong>（固定）；<strong>EDF = absolute deadline 最早</strong>；平手 → 唔 preempt（E2 第 5 點）。</li>
 </ul>
 </li>
 <li><strong>Deadline miss</strong>：完成時間 &gt; deadline 就係 miss；soft real-time → <strong>嗰個 job 繼續行完</strong>，計一次 miss（E2 第 6 點）。</li>
 <li><strong>答卷寫法</strong>：U 條式 → 同 bound 比較一句 → Gantt → 逐個 miss 寫「P2 misses its deadline at t = 7」。</li>
-<li>對答案用：<strong>X5-53（p.58）</strong>（同一組 task 嘅 RM vs EDF timeline）、<strong>X5-52（p.58）</strong>（四組 U 判斷）、<strong>Ch5 §11.5 做題方法（p.124）</strong>、<strong>Lab 5 L5.3（p.140）</strong>；原題 <strong>Sp21 Q2.3（p.149）</strong>、<strong>F19 Q3.4（p.146）</strong>、<strong>HW2 Q2.5（p.151）</strong>。</li>
+</ol>
+<p><strong>📝 例子</strong>（X5-53）：P1 (t = 2, p = d = 5)、P2 (t = 4, p = d = 7)，soft real-time，畫 0–14。</p>
+<ul>
+<li>U = 2/5 + 4/7 = 0.400 + 0.571 = <strong>0.971</strong>；查 P5：N = 2 嘅 RM bound = <strong>0.828</strong> → 0.971 &gt; 0.828 → RM <strong>not guaranteed</strong>；0.971 ≤ 1 → <strong>EDF schedulable</strong>。</li>
+<li>Releases / deadlines：P1 @ 0, 5, 10（deadline 5, 10, 15）；P2 @ 0, 7（deadline 7, 14）。</li>
+<li><strong>RM</strong>（P1 period 短 → 永遠優先）：<code>0 P1 2 P2 5 P1 7 P2 10 P1 12 P2 14</code> → P2 第一個 job 喺 t = 8 先完 → <strong>miss deadline 7</strong>（soft：繼續行完）。</li>
+<li><strong>EDF</strong>：t = 5 時 P2 deadline 7 &lt; P1 新 job deadline 10 → P2 繼續 → <code>0 P1 2 P2 6 P1 8 P2 12 P1 14</code> → <strong>0 miss</strong>。</li>
+<li>寫：U 條式 → <em>&quot;0.971 &gt; 0.828, so RM is not guaranteed; 0.971 ≤ 1, so EDF can meet all deadlines.&quot;</em> → 兩條 Gantt → <em>&quot;Under RM, P2 misses its deadline at t = 7.&quot;</em></li>
+</ul>
+<ol start="6">
+<li>對答案用：<strong>X5-53（p.61）</strong>（同一組 task 嘅 RM vs EDF timeline）、<strong>X5-52（p.61）</strong>（四組 U 判斷）、<strong>Ch5 §11.5 做題方法（p.127）</strong>、<strong>Lab 5 L5.3（p.143）</strong>；原題 <strong>Sp21 Q2.3（p.152）</strong>、<strong>F19 Q3.4（p.149）</strong>、<strong>HW2 Q2.5（p.154）</strong>。</li>
 </ol>
 <h2 id="s6"><a class="anchor" href="#s6">#</a>6. 公式題（直接代入）</h2>
 <div class="tw"><table>
@@ -267,38 +466,78 @@
 <tbody>
 <tr>
   <td>Exponential averaging（α、τ）</td>
-  <td>E1 <strong>p.12</strong>、P5 權重表 <strong>p.16</strong></td>
-  <td><strong>X5-19（p.52）</strong>、<strong>X5-20（p.52）</strong></td>
+  <td>E1 <strong>p.15</strong>、P5 權重表 <strong>p.19</strong></td>
+  <td><strong>X5-19（p.55）</strong>、<strong>X5-20（p.55）</strong></td>
 </tr>
 <tr>
   <td>Little's formula <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">λW</span></span></span></span></td>
   <td>E1</td>
-  <td><strong>X5-55（p.58）</strong>（記得先轉單位）</td>
+  <td><strong>X5-55（p.61）</strong>（記得先轉單位）</td>
 </tr>
 <tr>
   <td>RR + context switch：efficiency / utilization</td>
   <td>—</td>
-  <td><strong>X5-13（p.51）</strong>、<strong>X5-14（p.52）</strong></td>
+  <td><strong>X5-13（p.54）</strong>、<strong>X5-14（p.55）</strong></td>
 </tr>
 <tr>
   <td>RR 等待上限 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right:0.0359em;">q</span></span></span></span></td>
   <td>E1</td>
-  <td><strong>X5-11（p.51）</strong></td>
+  <td><strong>X5-11（p.54）</strong></td>
 </tr>
 <tr>
   <td>Response time 定義</td>
   <td>E2 第 1 點</td>
-  <td><strong>X5-07（p.51）</strong></td>
+  <td><strong>X5-07（p.54）</strong></td>
 </tr>
 </tbody>
 </table></div>
 <p><strong>答卷寫法</strong>：formula → 代數 → 答案（連 unit）。逐步寫，錯數都有 method 分。</p>
+<p><strong>📝 例子</strong>：α = 0.5、τ0 = 12 ms，實際 bursts 8、6、10、4 ms，預測 τ1–τ4。照 E1 公式 <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6389em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mclose">)</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1132em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 逐個代：</p>
+<ul>
+<li>τ1 = 0.5 × 8 + 0.5 × 12 = <strong>10 ms</strong></li>
+<li>τ2 = 0.5 × 6 + 0.5 × 10 = <strong>8 ms</strong></li>
+<li>τ3 = 0.5 × 10 + 0.5 × 8 = <strong>9 ms</strong></li>
+<li>τ4 = 0.5 × 4 + 0.5 × 9 = <strong>6.5 ms</strong>（同 X5-19 一樣 <span class="ok">✔</span>）</li>
+</ul>
+<p><strong>📝 例子（Little）</strong>：每分鐘 120 個 process 到，平均等 250 ms → 先轉單位：λ = 120/60 = 2 /s、W = 0.25 s → <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">λW</span></span></span></span> = 2 × 0.25 = <strong>0.5</strong>（X5-55）。</p>
 <h2 id="s7"><a class="anchor" href="#s7">#</a>7. 自訂 policy（dynamic priority、LUF、<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 公式）</h2>
 <ol>
-<li>P3 表有「Dynamic priority」同「LUF」兩行（p.15）。</li>
+<li>P3 表有「Dynamic priority」同「LUF」兩行（p.18）。</li>
 <li>每個決策時間點<strong>列一個表</strong>：每個 process 嘅 priority / 用咗幾多 CPU / <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 值 → 照題目規則揀 → 平手照<strong>題目</strong>講（例如 S26：larger ID）。</li>
-<li>對答案用：<strong>Ch5 §14.2 至 §14.4（p.126）</strong>；原題 <strong>S26 Q4.3（p.144）</strong>、<strong>S26 Q2.3（p.143）</strong>、<strong>F19 Q3.5（p.146）</strong>。</li>
+<li>對答案用：<strong>Ch5 §14.2 至 §14.4（p.129）</strong>；原題 <strong>S26 Q4.3（p.147）</strong>、<strong>S26 Q2.3（p.146）</strong>、<strong>F19 Q3.5（p.149）</strong>。</li>
 </ol>
+<p><strong>📝 例子（表格格式，照抄落 rough paper / 答卷）</strong>：每個決策時間點一行，<strong>先計晒所有 process 嘅值先揀</strong>：</p>
+<div class="tw"><table>
+<thead>
+<tr>
+  <th>t</th>
+  <th>P1 值</th>
+  <th>P2 值</th>
+  <th>P3 值</th>
+  <th>揀</th>
+  <th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>計</td>
+  <td>計</td>
+  <td>未到</td>
+  <td>…</td>
+  <td>題目規則：最大 / 最細值；平手照題目</td>
+</tr>
+<tr>
+  <td>下一個 event</td>
+  <td>重計</td>
+  <td>重計</td>
+  <td>計</td>
+  <td>…</td>
+  <td>…</td>
+</tr>
+</tbody>
+</table></div>
+<p>數字完整示範睇 <strong>S26 Q4.3</strong>（dynamic priority：waiting 嘅 priority 以 α 變、running 以 β 變）同 <strong>F19 Q3.5</strong>（LUF：揀用 CPU 最少嗰個），兩題都係用呢個表格式做。</p>
 <h2 id="s8"><a class="anchor" href="#s8">#</a>8. 交卷前 30 秒 checklist</h2>
 <ul>
 <li>有冇寫 <strong>assumptions</strong>（tie、RR 新 arrival、response time 定義）？</li>
